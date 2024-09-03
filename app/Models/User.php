@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'id_role'
     ];
 
     /**
@@ -42,4 +44,15 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function role(): HasOne{
+        return $this->hasOne(Role::class, 'id', 'id_role');
+    }
+
+    public function delete(): void{
+        
+        $this->date_suppr = now();
+        $this->save();
+    }
+
 }

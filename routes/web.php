@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\Users\UserController;
+use App\Http\Middleware\EnsureIsAdmin;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,13 +16,29 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+//routes nécessitant authentification
+Route::middleware('auth')->group(function(){
+    Route::get('accueil',function(){
+        if(Auth::user()->role->nom_role === 'admin')
+            return view ('app/admin_welcome');
+        else
+            return view('app/welcome');
+    })->name('accueil');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// routes nécessitant connexion et admin
+Route::middleware('auth', EnsureIsAdmin::class)->group(function () {
+    Route::post('delUser',[UserController::class,'delUser'])->name('delUser');
+    Route::get('listeUsers', [UserController::class, 'getAllUsers'])->name('listeUsers');   
+});
+
+
+Route::post('authAdmin',[AdminAuthController::class,'login'])->name('authAdmin');
+
+Route::get('/', function () {
+    return view('auth/login2');
+});
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
