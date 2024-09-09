@@ -276,7 +276,28 @@
           </li>
 
         </ul>
-      </li><!-- End Components Nav -->
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-calendar-plus"></i><span>Année universitaire</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('au_form') }}">
+              <i class="bi bi-circle"></i><span>Ouvrir une nouvelle A.U.</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('au_en_cours') }}">
+              <i class="bi bi-circle"></i><span>A.U. en cours</span>
+            </a>
+          </li>
+
+        </ul>
+      </li>
+      <!-- End Components Nav -->
 
 
     </ul>

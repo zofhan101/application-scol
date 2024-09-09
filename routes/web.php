@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\Users\UserController;
+use App\Http\Controllers\AU\AUcontroller;
 use App\Http\Middleware\EnsureIsAdmin;
 /*
 |--------------------------------------------------------------------------
@@ -28,8 +29,15 @@ Route::middleware('auth')->group(function(){
 
 // routes nécessitant connexion et admin
 Route::middleware('auth', EnsureIsAdmin::class)->group(function () {
+    // années universitaires
+    Route::get('ouvrir_au',[AUcontroller::class,'auForm'])->name('au_form');
+    Route::post('ouvrir_au',[AUcontroller::class,'ouvrir_au'])->name('ouvrir_au');
+    Route::get('au_en_cours',[AUcontroller::class,'au_en_cours'])->name('au_en_cours');
+    Route::post('cloture_au',[AUcontroller::class,'cloture_au'])->name('cloture_au');
+
+    //utilisateurs
     Route::post('delUser',[UserController::class,'delUser'])->name('delUser');
-    Route::get('listeUsers', [UserController::class, 'getAllUsers'])->name('listeUsers');   
+    Route::get('listeUsers', [UserController::class, 'getAllUsers'])->name('listeUsers');
 });
 
 
