@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\AU\AUcontroller;
+use App\Http\Controllers\inscriptions\Inscription_import_controller;
 use App\Http\Middleware\EnsureIsAdmin;
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,9 @@ use App\Http\Middleware\EnsureIsAdmin;
 
 //routes nécessitant authentification
 Route::middleware('auth')->group(function(){
+    Route::post('import_selectionnes',[Inscription_import_controller::class,'import_selectionnes']);
+    Route::get('down_modele_selectionnes',[Inscription_import_controller::class,'modele_selectionnes']);
+    Route::get('import_selectionnes',[Inscription_import_controller::class,'import_selectionnes_page'])->name('import_selectionnes');
     Route::get('accueil',function(){
         if(Auth::user()->role->nom_role === 'admin')
             return view ('app/admin_welcome');
