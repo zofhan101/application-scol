@@ -21,6 +21,7 @@ class RoleSeeder extends Seeder
             ['nom_role'=>'chef de service'],
             ['nom_role'=>'chef de division'],
             ['nom_role'=>'agent'],
+            ['nom_role'=>'admin']
         ];
 
         DB::table('role')->insert($roles);

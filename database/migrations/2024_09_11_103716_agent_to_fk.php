@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('selectionnes', function (Blueprint $table) {
-            $table->BigInteger('id_agent');
+            $table->foreign('id_agent')->references('id')->on('users');
+
         });
     }
 
@@ -21,8 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->dropColumn('id_agent');
-        });
+
     }
 };

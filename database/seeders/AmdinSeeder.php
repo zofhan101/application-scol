@@ -15,11 +15,10 @@ class AmdinSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('role')->insert(['nom_role'=>'admin']);
         DB::table('users')->insert([
-            'name'=>'admin', 
-            'email'=>'servicescol213@gmail.com', 
-            'password'=>Hash::make('ScolAritE213#'), 
+            'name'=>'admin',
+            'email'=>'servicescol213@gmail.com',
+            'password'=>Hash::make('ScolAritE213#'),
             'id_role'=>7]);
 
     }

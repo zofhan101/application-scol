@@ -30,7 +30,7 @@ class AU extends Model
         $au_en_cours = AU::where('cloture','=', null)->get();
 
         if($au_en_cours->isEmpty()){
-            throw new Exception('Aucune A.U. ouverte');
+            throw new Exception('Désolé! Aucune A.U. n\'est en cours. Veuillez contacter votre administrateur pour en ouvrir une.');
         }
         else{
             return $au_en_cours[0];

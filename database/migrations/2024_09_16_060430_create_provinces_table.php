@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->BigInteger('id_agent');
+        Schema::create('province', function (Blueprint $table) {
+            $table->id('id_province');
+            $table->string('nom_province');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->dropColumn('id_agent');
-        });
+        Schema::dropIfExists('province');
     }
 };

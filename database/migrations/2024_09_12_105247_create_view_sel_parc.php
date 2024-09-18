@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->BigInteger('id_agent');
-        });
+        DB::statement("
+            create or replace view v_selectionnes_parcours as
+                select s.*, p.nom_parcours
+                from selectionnes as s
+                join parcours as p on s.id_parcours = p.id_parcours;
+
+        ");
     }
 
     /**
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->dropColumn('id_agent');
-        });
+        Schema::dropIfExists('view_sel_parc');
     }
 };

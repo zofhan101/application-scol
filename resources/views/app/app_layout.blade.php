@@ -268,6 +268,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="check_admission">
+              <i class="bi bi-circle"></i><span>Inscription en PACES</span>
+            </a>
+          </li>
+
         </ul>
       </li><!-- End Components Nav -->
 

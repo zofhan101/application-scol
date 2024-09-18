@@ -36,26 +36,26 @@ class Inscription_import_controller extends Controller
         fastexcel()->import($request->file('fichier_excel'), function($ligne) use (&$doublons,$id_user,$id_au, $id_parcours,&$sel){
 
             $response = rescue(
-                function() use ($ligne,$id_au,$id_parcours,$sel,$id_user){
-                    //$sel = new Selectionnes();
+                function() use ($ligne,$id_au,$id_parcours,&$sel,$id_user){
+                    $sel = new Selectionnes();
                     $sel->nom = $ligne['Nom'];
                     $sel->prenoms = $ligne['Prenom'];
                     $sel->num_bacc = $ligne['Numero_bacc'];
                     $sel->id_parcours = $id_parcours;
                     $sel->id_au = $id_au;
                     $sel->id_agent = $id_user;
+                    echo $sel->save();
 
-                    $sel->save();
                     return true;
                 },
-                function(UniqueConstraintViolationException $ex) use(&$sel, $doublons){
+                function(UniqueConstraintViolationException $ex) use(&$sel){
+                    //var_dump($sel);
                     return $sel;
                 },
                 false
             );
 
             if($response instanceof Selectionnes){
-                echo 'tratra';
                 array_push($doublons,$response->replicate());
             }
 
@@ -66,6 +66,7 @@ class Inscription_import_controller extends Controller
             return view('inscriptions/import_selectionnes',['success'=>'Import effectué avec succès','parcours'=>Parcours::all()]);
         }
         else{
+            //var_dump($doublons);
             return view('inscriptions/import_selectionnes',['doublons'=>$doublons,'parcours'=>Parcours::all()]);
         }
 

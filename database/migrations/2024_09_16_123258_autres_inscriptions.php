@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('selectionnes', function (Blueprint $table) {
-            $table->id('id_selectionnes');
-            $table->string('nom');
-            $table->string('prenoms');
-            $table->string('num_bacc');
-            $table->BigInteger('id_parcours');
+        Schema::create('autres_inscriptions',function (Blueprint $table) {
             $table->BigInteger('id_au');
-            $table->foreign('id_parcours')->references('id_parcours')->on('parcours');
             $table->foreign('id_au')->references('id_au')->on('au');
-            $table->boolean('est_inscrit')->nullable();
+            $table->BigInteger('id_etudiants');
+            $table->foreign('id_etudiants')->references('id_etudiants')->on('etudiants');
+            $table->String('etablissement');
+            $table->String('niveau',50);
             $table->timestamps();
+
+
         });
     }
 
@@ -30,6 +29,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('autres_inscriptions');
+
     }
 };

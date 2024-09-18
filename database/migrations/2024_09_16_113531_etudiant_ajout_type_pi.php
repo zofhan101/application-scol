@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->BigInteger('id_agent');
+        Schema::table('etudiants',function (Blueprint $table) {
+            $table->enum('type_piece_identite', ['cin','pass'])->nullable();
         });
     }
 
@@ -21,8 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->dropColumn('id_agent');
-        });
+        //
     }
 };

@@ -50,7 +50,7 @@
                         @endforeach
                     </select>
                   </div>
-                  <div class="col-12">
+                    <div class="col-12">
 
                     <label for="inputEmail4" class="form-label">Fichier Excel</label>
                     <input type="file" class="form-control" id="inputEmail4" name="fichier_excel">
@@ -73,7 +73,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @enderror
-                </div>
+                    </div>
                   <div class="text-center">
                     <button type="submit" class="btn btn-primary">Importer</button>
                     <button type="reset" class="btn btn-secondary">Reset</button>

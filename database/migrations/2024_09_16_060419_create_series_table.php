@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->BigInteger('id_agent');
+        Schema::create('serie', function (Blueprint $table) {
+            $table->id('id_serie');
+            $table->string('nom_serie',50);
+            $table->timestamps();
         });
     }
 
@@ -21,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('selectionnes', function (Blueprint $table) {
-            $table->dropColumn('id_agent');
-        });
+        Schema::dropIfExists('serie');
     }
 };
