@@ -16,11 +16,101 @@ use App\Rules\inscription\AdmissionExists;
 use App\Models\inscription\Nationalite;
 use App\Models\inscription\Autre_inscription;
 use App\Models\inscription\Inscription;
+use PDF;
 
 
 
 class Inscription_controller extends Controller
 {
+
+    // attestation d'inscription
+
+    public function check_inscription_attestation(Request $request){
+        $request->validate([
+            'matricule' => ['required','numeric'],
+            'annee_universitaire'=>['required','numeric','exists:au,id_au']
+        ]);
+
+        $matricule = (int) $request->input('matricule');
+        $id_au = (int)$request->input('annee_universitaire');
+        try {
+            $inscription = Inscription::check_inscription($matricule, $id_au);
+            $pdf = PDF::loadView('inscriptions/attestation_inscription', ['inscription'=>$inscription, 'au_en_cours'=>AU::get_au_en_cours()]);
+            $pdf->setOption('margin-top', '0');
+            return $pdf->stream('attesation_inscription_'.$inscription->im.'.pdf');
+
+
+        } catch (\Exception $th) {
+            return redirect()->back()->With('error',$th->getMessage());
+        }
+
+
+
+    }
+
+    public function get_au_fermees(){
+        $aus = AU::get_au_fermees();
+        if($aus->isEmpty()){
+            return view('inscriptions/check_inscription_attestation', ['error'=>'Aucune A.U. n\'a encore été cloturée pour délivrer des attestations d\'inscription']);
+        }
+        return view('inscriptions/check_inscription_attestation',['aus'=>$aus]);
+    }
+
+
+    //CERTIFICATS DE SCOLARITE
+
+    public function plutot_attestation_inscription(){
+        if(session()->has('etu_inscrit')){
+            $inscription = session('etu_inscrit');
+            $pdf = PDF::loadView('inscriptions/attestation_inscription', ['inscription'=>$inscription, 'au_en_cours'=>AU::get_au_en_cours()]);
+            $pdf->setOption('margin-top', '0');
+            session()->forget('etu_inscrit');
+            return $pdf->stream('attestation_inscription'.$inscription->im.'.pdf');
+        }
+        else{
+            return redirect()->back();
+        }
+
+    }
+
+    public function check_inscription(Request $request){
+        $request->validate([
+            //pere
+            'matricule' => ['required','numeric']
+        ]);
+
+        //vérifier que l'étudiant est inscrit à l'AU en cours
+        $matricule = (int) $request->input('matricule');
+        $au = AU::get_au_en_cours();
+        try {
+            $inscription = Inscription::check_inscription($matricule, $au->id_au);
+            //si inscription non annulée, certificat de scolarité
+
+            if($inscription->date_annulation === null && $inscription->date_certificat_scol === null){
+                //return view('inscriptions/certificat_scolarite', ['inscription'=>$inscription]);
+                $pdf = PDF::loadView('inscriptions/certificat_scolarite', ['inscription'=>$inscription]);
+                $pdf->setOption('margin-top', '0');
+                Inscription::prend_certificat_scol($inscription->id_inscription);
+                return $pdf->download('certificat_scolarite_'.$inscription->im.'.pdf');
+
+            }
+            else if($inscription->date_certificat_scol !== null){
+                session(['etu_inscrit'=>$inscription]);
+                return redirect()->back()->With('error_inscrit','Cet étudiant a déjà récupéré son certificat de scolarité le '.$inscription->date_certificat_scol);
+            }
+            else if($inscription->date_annulation === null){
+                session(['etu_inscrit'=>$inscription]);
+                return redirect()->back()->With('error_inscrit','Cet étudiant a annulé son inscription le '.$inscription->date_annulation);
+            }
+
+        } catch (\Exception $th) {
+            return redirect()->back()->With('error',$th->getMessage());
+        }
+
+    }
+
+    //INSCRIPTIONS
+
     public function inscription(Request $request){
         $request->validate([
             //pere
@@ -37,8 +127,7 @@ class Inscription_controller extends Controller
         Etudiant::inscrire($new_etu);
 
         session()->forget('new_etu');
-
-        return view('inscriptions/check_admission',['success'=>'Inscription effectuée']);
+        return redirect(route('check_admission'))->with('success', 'Inscription effectuée');
     }
 
     public function form_parents(Request $request){

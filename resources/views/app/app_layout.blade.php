@@ -263,14 +263,26 @@
         </a>
         <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="import_selectionnes">
+            <a href="{{ route('import_selectionnes_page') }}">
               <i class="bi bi-circle"></i><span>Import liste sélectionnés</span>
             </a>
           </li>
 
           <li>
-            <a href="check_admission">
+            <a href="{{ route('check_admission') }}">
               <i class="bi bi-circle"></i><span>Inscription en PACES</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('check_inscription_form') }}">
+              <i class="bi bi-circle"></i><span>Cerificat de scolarité</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('check_inscription_form_attestation') }}">
+              <i class="bi bi-circle"></i><span>Attestation d'inscription</span>
             </a>
           </li>
 

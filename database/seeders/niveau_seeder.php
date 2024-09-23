@@ -14,12 +14,12 @@ class niveau_seeder extends Seeder
     public function run(): void
     {
         DB::table('niveau')->insert([
-            ['nom_niveau'=>'L1', 'rang'=>'1'],
-            ['nom_niveau'=>'L2', 'rang'=>'2'],
-            ['nom_niveau'=>'L3', 'rang'=>'3'],
-            ['nom_niveau'=>'4° année', 'rang'=>'4'],
-            ['nom_niveau'=>'5° année', 'rang'=>'5'],
-            ['nom_niveau'=>'6° année', 'rang'=>'6']
+            ['nom_niveau'=>'PACES', 'rang'=>'1', 'nom_niveau_long'=>'Première Année Commune des Etudes de Santé'],
+            ['nom_niveau'=>'NIVEAU L2', 'rang'=>'2'],
+            ['nom_niveau'=>'NIVEAU L3', 'rang'=>'3'],
+            ['nom_niveau'=>'QUATRIEME année', 'rang'=>'4'],
+            ['nom_niveau'=>'CINQUIEME année', 'rang'=>'5'],
+            ['nom_niveau'=>'SIXIEME année', 'rang'=>'6']
         ]);
     }
 }

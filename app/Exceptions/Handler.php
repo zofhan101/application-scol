@@ -5,6 +5,8 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
+use EtudiantNonInscritAuCourantException;
+
 class Handler extends ExceptionHandler
 {
     /**
@@ -16,6 +18,10 @@ class Handler extends ExceptionHandler
         'current_password',
         'password',
         'password_confirmation',
+    ];
+
+    protected $dontReport = [
+        EtudiantNonInscritAuCourantException::class,
     ];
 
     /**

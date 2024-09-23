@@ -4,6 +4,12 @@ namespace App\Models\inscription;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Exceptions\EtudiantNonInscritAuCourantException;
+use App\Models\AU\AU;
+use Illuminate\Support\Facades\DB;
+use Exception;
+
+
 
 class Inscription extends Model
 {
@@ -24,4 +30,25 @@ class Inscription extends Model
         'date_inscription' => 'date',
         'date_annulation' => 'date',
     ];
+
+    public static function prend_certificat_scol(int $id_inscription): void {
+        $inscription = Inscription::find($id_inscription);
+        $inscription->date_certificat_scol = date('Y-m-d');
+        $inscription->save();
+    }
+
+    public static function check_inscription(int $matricule, int $id_au){
+        //vérifier que ce matricule est inscrit à l 'AU en cours
+
+
+        $inscriptions = DB::select('select * from v_inscrits where id_au = ? and im = ?',[$id_au, $matricule]);
+        if(!empty($inscriptions)){
+            $inscription = $inscriptions[0];
+
+            return $inscription;
+        }
+        else{
+            throw new Exception('Etudiant non inscrit à l\'A.U. selectionnée');
+        }
+    }
 }

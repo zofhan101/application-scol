@@ -17,6 +17,11 @@ class AU extends Model
        'intitule'
     ];
 
+    public static function get_au_fermees(){
+        $au_fermees = AU::where('cloture','!=', null)->get();
+        return $au_fermees;
+    }
+
     public static function clore_au($id_au){
         $au =  AU::find($id_au);
         if($au != null){

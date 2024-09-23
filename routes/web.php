@@ -22,6 +22,13 @@ use App\Http\Middleware\AU\CheckOpenedAU;
 // route nécessitant authentification et au ouverte
 Route::middleware('auth',CheckOpenedAU::class)->group(function(){
 
+    // certificat de scolarité
+    Route::post('inscription/plutot_attestation_inscription',[Inscription_controller::class,'plutot_attestation_inscription'])->name('plutot_attestation_inscription');
+    Route::post('inscription/check_inscription',[Inscription_controller::class,'check_inscription'])->name('check_inscription');
+    Route::get('inscription/check_inscription',function(){ return view('inscriptions/check_inscription'); })->name('check_inscription_form');
+
+
+    // Inscriptions
     Route::post('inscription/finaliser',[Inscription_controller::class,'inscription']);
     Route::get('inscription/form_autres_inscriptions',function(){ return view('inscriptions/form_autres_inscriptions'); });
     Route::post('inscription/form_parents',[Inscription_controller::class,'form_parents']);
@@ -34,16 +41,20 @@ Route::middleware('auth',CheckOpenedAU::class)->group(function(){
     Route::post('inscription/form_etudiant',[Inscription_controller::class,'form_etudiant']);
     Route::post('inscription/parcours',[Inscription_controller::class,'choix_parcours']);
     Route::get('verifier_admission',[Inscription_controller::class,'verifier_admission'])->name('verifier_admission');
-    Route::get('check_admission',function(){ return view('inscriptions/check_admission'); });
+    Route::get('check_admission',function(){ return view('inscriptions/check_admission'); })->name('check_admission');
 
     // import
     Route::post('import_selectionnes',[Inscription_import_controller::class,'import_selectionnes']);
-    Route::get('import_selectionnes',[Inscription_import_controller::class,'import_selectionnes_page'])->name('import_selectionnes');
+    Route::get('import_selectionnes',[Inscription_import_controller::class,'import_selectionnes_page'])->name('import_selectionnes_page');
 });
 
 
 //routes nécessitant authentification
 Route::middleware('auth')->group(function(){
+    //attestation d'inscription
+    Route::post('inscription/check_inscription_attestation',[Inscription_controller::class,'check_inscription_attestation'])->name('check_inscription_attestation');
+    Route::get('inscription/check_inscription_attestation',[Inscription_controller::class,'get_au_fermees'])->name('check_inscription_form_attestation');
+
     Route::get('au_fermee',function(){
         return view('AU/au_fermee');
     });
