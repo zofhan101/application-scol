@@ -49,8 +49,14 @@ class Etudiant extends Model
         'id_agent'
     ];
 
+    protected $casts = [
+        'est_officier' => 'boolean',
+        'lieu_naissance'=> 'string'
+    ];
+
+
     public static function check_inscription($etu){
-        
+
     }
 
     public static  function inscrire($new_etu){

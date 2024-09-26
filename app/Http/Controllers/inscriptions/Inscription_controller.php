@@ -16,6 +16,8 @@ use App\Rules\inscription\AdmissionExists;
 use App\Models\inscription\Nationalite;
 use App\Models\inscription\Autre_inscription;
 use App\Models\inscription\Inscription;
+use Illuminate\Support\Facades\Auth;
+
 use PDF;
 
 
@@ -23,11 +25,34 @@ use PDF;
 class Inscription_controller extends Controller
 {
 
+
+    //annulation d'inscription
+    public function annuler_inscription(Request $request){
+        $request->validate([
+            'matricule' => ['required','numeric', 'exists:etudiants,im'],
+        ]);
+
+        $matricule = (int) $request->input('matricule');
+        $au = AU::get_au_en_cours();
+        try {
+            $inscription = Inscription::check_inscription($matricule, $au->id_au);
+            if($inscription->date_annulation !== null)
+                return redirect()->back()->With('error','Cet étudiant a déjà annulé sont inscription le '.$inscription->date_annulation);
+
+            $user = Auth::user();
+            Inscription::annuler_inscription($inscription, $user->id_user);
+            return redirect()->back()->With('success','Annulation d\'inscription effectuée');
+
+        } catch (\Exception $th) {
+            return redirect()->back()->With('error',$th->getMessage());
+        }
+    }
+
     // attestation d'inscription
 
     public function check_inscription_attestation(Request $request){
         $request->validate([
-            'matricule' => ['required','numeric'],
+            'matricule' => ['required','numeric','exists:etudiants,im'],
             'annee_universitaire'=>['required','numeric','exists:au,id_au']
         ]);
 
@@ -76,7 +101,7 @@ class Inscription_controller extends Controller
     public function check_inscription(Request $request){
         $request->validate([
             //pere
-            'matricule' => ['required','numeric']
+            'matricule' => ['required','numeric','exists:etudiants,im']
         ]);
 
         //vérifier que l'étudiant est inscrit à l'AU en cours
@@ -221,7 +246,7 @@ class Inscription_controller extends Controller
             'sexe'=> ['required', Rule::in(['m','f'])],
             'dtn' => ['required', 'date'],
             'ldn' => ['required', 'max:255'],
-            'est_officier'=>['required']
+            'est_officier'=>['required', Rule::in(['0','1'])]
         ]);
 
         // enregistrer ces informations dans la session

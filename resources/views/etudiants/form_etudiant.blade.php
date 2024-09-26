@@ -1,5 +1,5 @@
 @extends('app.app_layout')
-@section('title', 'Inscription - infos étudiant')
+@section('title', 'Mise à jour - infos étudiant')
 
 @section('content')
 <div class="pagetitle">
@@ -7,14 +7,14 @@
     <nav>
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route('accueil')}}">Accueil</a></li>
-        <li class="breadcrumb-item">Inscriptions</li>
+        <li class="breadcrumb-item">Etudiant</li>
         <li class="breadcrumb-item active">Informations sur l'étudiant</li>
       </ol>
     </nav>
 </div>
 
 @php
-    $new_etu = session('new_etu');
+    $etu = session('etu_modif');
 @endphp
 
 <section class="section">
@@ -24,7 +24,7 @@
             <div class="card">
               <div class="card-body">
                 <!-- Vertical Form -->
-                <form class="row g-3" action="form_etudiant" method="POST" >
+                <form class="row g-3" action="{{ route('form_etudiant_modif') }}" method="POST" >
                     @csrf
 
                   <div class="col-12">
@@ -35,7 +35,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         @enderror
-                    <input type="text" class="form-control" id="inputAddress" name="nom" value="{{ $new_etu->nom_candidat }}">
+                    <input type="text" class="form-control" id="inputAddress" name="nom" value="{{ $etu->nom }}">
                   </div>
 
                   <div class="col-12">
@@ -46,7 +46,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         @enderror
-                    <input type="text" class="form-control" id="inputAddress" name="prenoms" value="{{ $new_etu->prenom_candidat }}">
+                    <input type="text" class="form-control" id="inputAddress" name="prenoms" value="{{ $etu->prenoms }}">
                   </div>
 
                   <div class="col-12">
@@ -58,13 +58,13 @@
                         </div>
                     @enderror
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="sexe" id="gridRadios1" value="m" @if(old('sexe')==='m') checked @endif>
+                        <input class="form-check-input" type="radio" name="sexe" id="gridRadios1" value="m" @if($etu->sexe==='m') checked @endif>
                         <label class="form-check-label" for="gridRadios1">
                           Masculin
                         </label>
                     </div>
                       <div class="form-check">
-                        <input class="form-check-input" type="radio" name="sexe" id="gridRadios2" value="f" @if(old('sexe')==='f') checked @endif>
+                        <input class="form-check-input" type="radio" name="sexe" id="gridRadios2" value="f" @if($etu->sexe==='f') checked @endif>
                         <label class="form-check-label" for="gridRadios2">
                           Féminin
                         </label>
@@ -80,13 +80,13 @@
                         </div>
                     @enderror
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="est_officier" id="gridRadios1" value="1" >
+                        <input class="form-check-input" type="radio" name="est_officier" id="gridRadios1" value="1" @if($etu->est_officier === true) checked @endif >
                         <label class="form-check-label" for="gridRadios1">
                           Oui
                         </label>
                     </div>
                       <div class="form-check">
-                        <input class="form-check-input" type="radio" name="est_officier" id="gridRadios2" value="0" >
+                        <input class="form-check-input" type="radio" name="est_officier" id="gridRadios2" value="0" @if($etu->est_officier === false) checked @endif >
                         <label class="form-check-label" for="gridRadios2">
                           Non
                         </label>
@@ -101,7 +101,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         @enderror
-                    <input type="date" class="form-control" id="inputAddress" name="dtn" value={{ old('dtn') }}>
+                    <input type="date" class="form-control" id="inputAddress" name="dtn" value="{{ $etu->date_naissance }}">
                   </div>
 
                   <div class="col-12">
@@ -112,11 +112,11 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         @enderror
-                    <input type="text" class="form-control" id="inputAddress" name="ldn" value={{ old('ldn') }}>
+                    <input type="text" class="form-control" id="inputAddress" name="ldn" value="{{ $etu->lieu_naissance }}">
                   </div>
 
                   <div class="text-center">
-                    <button type="submit" class="btn btn-primary">Suivant</button>
+                    <button type="submit" class="w-100 btn btn-primary">Suivant</button>
                   </div>
                 </form><!-- Vertical Form -->
 

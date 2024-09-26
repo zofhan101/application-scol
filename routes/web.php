@@ -7,6 +7,8 @@ use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\AU\AUcontroller;
 use App\Http\Controllers\inscriptions\Inscription_import_controller;
 use App\Http\Controllers\inscriptions\Inscription_controller;
+use App\Http\Controllers\inscriptions\EtudiantController;
+use App\Http\Controllers\inscriptions\TransfertController;
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\AU\CheckOpenedAU;
 /*
@@ -21,6 +23,13 @@ use App\Http\Middleware\AU\CheckOpenedAU;
 */
 // route nécessitant authentification et au ouverte
 Route::middleware('auth',CheckOpenedAU::class)->group(function(){
+    //transfert d'étudiant
+    Route::get('transfert/transfert_form',[TransfertController::class,'transfert_etu_form'])->name('transfert_etu_form');
+
+
+    //annulation d'inscription
+    Route::post('inscription/annuler_inscription',[Inscription_controller::class,'annuler_inscription'])->name('annuler_inscription');
+    Route::get('inscription/annuler_inscription',function(){ return view('inscriptions/annuler_inscription'); })->name('annuler_inscription_form');
 
     // certificat de scolarité
     Route::post('inscription/plutot_attestation_inscription',[Inscription_controller::class,'plutot_attestation_inscription'])->name('plutot_attestation_inscription');
@@ -51,6 +60,14 @@ Route::middleware('auth',CheckOpenedAU::class)->group(function(){
 
 //routes nécessitant authentification
 Route::middleware('auth')->group(function(){
+    //Mise à jour des données étudiant
+    Route::post('etudiant/form_parents',[EtudiantController::class,'form_parents'])->name('form_parents_modif');
+    Route::post('etudiant/form_bacc',[EtudiantController::class,'form_bacc'])->name('form_bacc_modif');
+    Route::post('etudiant/form_identite',[EtudiantController::class,'form_identite'])->name('form_identite_modif');
+    Route::post('etudiant/form_etudiant',[EtudiantController::class,'form_etudiant'])->name('form_etudiant_modif');
+    Route::post('etudiant/search_matricule',[EtudiantController::class,'search_etudiant'])->name('maj_etu_search');
+    Route::get('etudiant/search_matricule',function(){ return view('etudiants/check_etudiant');})->name('maj_etu_search_form');
+
     //attestation d'inscription
     Route::post('inscription/check_inscription_attestation',[Inscription_controller::class,'check_inscription_attestation'])->name('check_inscription_attestation');
     Route::get('inscription/check_inscription_attestation',[Inscription_controller::class,'get_au_fermees'])->name('check_inscription_form_attestation');

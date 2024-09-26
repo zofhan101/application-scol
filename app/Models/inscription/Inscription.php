@@ -31,6 +31,14 @@ class Inscription extends Model
         'date_annulation' => 'date',
     ];
 
+    public static function annuler_inscription($inscription, $id_user): void{
+        $id_inscription = $inscription->id_inscription;
+        $inscription_elq = Inscription::find($id_inscription);
+        $inscription_elq->date_annulation = date('Y-m-d');
+        $inscription_elq->id_agent_annulation = $id_user;
+        $inscription_elq->save();
+    }
+
     public static function prend_certificat_scol(int $id_inscription): void {
         $inscription = Inscription::find($id_inscription);
         $inscription->date_certificat_scol = date('Y-m-d');
