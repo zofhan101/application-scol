@@ -37,16 +37,17 @@ class Etudiant extends Model
         'profession_mere',
         'tel_mere',
         'adresse_mere',
-        'etablissement_transfert',
-        'niveau_au_transfert',
-        'au_transfert',
+        'id_etablissement_transfert',
+        'id_niveau_transfert',
+        'id_au_transfert',
         'est_officier',
         'annee_bacc',
         'id_serie',
         'id_province',
         'id_nationalite',
         'id_parcours',
-        'id_agent'
+        'id_agent',
+        'email'
     ];
 
     protected $casts = [
@@ -54,8 +55,85 @@ class Etudiant extends Model
         'lieu_naissance'=> 'string'
     ];
 
+    public static function transfert($new_etu, $autre_inscription, $niveau_inscription){
+        $user = Auth::user();
+        $id_user = $user->id;
+        $au = AU::get_au_en_cours();
 
-    public static function check_inscription($etu){
+
+        DB::transaction(function () use($new_etu, $id_user,$au, $autre_inscription, $niveau_inscription){
+            //enregistrement de l'étudiant
+            $new_etu->id_agent = $id_user;
+
+            //echo $new_etu->id_niveau_transfert;
+
+            //var_dump($new_etu);
+            echo '<br>';
+            echo 'new_etu à enregistrer id_etablissement_transfert: '.$new_etu->id_etablissement_transfert;
+            echo '<br>';
+            echo 'new_etu à enregistrer email: '.$new_etu->email;
+
+
+            $etu = Etudiant::create([
+                'im'=>$new_etu->im,
+                'nom'=>$new_etu->nom,
+                'prenoms'=>$new_etu->prenoms,
+                'sexe'=>$new_etu->sexe,
+                'date_premiere_inscription'=>$new_etu->date_premiere_inscription,
+                'date_naissance'=>$new_etu->date_naissance,
+                'lieu_naissance'=>$new_etu->lieu_naissance,
+                'type_piece_identite'=>$new_etu->type_piece_identite,
+                'num_piece_identite'=>$new_etu->num_piece_identite,
+                'date_delivrance'=>$new_etu->date_delivrance,
+                'lieu_delivrance'=>$new_etu->lieu_delivrance,
+                'adresse'=>$new_etu->adresse,
+                'telephone'=>$new_etu->telephone,
+                'pere'=>$new_etu->pere,
+                'profession_pere'=>$new_etu->profession_pere,
+                'tel_pere'=>$new_etu->tel_pere,
+                'adresse_pere'=>$new_etu->adresse_pere,
+                'mere'=>$new_etu->mere,
+                'profession_mere'=>$new_etu->profession_mere,
+                'tel_mere'=>$new_etu->tel_mere,
+                'adresse_mere'=>$new_etu->adresse_mere,
+                'est_officier'=>$new_etu->est_officier,
+                'annee_bacc'=>$new_etu->annee_bacc,
+                'id_serie'=>$new_etu->id_serie,
+                'id_province'=>$new_etu->id_province,
+                'id_nationalite'=>$new_etu->id_nationalite,
+                'id_parcours'=>$new_etu->id_parcours,
+                'id_agent'=>$new_etu->id_agent,
+                'id_etablissement_transfert'=>$new_etu->id_etablissement_transfert,
+                'id_au_transfert'=>$new_etu->id_au_transfert,
+                'id_niveau_transfert'=>$new_etu->id_niveau_transfert,
+                'email'=>$new_etu->email
+
+            ]);
+
+            //var_dump($etu);
+            echo '<br>';
+            echo 'etu enregistré id_etablissement_transfert: '.$etu->id_etablissement_transfert;
+            echo '<br>';
+            echo 'etu enregistré email: '.$etu->email;
+
+
+            // enregistremement des autres inscriptions
+            if($autre_inscription->etablissement !== null){
+                $autre_inscription->id_au = $au->id_au;
+                $autre_inscription->id_etudiants = $etu->id_etudiants;
+                $autre_inscription->save();
+            }
+
+            //enregistrement de l'inscription
+            Inscription::create([
+                'date_inscription'=>date('Y-m-d'),
+                'id_agent_inscription'=>$id_user,
+                'id_etudiant'=>$etu->id_etudiants,
+                'id_au'=>$au->id_au,
+                'id_niveau'=>$niveau_inscription->id_niveau
+            ]);
+
+        });
 
     }
 

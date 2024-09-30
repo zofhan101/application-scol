@@ -24,6 +24,18 @@ use App\Http\Middleware\AU\CheckOpenedAU;
 // route nécessitant authentification et au ouverte
 Route::middleware('auth',CheckOpenedAU::class)->group(function(){
     //transfert d'étudiant
+    Route::post('transfert/autres_inscriptions',[TransfertController::class,'inscription'])->name('autres_inscriptions_transfert');
+    Route::get('transfert/autres_inscriptions',function(){ return view('transfert/form_autres_inscriptions'); })->name('autres_inscriptions_f');
+    Route::post('transfert/form_parents',[TransfertController::class,'form_parents'])->name('form_parents_transfert');
+    Route::get('transfert/form_parents',function(){ return view('transfert/form_parents'); })->name('form_parents_f');
+    Route::post('transfert/form_parents',[TransfertController::class,'form_parents'])->name('form_parents_transfert');
+    Route::post('transfert/form_bacc',[TransfertController::class,'form_bacc'])->name('form_bacc_transfert');
+    Route::get('transfert/form_bacc',[TransfertController::class,'form_bacc_f'])->name('form_bacc_f');
+    Route::post('transfert/form_identite',[TransfertController::class,'form_identite'])->name('form_identite_transfert');
+    Route::get('transfert/form_identite',[TransfertController::class,'form_identite_f'])->name('form_identite_f');
+    Route::post('transfert/form_etudiant',[TransfertController::class,'form_etudiant'])->name('form_etudiant_transfert');
+    Route::get('transfert/form_etudiant',function(){ return view('transfert/form_etudiant'); })->name('form_etudiant_f');
+    Route::post('transfert/transfert_form',[TransfertController::class,'transfert_etu'])->name('transfert_etu');
     Route::get('transfert/transfert_form',[TransfertController::class,'transfert_etu_form'])->name('transfert_etu_form');
 
 

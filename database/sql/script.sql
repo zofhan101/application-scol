@@ -34,3 +34,10 @@ join niveau as n on i.id_niveau = n.id_niveau
 join au on i.id_au = au.id_au
 join parcours as p on e.id_parcours =  p.id_parcours
 join mention as m on p.id_mention = m.id_mention;
+
+--26-09-24 20:02
+create or replace view v_parcours_niveau as
+select p.id_parcours, p.nom_parcours, n.id_niveau, n.nom_niveau, n.rang
+from parcours as p
+join parcours_niveau as pn on pn.id_parcours = p.id_parcours
+join niveau as n on pn.id_niveau = n.id_niveau;
