@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AU\AU;
+use  Illuminate\Support\Collection;
+use Exception;
 
 
 class Etudiant extends Model
@@ -54,6 +56,25 @@ class Etudiant extends Model
         'est_officier' => 'boolean',
         'lieu_naissance'=> 'string'
     ];
+
+    public static function get_liste($id_au, $id_parcours, $id_niveau){
+        $liste = DB::select('
+            select im, nom, prenoms
+            from v_inscrits
+            where id_au = ?
+            and id_parcours = ?
+            and id_niveau = ?
+            order by im asc
+        ', [$id_au, $id_parcours, $id_niveau]);
+        if(empty($liste))
+            throw new Exception('Aucun inscrit pour l\'A.U., parcours et niveau sélectionnés');
+
+        $res = array();
+        foreach($liste as $element){
+            $res[] = (array)$element;
+        }
+        return collect($res);
+    }
 
     public static function transfert($new_etu, $autre_inscription, $niveau_inscription){
         $user = Auth::user();

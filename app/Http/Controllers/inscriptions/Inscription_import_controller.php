@@ -32,6 +32,7 @@ class Inscription_import_controller extends Controller
 
         $sel = new Selectionnes();
         $doublons = [];
+        
         // import et écriture dans la base de données
         fastexcel()->import($request->file('fichier_excel'), function($ligne) use (&$doublons,$id_user,$id_au, $id_parcours,&$sel){
 

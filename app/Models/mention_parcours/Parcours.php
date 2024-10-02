@@ -9,4 +9,5 @@ class Parcours extends Model
 {
     use HasFactory;
     protected $table = "parcours";
+    protected $primaryKey = "id_parcours";
 }

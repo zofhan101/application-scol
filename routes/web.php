@@ -21,7 +21,7 @@ use App\Http\Middleware\AU\CheckOpenedAU;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-// route nécessitant authentification et au ouverte
+// route nécessitant authentification et A.U. ouverte
 Route::middleware('auth',CheckOpenedAU::class)->group(function(){
     //transfert d'étudiant
     Route::post('transfert/autres_inscriptions',[TransfertController::class,'inscription'])->name('autres_inscriptions_transfert');
@@ -72,6 +72,10 @@ Route::middleware('auth',CheckOpenedAU::class)->group(function(){
 
 //routes nécessitant authentification
 Route::middleware('auth')->group(function(){
+    //liste des inscrits
+    Route::post('inscription/liste_inscrits',[Inscription_controller::class,'get_liste_inscrits'])->name('liste_inscrits');
+    Route::get('inscription/liste_inscrits',[Inscription_controller::class,'form_au_niveau_parcours'])->name('liste_inscrits_form');
+
     //Mise à jour des données étudiant
     Route::post('etudiant/form_parents',[EtudiantController::class,'form_parents'])->name('form_parents_modif');
     Route::post('etudiant/form_bacc',[EtudiantController::class,'form_bacc'])->name('form_bacc_modif');
@@ -109,6 +113,8 @@ Route::middleware('auth', EnsureIsAdmin::class)->group(function () {
     Route::get('listeUsers', [UserController::class, 'getAllUsers'])->name('listeUsers');
 });
 
+
+Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_parcours'])->name('get_niveaux_parcours');
 
 Route::post('authAdmin',[AdminAuthController::class,'login'])->name('authAdmin');
 

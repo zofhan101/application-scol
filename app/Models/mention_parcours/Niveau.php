@@ -13,6 +13,13 @@ class Niveau extends Model
     protected $table = "niveau";
     protected $primaryKey = "id_niveau";
 
+    public static function get_niveaux_parcours($id_parcours){
+        $niveaux = DB::select('
+            select * from v_parcours_niveau where id_parcours = ?
+        ',[$id_parcours]);
+        return $niveaux;
+    }
+
     public static function check_transfert_autorise($parcours_niveau){
         //vérifier dans la table transferts_autorises ci le couple id_niveau, id_parcours est existant
         $autorisations = DB::select('select * from transferts_autorises where id_parcours = ? and id_niveau = ?',[$parcours_niveau->id_parcours, $parcours_niveau->id_niveau]);

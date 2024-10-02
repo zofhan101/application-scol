@@ -17,13 +17,71 @@ use App\Models\inscription\Nationalite;
 use App\Models\inscription\Autre_inscription;
 use App\Models\inscription\Inscription;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\mention_parcours\Parcours;
+use App\Models\mention_parcours\Niveau;
+use Rap2hpoutre\FastExcel\FastExcel;
 use PDF;
 
 
 
 class Inscription_controller extends Controller
 {
+    //liste des inscrits
+    public function get_liste_inscrits(Request $request){
+        $request->validate([
+            'parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+            'annee_universitaire' => ['required','numeric', 'exists:au,id_au']
+        ]);
+        $id_au = $request->input('annee_universitaire');
+        $id_parcours = $request->input('parcours');
+        $id_niveau = $request->input('niveau');
+
+        $au = AU::find($id_au);
+        $parcours = Parcours::find($id_parcours);
+        $niveau = Niveau::find($id_niveau);
+
+        //récupération des données étudiant correspondants
+        try {
+            $liste = Etudiant::get_liste($id_au, $id_parcours, $id_niveau);
+            //var_dump($liste);
+            $fe = new FastExcel($liste);
+
+            return $fe->download("inscrits_".$niveau->nom_niveau."_".$parcours->nom_parcours."_".$au->intitule.".xslx", function($element){
+                return[
+                'Matricule'=>$element['im'],
+                'Nom' => $element['nom'],
+                'Prénoms' =>$element['prenoms']
+                ];
+            });
+
+        } catch (\Exception $ex) {
+            return redirect()->back()->With('error', $ex->getMessage());
+        }
+
+
+    }
+
+    public function get_niveaux_parcours(Request $request){
+        $request->validate([
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+        ]);
+
+        $id_parcours = $request->input('id_parcours');
+        $niveaux = Niveau::get_niveaux_parcours($id_parcours);
+        return response()->json($niveaux);
+    }
+
+
+    public function form_au_niveau_parcours(){
+        $aus = AU::all();
+        $parcours = Parcours::all();
+
+        return view('inscriptions/liste_inscrits_form',[
+                                        'aus'=>$aus,
+                                        'parcours'=>$parcours
+        ]);
+    }
 
 
     //annulation d'inscription

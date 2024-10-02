@@ -287,6 +287,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('liste_inscrits_form') }}">
+              <i class="bi bi-circle"></i><span>Liste des inscrits</span>
+            </a>
+          </li>
+
 
         </ul>
       </li><!-- End Components Nav -->
