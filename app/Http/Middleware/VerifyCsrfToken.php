@@ -13,6 +13,13 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'authAdmin',
-        'niveaux_par_parcours'
+        'niveaux_par_parcours',
+        'ue/create_ue',
+        'ue/liste_ue',
+        'ue/liste_ec',
+        'ue/create_ec',
+        'ue/ajouter_ue_ec',
+        'ue/liste_ue_ec',
+        'ue/supprimer_ue_ec'
     ];
 }

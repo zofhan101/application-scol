@@ -295,6 +295,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('create_exam_form') }}">
+              <i class="bi bi-circle"></i><span>Définition examens de l'A.U.</span>
+            </a>
+          </li>
+
         </ul>
       </li>
 
@@ -304,7 +310,7 @@
         </a>
         <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="{{ route('au_form') }}">
+            <a href="{{ route('crud_ue') }}">
               <i class="bi bi-circle"></i><span>Définition des U.E. par année</span>
             </a>
           </li>

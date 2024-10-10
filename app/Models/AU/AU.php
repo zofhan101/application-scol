@@ -4,6 +4,8 @@ namespace App\Models\AU;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+
 use Exception;
 
 class AU extends Model
@@ -16,6 +18,20 @@ class AU extends Model
     protected $fillable = [
        'intitule'
     ];
+
+    public static function get_liste_examens(){
+        $au = AU::get_au_en_cours();
+        $examens = DB::select('
+            select epa.id_examen_par_au, se.id_session_examen, se.nom_session_examen
+            from examen_par_au as epa
+            join session_examen as se on epa.id_session_examen = se.id_session_examen
+            where epa.id_au = ?
+        ',[$au->id_au]);
+
+        if(empty($examens))
+            throw new Exception('aucune session d\'examen n\'a encore été selectionnée pour l\'année en cours');
+        return $examens;
+    }
 
     public static function get_au_fermees(){
         $au_fermees = AU::where('cloture','!=', null)->get();

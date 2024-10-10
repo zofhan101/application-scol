@@ -33,7 +33,7 @@ class parcours_niveau_seeder extends Seeder
             ['id_parcours'=>3, 'id_niveau'=>3],
             ['id_parcours'=>3, 'id_niveau'=>4],
             ['id_parcours'=>3, 'id_niveau'=>5],
-            ['id_parcours'=>2, 'id_niveau'=>6],
+            ['id_parcours'=>3, 'id_niveau'=>6],
 
             ['id_parcours'=>4, 'id_niveau'=>1],
             ['id_parcours'=>4, 'id_niveau'=>2],

@@ -11,6 +11,7 @@ use App\Http\Controllers\inscriptions\EtudiantController;
 use App\Http\Controllers\inscriptions\TransfertController;
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\AU\CheckOpenedAU;
+use App\Http\Controllers\UE\UEController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -59,6 +60,23 @@ Route::middleware('auth')->group(function(){
 
         // ROUTES NECESSITANT AUTHENTIFICATION ET ADMIN
         Route::middleware(EnsureIsAdmin::class)->group(function () {
+            // Nécessitant AU ouverte
+            Route::middleware(CheckOpenedAU::class)->group(function () {
+                //évaluations
+                Route::post('au/create_exam',[AUcontroller::class,'create_exam'])->name('create_exam');
+                Route::get('au/create_exam',[AUcontroller::class,'create_exam_form'])->name('create_exam_form');
+
+                //unites d'enseignements
+                Route::post('ue/supprimer_ue_ec',[UEController::class,'supprimer_ue_ec'])->name('supprimer_ue_ec');
+                Route::post('ue/ajouter_ue_ec',[UEController::class,'ajouter_ue_ec'])->name('ajouter_ue_ec');
+                Route::post('ue/liste_ue_ec',[UEController::class,'liste_ue_ec'])->name('liste_ue_ec');
+                Route::post('ue/liste_ec',[UEController::class,'liste_ec'])->name('liste_ec');
+                Route::post('ue/create_ec',[UEController::class,'create_ec'])->name('create_ec');
+                Route::post('ue/liste_ue',[UEController::class,'liste_ue'])->name('liste_ue');
+                Route::post('ue/create_ue',[UEController::class,'create_ue'])->name('create_ue');
+                Route::get('ue/crud_ue', [UEController::class, 'ue_form'])->name('crud_ue');
+            });
+
             // années universitaires
             Route::get('ouvrir_au',[AUcontroller::class,'auForm'])->name('au_form');
             Route::post('ouvrir_au',[AUcontroller::class,'ouvrir_au'])->name('ouvrir_au');

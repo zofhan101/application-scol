@@ -16,6 +16,23 @@ class AUcontroller extends Controller
         $this->au_service = $au_service;
     }
 
+    public function create_exam(Request $request){
+        $request->validate([
+            'sessions_examen' => ['required'],
+        ]);
+        $sessions = $request->input('sessions_examen');
+        $au = AU::get_au_en_cours();
+        foreach($sessions as $session){
+            $this->au_service->save_exam($session, $au->id_au);
+        }
+        return redirect()->back()->With('success', 'enregistrement des examens effectué');
+    }
+
+    public function create_exam_form(){
+        $examens = $this->au_service->get_liste_examens();
+        return view('AU/create_exam',['examens'=>$examens]);
+    }
+
     public function cloture_au(Request $request){
         AU::clore_au($request->input('id_au'));
         return redirect(route('au_en_cours'));

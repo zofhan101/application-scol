@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('v_parcours_niveau');
+        DB::statement(' drop view if exists v_parcours_niveau');
     }
 };
