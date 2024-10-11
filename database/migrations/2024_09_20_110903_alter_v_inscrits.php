@@ -13,7 +13,7 @@ return new class extends Migration
     {
         DB::statement('
             create or replace view  v_inscrits as
-                select e.*,i.id_inscription, i.date_inscription, i.date_certificat_scol, i.date_annulation, i.id_niveau, i.id_au,n.nom_niveau,au.intitule, p.nom_parcours, m.id_mention, m.nom_mention
+                select e.*,i.id_inscription, i.date_inscription, i.date_annulation, i.id_niveau, i.id_au,n.nom_niveau,au.intitule, p.nom_parcours, m.id_mention, m.nom_mention, i.date_certificat_scol
                 from etudiants as e
                 join inscription as i on i.id_etudiant = e.id_etudiants
                 join niveau as n on i.id_niveau = n.id_niveau

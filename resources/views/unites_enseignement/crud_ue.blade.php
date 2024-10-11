@@ -1,4 +1,4 @@
-@extends('app.admin_app_layout')
+@extends('app.app_layout')
 @section('title', 'Définition des unités d\'enseigenement')
 
 @section('content')

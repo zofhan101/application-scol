@@ -253,89 +253,31 @@
   </header><!-- End Header -->
 
   <!-- ======= Sidebar ======= -->
-  <aside id="sidebar" class="sidebar">
+  @php
+      $user = Auth::user();
+      $rang_role = $user->role->rang_role;
+  @endphp
 
-    <ul class="sidebar-nav" id="sidebar-nav">
+  {{-- menu chefs de division --}}
+  @if ($rang_role==0)
+    @include('app/menu/menu_chef_div')
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Inscriptions</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="{{ route('import_selectionnes_page') }}">
-              <i class="bi bi-circle"></i><span>Import liste sélectionnés</span>
-            </a>
-          </li>
+  {{-- menu chef scol --}}
+  @elseif($rang_role==10 || $rang_role==20)
+    @include('app/menu/menu_adjoint')
 
-          <li>
-            <a href="{{ route('check_admission') }}">
-              <i class="bi bi-circle"></i><span>Inscription en PACES</span>
-            </a>
-          </li>
+  @elseif($rang_role == 30)
+    @include('app/menu/menu_chef_scol')
 
+  @elseif($rang_role >=40 && $rang_role <70 )
+    @include('app/menu/menu_doyen')
 
-          <li>
-            <a href="{{ route('annuler_inscription_form') }}">
-              <i class="bi bi-circle"></i><span>Annulation d'inscription</span>
-            </a>
-          </li>
+  @elseif($rang_role==70)
+    @include("app/menu/menu_admin")
 
-          <li>
-            <a href="{{ route('transfert_etu_form') }}">
-              <i class="bi bi-circle"></i><span>Inscription d'un étudiant transféré</span>
-            </a>
-          </li>
+  @elseif($rang )
+  @endif
 
-          <li>
-            <a href="{{ route('liste_inscrits_form') }}">
-              <i class="bi bi-circle"></i><span>Liste des inscrits</span>
-            </a>
-          </li>
-
-
-        </ul>
-      </li><!-- End Components Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-people-fill"></i><span>Documents sur l'inscription</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-                <a href="{{ route('check_inscription_form') }}">
-                  <i class="bi bi-circle"></i><span>Cerificat de scolarité</span>
-                </a>
-              </li>
-
-              <li>
-                <a href="{{ route('check_inscription_form_attestation') }}">
-                  <i class="bi bi-circle"></i><span>Attestation d'inscription</span>
-                </a>
-              </li>
-
-        </ul>
-      </li><!-- End Components Nav -->
-
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-people-fill"></i><span>Etudiants</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="{{ route('maj_etu_search_form') }}">
-              <i class="bi bi-circle"></i><span>Mise à jour des informations</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Components Nav -->
-
-
-
-    </ul>
-
-  </aside><!-- End Sidebar-->
 
   <main id="main" class="main">
     @yield('content')

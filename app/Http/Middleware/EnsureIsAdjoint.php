@@ -5,9 +5,8 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Auth;
 
-class EnsureIsAdmin
+class EnsureIsAdjoint
 {
     /**
      * Handle an incoming request.
@@ -16,7 +15,7 @@ class EnsureIsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(Auth::user()->role->rang_role < 70){
+        if(Auth::user()->role->rang_role < 20){
             return $request->expectsJson() ? response()->json(['message'=>'Accès refusé']) : redirect(route('login'));
         }
         return $next($request);

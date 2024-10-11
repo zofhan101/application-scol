@@ -1,4 +1,4 @@
-@extends('app.admin_app_layout')
+@extends('app.app_layout')
 @section('title', 'A.U. en cours facmed-scol')
 
 @section('content')
