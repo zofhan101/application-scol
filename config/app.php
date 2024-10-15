@@ -163,7 +163,7 @@ return [
         /*
          * Application Service Providers...
          */
-        Barryvdh\Snappy\ServiceProvider::class,
+        Milon\Barcode\BarcodeServiceProvider::class,
         Barryvdh\DomPDF\ServiceProvider::class,
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
@@ -185,8 +185,8 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
-        "PDF" => Barryvdh\DomPDF\Facade::class
-        //"PDF"=>Barryvdh\Snappy\Facades\SnappyPdf::class
+        "PDF" => Barryvdh\DomPDF\Facade::class,
+        'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
     ])->toArray(),
 
 ];

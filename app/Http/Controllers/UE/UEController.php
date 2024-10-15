@@ -10,10 +10,36 @@ use App\Models\UE\Unite_enseignement;
 use App\Models\UE\Element_constitutif;
 use Illuminate\Http\Response;
 use App\Models\AU\AU;
+use PDF;
 
 
 class UEController extends Controller
 {
+
+    public function down_barcode(Request $request){
+        $liste_code_barre = session('liste_code_barre');
+        $id_ue_ec = $request->input('id_ue_ec');
+        $ue_ec = $liste_code_barre[$id_ue_ec];
+        $en_plus = $liste_code_barre['en_plus'];
+        //var_dump($ue_ec);
+        $pdf = PDF::loadview('copies_examen/codes_barres', ['ue_ec'=>$ue_ec, 'en_plus'=>$en_plus]);
+        return $pdf->stream();
+    }
+
+    public function get_liste_ue_ec_code_barre(){
+        $au_courant = AU::get_au_en_cours();
+        try {
+            $liste_ue_ec = Unite_enseignement::get_liste_ue_ec_code_barre($au_courant->id_au);
+
+            session(['liste_code_barre'=> $liste_ue_ec[1]]);
+
+            return view('copies_examen/liste_ue_ec', ['liste_ue_ec'=>$liste_ue_ec[0]]);
+        } catch (\Throwable $th) {
+            return view('copies_examen/liste_ue_ec', ['liste_ue_ec'=>[]]);
+        }
+
+    }
+
     public function supprimer_ue_ec(Request $request){
         $data = $request->all();
 

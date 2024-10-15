@@ -129,6 +129,10 @@ Route::middleware('auth')->group(function(){
         Route::middleware(EnsureIsAdmin::class)->group(function () {
             // Nécessitant AU ouverte
             Route::middleware(CheckOpenedAU::class)->group(function () {
+                //codes barres des feuilles de copie
+                Route::post('ue/down_barcode',[UEController::class,'down_barcode'])->name('down_barcode');
+                Route::get('ue/codes_barres',[UEController::class,'get_liste_ue_ec_code_barre'])->name('codes_barres');
+
                 //évaluations
                 Route::post('au/create_exam',[AUcontroller::class,'create_exam'])->name('create_exam');
                 Route::get('au/create_exam',[AUcontroller::class,'create_exam_form'])->name('create_exam_form');

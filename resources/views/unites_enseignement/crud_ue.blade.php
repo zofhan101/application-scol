@@ -12,7 +12,7 @@
     <form>
         <select id="eval" name="eval" id="">
             @foreach ($exams as $exam)
-                <option value="{{ $exam->id_examen_par_au }}-{{ $exam->nom_session_examen }}">{{ $exam->nom_session_examen }}</option>
+                <option value="{{ $exam->id_examen_par_au }}##**##{{ $exam->nom_session_examen }}">{{ $exam->nom_session_examen }}</option>
             @endforeach
         </select>
     </form>
@@ -87,7 +87,7 @@
                             <ul class="list-group list-group-flush" id="liste_ue">
                                 @foreach($UE as $ue)
                                     <li class="list-group-item">
-                                      <input class="form-check-input me-1" type="radio" value="{{ $ue->nom_unite_enseignement }}-{{ $ue->id_unite_enseignement }}" name="ue">
+                                      <input class="form-check-input me-1" type="radio" value="{{ $ue->nom_unite_enseignement }}##**##{{ $ue->id_unite_enseignement }}" name="ue">
                                       {{ $ue->nom_unite_enseignement }}
                                     </li>
                                 @endforeach
@@ -127,7 +127,7 @@
                             <ul class="list-group list-group-flush" id="liste_ec">
                                 @foreach($EC as $ec)
                                     <li class="list-group-item">
-                                      <input class="form-check-input me-1" type="checkbox" value="{{ $ec->nom_element_constitutif }}-{{ $ec->id_element_constitutif }}" name="ec">
+                                      <input class="form-check-input me-1" type="checkbox" value="{{ $ec->nom_element_constitutif }}##**##{{ $ec->id_element_constitutif }}" name="ec">
                                       {{ $ec->nom_element_constitutif }}
                                     </li>
                                 @endforeach
@@ -225,14 +225,14 @@
     //evaluation comprenant l'ue selectionnée
     var eval_selectionne;
     var eval_select = document.getElementById('eval');
-    table_eval_select = eval_select.value.split('-');
+    table_eval_select = eval_select.value.split('##**##');
     eval_selectionne = {
         'id_examen_par_au': table_eval_select[0],
         'nom_session_examen': table_eval_select[1]
     };
     //console.log(eval_selectionne);
     eval_select.addEventListener('change', function(){
-        let table_value = this.value.split('-');
+        let table_value = this.value.split('##**##');
         eval_selectionne={
             'id_examen_par_au': table_value[0],
             'nom_session_examen': table_value[1]
@@ -245,9 +245,9 @@
     document.getElementById('elements_constitutifs').addEventListener('change', function(event){
         let input = event.target;
         let input_value = input.value;
-        let table_ec_selectionne = input_value.split("-");
+        let table_ec_selectionne = input_value.split("##**##");
         ec_selectionnes.push({'id_ec': table_ec_selectionne[1], 'nom_ec':table_ec_selectionne[0]});
-        //console.log(ec_selectionnes);
+        console.log("EC selectionnes: ",ec_selectionnes);
     });
 
     //U.E. sélectionné
@@ -255,12 +255,12 @@
     document.getElementById('unites_enseignement').addEventListener('change', function(event){
         let input = event.target;
         let input_value = input.value;
-        let table_ue_selectionne = input_value.split("-");
+        let table_ue_selectionne = input_value.split("##**##");
         ue_selectionne = {
             'id_ue':table_ue_selectionne[1],
             'nom_ue': table_ue_selectionne[0],
         };
-        //onsole.log(ue_selectionne);
+        console.log("UE sélectionné: ",ue_selectionne);
     });
 
 
@@ -649,10 +649,7 @@
             let text;
             for(let i=0; i<ues.length; i++){
                 ue = ues[i];
-                /*<li class="list-group-item">
-                    <input class="form-check-input me-1" type="radio" value="{{ $ue->nom_unite_enseignement }}-{{ $ue->id_unite_enseignement }}" name="ue">
-                    {{ $ue->nom_unite_enseignement }}
-                </li>*/
+
 
                 ue_element=document.createElement('li');
                 ue_element.className = "list-group-item";

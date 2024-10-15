@@ -60,6 +60,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('codes_barres') }}">
+              <i class="bi bi-circle"></i><span>Codes-barres pour les copies d'examen</span>
+            </a>
+          </li>
+
         </ul>
       </li>
 
