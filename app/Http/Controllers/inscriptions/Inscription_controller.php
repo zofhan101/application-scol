@@ -172,7 +172,7 @@ class Inscription_controller extends Controller
 
             if($inscription->date_annulation === null && $inscription->date_certificat_scol === null){
                 //return view('inscriptions/certificat_scolarite', ['inscription'=>$inscription]);
-                $pdf = Pdf::loadView('inscriptions/certificat_scolarite2', ['inscription'=>$inscription]);
+                $pdf = Pdf::loadView('inscriptions/certificat_scolarite', ['inscription'=>$inscription]);
                 $pdf->setOption('margin-top', '0');
                 Inscription::prend_certificat_scol($inscription->id_inscription);
                 return $pdf->download('certificat_scolarite_'.$inscription->im.'.pdf');
