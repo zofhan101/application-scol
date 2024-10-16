@@ -11,9 +11,11 @@ use App\Http\Controllers\inscriptions\EtudiantController;
 use App\Http\Controllers\inscriptions\TransfertController;
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\EnsureIsChefDiv;
+use App\Http\Middleware\EnsureIsSP;
 use App\Http\Middleware\EnsureIsChefDivScol;
 use App\Http\Middleware\AU\CheckOpenedAU;
 use App\Http\Controllers\UE\UEController;
+use App\Http\Controllers\notes\NoteController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -123,6 +125,11 @@ Route::middleware('auth')->group(function(){
             });
 
 
+        });
+
+        //ACCES A PARTIR DE SECRETAIRE PRINCIPAL
+        Route::middleware(EnsureIsSP::class)->group(function () {
+            Route::get('notes/ouverture_verrouillage_saisie',[NoteController::class,'ouverture_verrouillage_saisie'])->name('ouverture_verrouillage_saisie');
         });
 
         // ACCES ADMIN AUTHENTIFICATION ET ADMIN

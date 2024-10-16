@@ -11,21 +11,14 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Inscriptions</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-book-half"></i><span>Saisie des notes</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="{{ route('check_admission') }}">
-              <i class="bi bi-circle"></i><span>Inscription en PACES</span>
+            <a href="{{ route('ouverture_verrouillage_saisie') }}">
+              <i class="bi bi-circle"></i><span>Ouverture et verrouillage</span>
             </a>
           </li>
-
-          <li>
-            <a href="{{ route('transfert_etu_form') }}">
-              <i class="bi bi-circle"></i><span>Inscription d'un étudiant transféré</span>
-            </a>
-          </li>
-
         </ul>
       </li><!-- End Components Nav -->
 
