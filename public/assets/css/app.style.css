@@ -38,6 +38,87 @@ h6 {
   font-family: "Nunito", sans-serif;
 }
 
+/*-------------------------------------------------------------
+# CRUD UE
+---------------------------------------------------------------*/
+/*Admin crud ue*/
+
+.limit-height{
+    max-height: 30vh;
+    overflow-y: scroll;
+}
+
+.ue_selected{
+    max-height: 56vh;
+    overflow-y: scroll;
+}
+
+#crud_ue_section{
+    position:relative;
+}
+
+#eval{
+    border: none;
+    width:80px;
+    height:80px;
+    position: absolute;
+    top: 50%;
+    right: 29%;
+
+    background-color: #EB2A5C;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1;
+}
+
+
+#coef{
+    border: none;
+    width:80px;
+    height:80px;
+    position: absolute;
+    top: 65%;
+    right: 29%;
+
+    background-color: #EB2A5C;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1;
+}
+
+#coef > input{
+    background-color: #EB2A5C;
+    border:0;
+    color: white;
+    max-width: 100%;
+}
+
+#ajout_btn{
+    border: none;
+    width:80px;
+    height:80px;
+    position: absolute;
+    top: 80%;
+    right: 29%;
+
+    background-color: #EB2A5C;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1;
+}
+
+
+
+
+
+
+
 /*--------------------------------------------------------------
 # Main
 --------------------------------------------------------------*/
@@ -57,19 +138,22 @@ h6 {
 # Page Title
 --------------------------------------------------------------*/
 .pagetitle {
-  margin-bottom: 10px;
+  margin-bottom: 30px;
 }
 
 .pagetitle h1 {
   font-size: 24px;
-  margin-bottom: 0;
+  margin-bottom: 30px;
   font-weight: 600;
   color: #012970;
 }
 
+
 /*--------------------------------------------------------------
 # Back to top button
 --------------------------------------------------------------*/
+
+
 .back-to-top {
   position: fixed;
   visibility: hidden;

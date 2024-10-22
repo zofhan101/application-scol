@@ -15,9 +15,9 @@ class EnsureIsAdmin
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {   
-        if(Auth::user()->role->nom_role !== 'admin'){
-            return redirect(route('login'));
+    {
+        if(Auth::user()->role->rang_role < 70){
+            return $request->expectsJson() ? response()->json(['message'=>'Accès refusé']) : redirect(route('login'));
         }
         return $next($request);
     }

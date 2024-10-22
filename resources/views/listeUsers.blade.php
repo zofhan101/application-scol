@@ -1,4 +1,4 @@
-@extends('app.admin_app_layout')
+@extends('app.app_layout')
 @section('title', 'Liste des utilisateurs')
 
 @section('content')
