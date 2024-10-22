@@ -14,6 +14,7 @@ use App\Http\Middleware\EnsureIsChefDiv;
 use App\Http\Middleware\EnsureIsSP;
 use App\Http\Middleware\EnsureIsChefDivScol;
 use App\Http\Middleware\AU\CheckOpenedAU;
+use App\Http\Middleware\notes\CheckOuvertureSaisieNote;
 use App\Http\Controllers\UE\UEController;
 use App\Http\Controllers\notes\NoteController;
 /*
@@ -43,6 +44,13 @@ Route::middleware('auth')->group(function(){
     Route::get('accueil',function(){
         return view('app/welcome');
     })->name('accueil');
+
+        //saisie des notes d'examen
+        Route::middleware(CheckOuvertureSaisieNote::class)->group(function () {
+            Route::post('notes/enregistrer_note',[NoteController::class,'enregistrer_note'])->name('enregistrer_note');
+            Route::get('notes/interface_saisie_notes',function(){ return view('notes/interface_saisie_notes');})->name('interface_saisie_notes');
+
+        });
 
         //ACCES A PARTIR DE CHEF DE DIVISION
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
@@ -129,7 +137,12 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE SECRETAIRE PRINCIPAL
         Route::middleware(EnsureIsSP::class)->group(function () {
-            Route::get('notes/ouverture_verrouillage_saisie',[NoteController::class,'ouverture_verrouillage_saisie'])->name('ouverture_verrouillage_saisie');
+            //saisie des notes d'examen
+            Route::post('notes/ouvrir_saisie_note',[NoteController::class,'ouvrir_saisie_note'])->name('ouvrir_saisie_note');
+            Route::get('notes/controle_saisie_note',[NoteController::class,'controle_saisie_note'])->name('controle_saisie_note');
+            Route::post('notes/get_operation_par_examen',[NoteController::class,'get_operation_par_examen'])->name('get_operation_par_examen');
+
+
         });
 
         // ACCES ADMIN AUTHENTIFICATION ET ADMIN

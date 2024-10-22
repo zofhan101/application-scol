@@ -91,3 +91,10 @@ select l.*, n.nbr_inscrits
 from v_liste_ue_ec_avec_mentions as l
 join v_nbr_etu_par_au_parcours_niveau as n on l.id_parcours = n.id_parcours and l.id_niveau = n.id_niveau and l.id_au = n.id_au;
 
+--19-10-24 10:33
+-- operations (ouverture saisie notes, résulats, etc) sur examen par au
+create or replace view v_operation_par_examen_par_au as
+select o.*, e.id_session_examen, e.id_au
+from operation_par_examen as o
+join examen_par_au as e on o.id_examen_par_au = e.id_examen_par_au;
+
