@@ -34,7 +34,21 @@
             </a>
           </li>
         </ul>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#resultats_examen" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-people-fill"></i><span>Examens</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="resultats_examen" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('interface_saisie_notes') }}">
+              <i class="bi bi-circle"></i><span>Interface de saisie des notes</span>
+            </a>
+          </li>
+        </ul>
       </li><!-- End Components Nav -->
+
 
 
 

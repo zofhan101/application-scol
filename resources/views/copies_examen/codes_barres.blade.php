@@ -32,16 +32,17 @@
             <div class="row">
                 <div class="col-6">
                     @php
-                        echo DNS1D::getBarcodeSVG( $ue_ec->id_ue_ec.'-'.$i, 'CODABAR',1,35,'black', true)
+                        echo DNS1D::getBarcodeSVG( $ue_ec->id_ue_ec.'-'.$i, 'C128',2,35,'black', true)
                     @endphp
                 </div>
 
                 <div class="col-6">
                    @php
-                        echo DNS1D::getBarcodeSVG( $ue_ec->id_ue_ec.'-'.$i, 'CODABAR',1,35,'black', true)
+                        echo DNS1D::getBarcodeSVG( $ue_ec->id_ue_ec.'-'.$i, 'C128',2,35,'black', true)
                     @endphp
                 </div>
             </div>
         @endfor
 </body>
 </html>
+
