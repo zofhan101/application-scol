@@ -191,8 +191,6 @@
             //charger les UE correspondants aux Classes et Niveaux sélectionnés pour cette A.U.
             rafraichir_ue_ec_selectionnes();
             reset_selection();
-
-
         })
         .catch(error=>{
             console.error(error);
@@ -594,7 +592,7 @@
                 input = document.createElement('input');
                 input.className = "form-check-input me-1";
                 input.type = "checkbox"
-                input.value = ec.nom_element_constitutif + "-" + ec.id_element_constitutif;
+                input.value = ec.nom_element_constitutif + "##**##" + ec.id_element_constitutif;
                 input.name="ec";
                 ec_element.appendChild(input);
 
@@ -657,7 +655,7 @@
                 input = document.createElement('input');
                 input.className = "form-check-input me-1";
                 input.type = "radio"
-                input.value = ue.nom_unite_enseignement + "-" + ue.id_unite_enseignement;
+                input.value = ue.nom_unite_enseignement + "##**##" + ue.id_unite_enseignement;
                 input.name="ue";
                 ue_element.appendChild(input);
 
