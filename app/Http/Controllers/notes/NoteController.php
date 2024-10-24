@@ -8,16 +8,159 @@ use App\Models\notes\operation_sur_resultats;
 use App\Models\AU\AU;
 use App\Models\notes\Operation_sur_examen;
 use Illuminate\Support\Facades\Auth;
+use App\Rules\notes\IsNoteValide;
+use App\Rules\notes\IsBarcodeValide;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Exception;
+use Illuminate\Support\Facades\Session;
+use App\Models\UE\Unite_enseignement;
 
 
 
 class NoteController extends Controller
 {
-    public function enregister_note(){
+    public function controle_verifcation_notes(){
+        //recupération des examens et des opérations
+        try {
+            $examens = AU::get_liste_examens();
+            return view('notes/controle_verification_notes',['examens'=>$examens]);
+        } catch (\Exception $th) {
+            return view('notes/controle_verification_notes',['error'=>$th->getMessage()]);
+        }
+    }
+
+    public function verrouiller_saisie_note(Request $request){
+        $id_examen_par_au = $request->input('id_examen_par_au');
+        $id_user = Auth::user()->id_user;
+        try {
+            Operation_sur_examen::verrouiller_saisie_note($id_examen_par_au, $id_user);
+            return response()->json(['message'=>"verrouillage de saisie effectuée"], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message'=>$th], 500);
+        }
+
+    }
+
+    public function enregistrer_note(Request $request){
         $request->validate([
-            'barcode' => ['required','string', 'exists:parcours,id_parcours'],
-            'note' => ['required','numeric', 'exists:niveau,id_niveau'],
+            'barcode' => ['bail','required','string', new IsBarCodeValide],
+            'note' => ['bail','required','numeric', new IsNoteValide]
         ]);
+        $barcode = $request->input('barcode');
+        $note = $request->input('note');
+
+        $values = explode("-", $barcode);
+        $id_ue_ec = $values[0];
+
+        //d'après la règle de validation, c'est un ue_ec existant
+        $ue_ecs = Unite_enseignement::get_ue_ec_by_id($id_ue_ec);
+
+        $ue_ec = $ue_ecs[0];
+        $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($ue_ec->id_examen_par_au);
+
+        //aucune operation n'a encore été enregistrée <->saisie non encore ouverte
+        if(empty($operations)){
+            return response()->json(["errors"=>["barcode"=>'Saisie non encore ouverte pour l\'évaluation correspondante']], 422);
+        }
+        else{
+            $operation = $operations[0];
+            //Pour que le code barres soit valide, cette operation doit
+            //      -- être ouverte et non verrouillée (tout le monde a partir de chef div a accès)
+            //          OU
+            //      -- etre ouverte, verrouillée mais le resultat de l'examen ne doit pas être déjà généré(accès à partir de SP avec authentification contradictoire)
+            $user = Auth::user();
+
+            if($operation->date_ouverture_saisie_note != null){
+                if($operation->date_cloture_saisie_note == null){
+                    if($user-> role->rang_role >=0){
+                        $response = rescue(
+                            function() use($barcode, $note){
+                                Operation_sur_examen::enregistrer_note($barcode, $note);
+                                return [
+                                    ['message'=>'Enregistrement effectué'],
+                                    200
+                                ];
+                            },
+                            function(Exception $ex){
+                                if($ex instanceof UniqueConstraintViolationException){
+                                    return [
+                                        ['message'=> 'Ce code barre a déjà été enregistré'],
+                                        500
+                                    ];
+                                }
+                                else{
+                                    return [
+                                        ['message'=> $ex->getMessage()],
+                                        500
+                                    ];
+                                }
+                            },
+                            false
+                        );
+
+                        return response()->json($response[0], $response[1]);
+                    }
+                    else{
+                        return response()->json(["errors"=>["acces"=>'Accès refusé']], 422);
+                    }
+                }
+                else{
+                    if($operation->date_resultats==null){
+                        if($user-> role->rang_role >=40){
+                            if(Session::has('user2') && $request->cookie('auth_cont') != null){
+                                $user2 = Session::get('user2');
+                                if($user2->role->rang_role >=40){
+                                    $response = rescue(
+                                        function() use($barcode, $note){
+                                            Operation_sur_examen::enregistrer_note($barcode, $note);
+                                            return [
+                                                ['message'=>'Enregistrement effectué'],
+                                                200
+                                            ];
+                                        },
+                                        function(Exception $ex){
+                                            if($ex instanceof UniqueConstraintViolationException){
+                                                return [
+                                                    ['message'=> 'Ce code barre a déjà été enregistré'],
+                                                    500
+                                                ];
+                                            }
+                                            else{
+                                                return [
+                                                    ['message'=> $ex->getMessage()],
+                                                    500
+                                                ];
+                                            }
+                                        },
+                                        false
+                                    );
+
+                                    return response()->json($response[0], $response[1]);
+                                }
+                                else{
+                                    Session::put('url.intended', route('interface_saisie_notes'));
+                                    return redirect(route('authentification_contradictoire.form'));
+                                }
+                            }
+                            else{
+                                Session::put('url.intended', route('interface_saisie_notes'));
+                                return redirect(route('authentification_contradictoire.form'));
+                            }
+                        }
+                        else{
+                            return response()->json(["errors"=>["acces"=>'Accès refusé']], 422);
+                        }
+                    }
+                    else{
+                        return response()->json(["errors"=>["acces"=>'Accès refusé']], 422);
+                    }
+                }
+            }
+            else{
+                return response()->json(["errors"=>["acces"=>'Saisie non_encore_ouverte pour l\'évaluation correspondante']], 422);
+            }
+
+        }
     }
 
     public function ouvrir_saisie_note(Request $request){

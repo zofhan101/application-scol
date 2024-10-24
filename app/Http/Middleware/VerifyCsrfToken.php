@@ -22,6 +22,8 @@ class VerifyCsrfToken extends Middleware
         'ue/liste_ue_ec',
         'ue/supprimer_ue_ec',
         'notes/get_operation_par_examen',
-        'notes/ouvrir_saisie_note'
+        'notes/ouvrir_saisie_note',
+        'notes/enregistrer_note',
+        'notes/verrouiller_saisie_note'
     ];
 }

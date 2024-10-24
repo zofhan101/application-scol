@@ -25,6 +25,12 @@
               <i class="bi bi-circle"></i><span>Interface de Saisie des notes</span>
             </a>
           </li>
+
+          <li>
+            <a href="{{ route('controle_verification_notes') }}">
+              <i class="bi bi-circle"></i><span>Controle de la vérification des notes</span>
+            </a>
+          </li>
         </ul>
       </li>
     </ul>

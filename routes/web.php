@@ -31,6 +31,7 @@ use App\Http\Controllers\notes\NoteController;
 
 //routes nécessitant authentification
 Route::middleware('auth')->group(function(){
+    Route::get('acces_refuse', function(){ return view('acces_refuse');})->name('acces_refuse');
     //PROFILE
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -46,8 +47,8 @@ Route::middleware('auth')->group(function(){
     })->name('accueil');
 
         //saisie des notes d'examen
+        Route::post('notes/enregistrer_note',[NoteController::class,'enregistrer_note'])->name('enregistrer_note');
         Route::middleware(CheckOuvertureSaisieNote::class)->group(function () {
-            Route::post('notes/enregistrer_note',[NoteController::class,'enregistrer_note'])->name('enregistrer_note');
             Route::get('notes/interface_saisie_notes',function(){ return view('notes/interface_saisie_notes');})->name('interface_saisie_notes');
 
         });
@@ -103,6 +104,12 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
+            //authentification contradictoire
+
+            Route::post('auth/authentification_contradictoire.controller',[AdminAuthController::class,'authentification_contradictoire'])->name('authentification_contradictoire.controller');
+            Route::get('auth/authentification_contradictoire.form',function(){ return view('auth/authentification_contradictoire/login2'); })->name('authentification_contradictoire.form');
+
+
             //liste des inscrits
             Route::post('inscription/liste_inscrits',[Inscription_controller::class,'get_liste_inscrits'])->name('liste_inscrits');
             Route::get('inscription/liste_inscrits',[Inscription_controller::class,'form_au_niveau_parcours'])->name('liste_inscrits_form');
@@ -137,7 +144,11 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE SECRETAIRE PRINCIPAL
         Route::middleware(EnsureIsSP::class)->group(function () {
+            //vérification des notes saisies
+            Route::get('notes/controle_verification_notes',[NoteController::class,'controle_verification_notes'])->name('ccontrole_verification_notes');
+
             //saisie des notes d'examen
+            Route::post('notes/verrouiller_saisie_note',[NoteController::class,'verrouiller_saisie_note'])->name('verrouiller_saisie_note');
             Route::post('notes/ouvrir_saisie_note',[NoteController::class,'ouvrir_saisie_note'])->name('ouvrir_saisie_note');
             Route::get('notes/controle_saisie_note',[NoteController::class,'controle_saisie_note'])->name('controle_saisie_note');
             Route::post('notes/get_operation_par_examen',[NoteController::class,'get_operation_par_examen'])->name('get_operation_par_examen');
@@ -178,22 +189,6 @@ Route::middleware('auth')->group(function(){
             Route::post('delUser',[UserController::class,'delUser'])->name('delUser');
             Route::get('listeUsers', [UserController::class, 'getAllUsers'])->name('listeUsers');
         });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 });
 

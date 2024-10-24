@@ -22,6 +22,14 @@ class Unite_enseignement extends Model
         'nom_unite_enseignement'
     ];
 
+
+    public static function get_ue_ec_by_id($id_ue_ec){
+        return DB::select('
+                select * from ue_ec_parcours_niveau_au where id_ue_ec = ?
+            ', [$id_ue_ec]);
+    }
+
+
     public static function get_liste_ue_ec_code_barre($id_au){
         $liste_ue_ec = DB::select('
             select *
