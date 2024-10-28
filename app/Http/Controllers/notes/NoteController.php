@@ -19,13 +19,170 @@ use App\Models\UE\Unite_enseignement;
 
 class NoteController extends Controller
 {
-    public function controle_verifcation_notes(){
+    public function modifier_note(Request $request){
+        $request->validate([
+            'barcode' => ['bail','required','string', new IsBarCodeValide],
+            'note_modifiee' => ['bail','required','numeric', new IsNoteValide]
+        ]);
+        $barcode = $request->input('barcode');
+        $note = $request->input('note_modifiee');
+
+        $values = explode("-", $barcode);
+        $id_ue_ec = $values[0];
+
+        //d'après la règle de validation, c'est un ue_ec existant
+        $ue_ecs = Unite_enseignement::get_ue_ec_by_id($id_ue_ec);
+        $ue_ec = $ue_ecs[0];
+
+        $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($ue_ec->id_examen_par_au);
+
+        //aucune operation n'a encore été enregistrée <-> donc pas d'ouverture de vérification et de modification
+        //MODIFICATION SELON L'OUVERTURE DE LA VERIFICATION, ET LES AUTORISATIONS
+        if(empty($operations)){
+            return response()->json(["errors"=>["autres"=>"Les operations relatifs à cet examen n'ont pas encore été enregistrés"]], 500);
+        }
+        else{
+            $operation = $operations[0];
+            //Pour que le code barres soit valide, cette operation doit
+            //      --
+            //      -- avoir la vérificataion des notes ouverte et non verrouillée (tout le monde a partir de chef div a accès)
+            //          OU
+            //      -- avoir la vérification ouverte, verrouillée mais le resultat de l'examen ne doit pas être déjà généré(accès à partir de SP avec authentification contradictoire)
+
+            $user = Auth::user();
+
+            if($operation->date_ouverture_verification_note != null){
+                if($operation->date_cloture_verification_note == null){
+                    if($user-> role->rang_role >=0){
+                        $response = rescue(
+                            function() use($barcode, $note){
+                                Operation_sur_examen::modifier_note($barcode, $note);
+                                return [
+                                    ['message'=>'Enregistrement effectué'],
+                                    200
+                                ];
+                            },
+                            function(Exception $ex){
+                                return [
+                                    ["errors"=>["acces"=>$ex]], 422
+                                ];
+
+                            },
+                            false
+                        );
+
+                        return response()->json($response[0], $response[1]);
+                    }
+                    else{
+                        return response()->json(["errors"=>["acces"=>'Accès refusé']], 422);
+                    }
+                }
+                else{
+                    if($operation->date_resultats==null){
+                        if($user-> role->rang_role >=40){
+                            if(Session::has('user2') && $request->cookie('auth_cont') != null){
+                                $user2 = Session::get('user2');
+                                if($user2->role->rang_role >=40){
+                                    $response = rescue(
+                                        function() use($barcode, $note){
+                                            Operation_sur_examen::modifier_note($barcode, $note);
+                                            return [
+                                                ['message'=>'Enregistrement effectué'],
+                                                200
+                                            ];
+                                        },
+                                        function(Exception $ex){
+                                            return [
+                                                ["errors"=>["acces"=>$ex]], 422
+                                            ];
+                                        },
+                                        false
+                                    );
+
+                                    return response()->json($response[0], $response[1]);
+                                }
+                                else{
+                                    Session::put('url.intended', route('interface_verification_notes'));
+                                    return redirect(route('authentification_contradictoire.form'));
+                                }
+                            }
+                            else{
+                                Session::put('url.intended', route('interface_verification_notes'));
+                                return redirect(route('authentification_contradictoire.form'));
+                            }
+                        }
+                        else{
+                            return response()->json(["errors"=>["acces"=>'Accès refusé']], 422);
+                        }
+                    }
+                    else{
+                        return response()->json(["errors"=>["acces"=>'Accès refusé: les résultats de l\'examen correspondant ont déjà été confirmés']], 422);
+                    }
+                }
+            }
+            else{
+                return response()->json(["errors"=>["acces"=>'Vérification non_encore_ouverte pour l\'évaluation correspondante']], 422);
+            }
+
+        }
+
+    }
+
+
+    public function get_note(Request $request){
+        $request->validate([
+            'barcode' => ['bail','required','string', new IsBarCodeValide],
+        ]);
+        $barcode = $request->input('barcode');
+        try {
+            $note = Operation_sur_examen::get_note($barcode);
+            return response()->json(['note'=>$note], 200);
+
+        } catch (Exception $th) {
+            return response()->json(['errors'=>['acces'=>$th->getMessage()]], 500);
+        }
+    }
+
+    public function verrouiller_verification_note(Request $request){
+        $request->validate([
+            'id_examen_par_au' => ['bail','required','numeric','exists:examen_par_au,id_examen_par_au'],
+        ]);
+
+        $id_examen_par_au = $request->input('id_examen_par_au');
+        $id_user = Auth::user()->id_user;
+        try {
+            Operation_sur_examen::verrouiller_verification_note($id_examen_par_au, $id_user);
+            return response()->json(['message'=>"ouverture de la vérification effectuée"], 200);
+        } catch (Exception $th) {
+            return response()->json(['error'=>$th->getMessage()], 500);
+        }
+
+    }
+
+    public function ouvrir_verification_note(Request $request){
+        $request->validate([
+            'id_examen_par_au' => ['bail','required','numeric','exists:examen_par_au,id_examen_par_au'],
+        ]);
+
+        $id_examen_par_au = $request->input('id_examen_par_au');
+        $id_user = Auth::user()->id_user;
+        try {
+            Operation_sur_examen::ouvrir_verification_note($id_examen_par_au, $id_user);
+            return response()->json(['message'=>"ouverture de la vérification effectuée"], 200);
+        } catch (\Exception $th) {
+            return response()->json(['error'=>$th->getMessage()], 500);
+        }
+
+    }
+
+
+    public function controle_verification_note(){
         //recupération des examens et des opérations
         try {
             $examens = AU::get_liste_examens();
             return view('notes/controle_verification_notes',['examens'=>$examens]);
         } catch (\Exception $th) {
-            return view('notes/controle_verification_notes',['error'=>$th->getMessage()]);
+            return view('notes/controle_verification_notes*',['error'=>$th->getMessage()]);
         }
     }
 
@@ -36,7 +193,7 @@ class NoteController extends Controller
             Operation_sur_examen::verrouiller_saisie_note($id_examen_par_au, $id_user);
             return response()->json(['message'=>"verrouillage de saisie effectuée"], 200);
         } catch (\Throwable $th) {
-            return response()->json(['message'=>$th], 500);
+            return response()->json(['message'=>$th->getMessage()], 500);
         }
 
     }

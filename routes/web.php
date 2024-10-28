@@ -31,30 +31,38 @@ use App\Http\Controllers\notes\NoteController;
 
 //routes nécessitant authentification
 Route::middleware('auth')->group(function(){
-    Route::get('acces_refuse', function(){ return view('acces_refuse');})->name('acces_refuse');
-    //PROFILE
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::get('acces_refuse', function(){ return view('acces_refuse');})->name('acces_refuse');
+
+        //PROFILE
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 
-    Route::get('au_fermee',function(){
-        return view('AU/au_fermee');
-    });
+        Route::get('au_fermee',function(){
+            return view('AU/au_fermee');
+        });
 
-    Route::get('accueil',function(){
-        return view('app/welcome');
-    })->name('accueil');
+        Route::get('accueil',function(){
+            return view('app/welcome');
+        })->name('accueil');
+
+        //authentification contradictoire
+
+        Route::post('auth/authentification_contradictoire.controller',[AdminAuthController::class,'authentification_contradictoire'])->name('authentification_contradictoire.controller');
+        Route::get('auth/authentification_contradictoire.form',function(){ return view('auth/authentification_contradictoire/login2'); })->name('authentification_contradictoire.form');
+
+
 
         //saisie des notes d'examen
-        Route::post('notes/enregistrer_note',[NoteController::class,'enregistrer_note'])->name('enregistrer_note');
-        Route::middleware(CheckOuvertureSaisieNote::class)->group(function () {
+        Route::middleware(CheckOpenedAU::class, CheckOuvertureSaisieNote::class)->group(function () {
             Route::get('notes/interface_saisie_notes',function(){ return view('notes/interface_saisie_notes');})->name('interface_saisie_notes');
 
         });
 
         //ACCES A PARTIR DE CHEF DE DIVISION
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
+
 
             //Mise à jour des données étudiant
             Route::post('etudiant/form_parents',[EtudiantController::class,'form_parents'])->name('form_parents_modif');
@@ -66,6 +74,18 @@ Route::middleware('auth')->group(function(){
 
             // NECESSITANT AUTHENTIFICATION ET A.U. OUVERTE
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //modification note
+                Route::post('notes/modifier_note',[NoteController::class,'modifier_note'])->name('modifier_note');
+
+
+                //saisie des notes
+                Route::post('notes/enregistrer_note',[NoteController::class,'enregistrer_note'])->name('enregistrer_note');
+
+
+                //vérification des notes
+                Route::post('notes/get_note',[NoteController::class,'get_note'])->name('get_note');
+                Route::get('notes/interface_verification_notes',function(){ return view('notes/interface_verification_notes'); })->name('interface_verification_notes');
+
                 //transfert d'étudiant
                 Route::post('transfert/autres_inscriptions',[TransfertController::class,'inscription'])->name('autres_inscriptions_transfert');
                 Route::get('transfert/autres_inscriptions',function(){ return view('transfert/form_autres_inscriptions'); })->name('autres_inscriptions_f');
@@ -103,12 +123,7 @@ Route::middleware('auth')->group(function(){
         });
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
-        Route::middleware(EnsureIsChefDiv::class)->group(function () {
-            //authentification contradictoire
-
-            Route::post('auth/authentification_contradictoire.controller',[AdminAuthController::class,'authentification_contradictoire'])->name('authentification_contradictoire.controller');
-            Route::get('auth/authentification_contradictoire.form',function(){ return view('auth/authentification_contradictoire/login2'); })->name('authentification_contradictoire.form');
-
+        Route::middleware(EnsureIsChefDivScol::class)->group(function () {
 
             //liste des inscrits
             Route::post('inscription/liste_inscrits',[Inscription_controller::class,'get_liste_inscrits'])->name('liste_inscrits');
@@ -144,16 +159,19 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE SECRETAIRE PRINCIPAL
         Route::middleware(EnsureIsSP::class)->group(function () {
-            //vérification des notes saisies
-            Route::get('notes/controle_verification_notes',[NoteController::class,'controle_verification_notes'])->name('ccontrole_verification_notes');
 
-            //saisie des notes d'examen
-            Route::post('notes/verrouiller_saisie_note',[NoteController::class,'verrouiller_saisie_note'])->name('verrouiller_saisie_note');
-            Route::post('notes/ouvrir_saisie_note',[NoteController::class,'ouvrir_saisie_note'])->name('ouvrir_saisie_note');
-            Route::get('notes/controle_saisie_note',[NoteController::class,'controle_saisie_note'])->name('controle_saisie_note');
-            Route::post('notes/get_operation_par_examen',[NoteController::class,'get_operation_par_examen'])->name('get_operation_par_examen');
+            Route::middleware(CheckOpenedAU::class)->group(function(){
+                //vérification des notes saisies
+                Route::post('notes/verrouiller_verification_note',[NoteController::class,'verrouiller_verification_note'])->name('verrouiller_verification_note');
+                Route::post('notes/ouvrir_verification_note',[NoteController::class,'ouvrir_verification_note'])->name('ouvrir_verification_note');
+                Route::get('notes/controle_verification_note',[NoteController::class,'controle_verification_note'])->name('controle_verification_note');
 
-
+                //saisie des notes d'examen
+                Route::post('notes/verrouiller_saisie_note',[NoteController::class,'verrouiller_saisie_note'])->name('verrouiller_saisie_note');
+                Route::post('notes/ouvrir_saisie_note',[NoteController::class,'ouvrir_saisie_note'])->name('ouvrir_saisie_note');
+                Route::get('notes/controle_saisie_note',[NoteController::class,'controle_saisie_note'])->name('controle_saisie_note');
+                Route::post('notes/get_operation_par_examen',[NoteController::class,'get_operation_par_examen'])->name('get_operation_par_examen');
+            });
         });
 
         // ACCES ADMIN AUTHENTIFICATION ET ADMIN

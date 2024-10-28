@@ -22,8 +22,8 @@ class AdminAuthController extends Controller
 
     public function authentification_contradictoire(Request $request){
         $request->validate( [
-            'email' => 'required|email',
-            'password' => 'required',
+            'email' => ['required','email'],
+            'password' => ['required'],
         ]);
 
         try {

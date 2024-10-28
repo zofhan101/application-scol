@@ -3,10 +3,10 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+        <a class="nav-link collapsed" data-bs-target="#inscriptions" data-bs-toggle="collapse" href="#">
           <i class="bi bi-book-half"></i><span>Inscriptions</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="inscriptions" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
             <a href="{{ route('import_selectionnes_page') }}">
               <i class="bi bi-circle"></i><span>Import liste sélectionnés</span>
@@ -43,10 +43,10 @@
       </li><!-- End Components Nav -->
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+        <a class="nav-link collapsed" data-bs-target="#documents" data-bs-toggle="collapse" href="#">
           <i class="bi bi-people-fill"></i><span>Documents sur l'inscription</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="documents" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
                 <a href="{{ route('check_inscription_form') }}">
                   <i class="bi bi-circle"></i><span>Cerificat de scolarité</span>
@@ -64,10 +64,10 @@
 
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+        <a class="nav-link collapsed" data-bs-target="#etudiants" data-bs-toggle="collapse" href="#">
           <i class="bi bi-people-fill"></i><span>Etudiants</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="etudiants" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
             <a href="{{ route('maj_etu_search_form') }}">
               <i class="bi bi-circle"></i><span>Mise à jour des informations</span>
@@ -75,6 +75,28 @@
           </li>
         </ul>
       </li><!-- End Components Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#examen" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-book-half"></i><span>Examens</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="examen" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('interface_saisie_notes') }}">
+              <i class="bi bi-circle"></i><span>Interface de Saisie des notes</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('interface_verification_notes') }}">
+              <i class="bi bi-circle"></i><span>Interface de vérification des notes</span>
+            </a>
+          </li>
+
+
+        </ul>
+      </li>
+
 
 
 
