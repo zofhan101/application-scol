@@ -15,6 +15,7 @@ use App\Http\Middleware\EnsureIsSP;
 use App\Http\Middleware\EnsureIsChefDivScol;
 use App\Http\Middleware\AU\CheckOpenedAU;
 use App\Http\Middleware\notes\CheckOuvertureSaisieNote;
+use App\Http\Middleware\notes\CheckOuvertureSaisieEntete;
 use App\Http\Controllers\UE\UEController;
 use App\Http\Controllers\notes\NoteController;
 /*
@@ -41,7 +42,7 @@ Route::middleware('auth')->group(function(){
 
         Route::get('au_fermee',function(){
             return view('AU/au_fermee');
-        });
+        })->name('au_fermee');
 
         Route::get('accueil',function(){
             return view('app/welcome');
@@ -52,13 +53,19 @@ Route::middleware('auth')->group(function(){
         Route::post('auth/authentification_contradictoire.controller',[AdminAuthController::class,'authentification_contradictoire'])->name('authentification_contradictoire.controller');
         Route::get('auth/authentification_contradictoire.form',function(){ return view('auth/authentification_contradictoire/login2'); })->name('authentification_contradictoire.form');
 
+        //accèes à l'interface saisie des en-tetes
+        Route::middleware(CheckOpenedAU::class, CheckOuvertureSaisieEntete::class)->group(function () {
+            Route::get('notes/interface_saisie_entete',function(){ return view('notes/interface_saisie_entete');})->name('interface_saisie_entete');
 
+        });
 
-        //saisie des notes d'examen
+        //accèes à l'interface saisie des notes d'examen
         Route::middleware(CheckOpenedAU::class, CheckOuvertureSaisieNote::class)->group(function () {
             Route::get('notes/interface_saisie_notes',function(){ return view('notes/interface_saisie_notes');})->name('interface_saisie_notes');
 
         });
+
+
 
         //ACCES A PARTIR DE CHEF DE DIVISION
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
@@ -74,6 +81,12 @@ Route::middleware('auth')->group(function(){
 
             // NECESSITANT AUTHENTIFICATION ET A.U. OUVERTE
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //saisie des entetes
+                Route::post('entetes/enregistrer_entete',[NoteController::class,'enregistrer_entete'])->name('enregistrer_entete');
+
+                //vérification des entetes
+                Route::get('entetes/interface_verification_entete',function(){ return view('notes/interface_verification_entete'); })->name('interface_verification_entete');
+
                 //modification note
                 Route::post('notes/modifier_note',[NoteController::class,'modifier_note'])->name('modifier_note');
 
@@ -161,12 +174,24 @@ Route::middleware('auth')->group(function(){
         Route::middleware(EnsureIsSP::class)->group(function () {
 
             Route::middleware(CheckOpenedAU::class)->group(function(){
-                //vérification des notes saisies
+
+                //ouverture et cloture des vérification des en-têtes
+                Route::post('entetes/verrouiller_verification_entete',[NoteController::class,'verrouiller_verification_entete'])->name('verrouiller_verification_entete');
+                Route::post('entetes/ouvrir_verification_entete',[NoteController::class,'ouvrir_verification_entete'])->name('ouvrir_verification_entete');
+                Route::get('entetes/controle_verification_entete',[NoteController::class,'controle_verification_entete'])->name('controle_verification_entete');
+
+                // ouverture et cloture de saisie d' en-tetes des feuilles de copie
+                Route::post('entetes/verrouiller_saisie_entete',[NoteController::class,'verrouiller_saisie_entete'])->name('verrouiller_saisie_entete');
+                Route::post('entetes/ouvrir_saisie_entete',[NoteController::class,'ouvrir_saisie_entete'])->name('ouvrir_saisie_entete');
+                Route::get('entetes/controle_saisie_entete',[NoteController::class,'controle_saisie_entete'])->name('controle_saisie_entete');
+
+
+                //ouverture et cloture des vérification des notes saisies
                 Route::post('notes/verrouiller_verification_note',[NoteController::class,'verrouiller_verification_note'])->name('verrouiller_verification_note');
                 Route::post('notes/ouvrir_verification_note',[NoteController::class,'ouvrir_verification_note'])->name('ouvrir_verification_note');
                 Route::get('notes/controle_verification_note',[NoteController::class,'controle_verification_note'])->name('controle_verification_note');
 
-                //saisie des notes d'examen
+                //ouverture et cloture des saisie des notes d'examen
                 Route::post('notes/verrouiller_saisie_note',[NoteController::class,'verrouiller_saisie_note'])->name('verrouiller_saisie_note');
                 Route::post('notes/ouvrir_saisie_note',[NoteController::class,'ouvrir_saisie_note'])->name('ouvrir_saisie_note');
                 Route::get('notes/controle_saisie_note',[NoteController::class,'controle_saisie_note'])->name('controle_saisie_note');

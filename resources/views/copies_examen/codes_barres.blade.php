@@ -26,7 +26,13 @@
 </head>
 <body>
         <h1>
-            Codes-barre pour le codage des copies d'examen - {{ $ue_ec->nom_session_examen }} - Année universitaire {{ $ue_ec->intitule }} Mention {{ $ue_ec->nom_mention }} - {{ $ue_ec->nom_niveau }} - {{ $ue_ec->nom_unite_enseignement }} - {{ $ue_ec->nom_element_constitutif }}
+            @php
+                if($ue_ec->nom_mention == $ue_ec->nom_parcours)
+                    $mention = "Mention ".$ue_ec->nom_mention." ";
+                else
+                    $mention = "Mention ".$ue_ec->nom_mention." Parcours ".$ue_ec->nom_parcours." ";
+            @endphp
+            Codes-barre pour le codage des copies d'examen - {{ $ue_ec->nom_session_examen }} - Année universitaire {{ $ue_ec->intitule }} {{ $mention }} - {{ $ue_ec->nom_niveau }} - {{ $ue_ec->nom_unite_enseignement }} - {{ $ue_ec->nom_element_constitutif }} ({{ $ue_ec->id_ue_ec }})
         </h1>
         @for($i = 1; $i<= $ue_ec->nbr_inscrits+$en_plus; $i++)
             <div class="row">

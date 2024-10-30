@@ -1,13 +1,13 @@
 @extends('app.app_layout')
-@section('title', 'Interface de saisie des notes')
+@section('title', 'Interface de saisie des entetes')
 
 @section('content')
 <div class="pagetitle" id="pagetitle">
-    <h1>Saisie des notes d'examen</h1>
+    <h1>Saisie des entêtes des feuilles de copie</h1>
 
     <div class="alert alert-info alert-dismissible fade show" role="alert">
         <i class="bi bi-info-circle me-1"></i>
-        Veuillez scanner le code-barres sur la copie d'examen puis saisir la note ci-dessous
+        Veuillez scanner le code-barres sur la copie d'examen puis saisir le matricule ci-dessous
     </div>
 </div>
 
@@ -21,8 +21,8 @@
                     <div class="col-12">
                         <input type="hidden" id="barcode" name="barcode">
 
-                        <label for="inputAddress" class="form-label">Note obtenue</label>
-                        <input type="text" class="form-control" name="note" id="note" disabled>
+                        <label for="inputAddress" class="form-label">Matricule</label>
+                        <input type="text" class="form-control" name="matricule" id="matricule" disabled>
                     </div>
 
                     <div class="text-center">
@@ -39,12 +39,12 @@
     </div>
 </section>
 <script>
-    let code_input = document.getElementById('barcode');
-    let note_input = document.getElementById('note');
-    let form = document.getElementById('form');
-    let submit_button = document.getElementById('submit_button');
-    let barcode="";
-    let formdata;
+    var input_du_code = document.getElementById('barcode');
+    var matricule_input = document.getElementById('matricule');
+    var form = document.getElementById('form');
+    var submit_button = document.getElementById('submit_button');
+    var barcode="";
+    var formdata;
 
     document.addEventListener('keydown', get_code);
 
@@ -53,8 +53,8 @@
         formdata = new FormData(this);
         await enregistrer_donnees(formdata);
         document.addEventListener('keydown', get_code);
-        note_input.value = "";
-        note_input.disabled = true;
+        matricule_input.value = "";
+        matricule_input.disabled = true;
         submit_button.disabled = true;
         barcode = "";
     });
@@ -63,10 +63,10 @@
     function get_code(event){
         if (event.key === 'Enter') {
             console.log("Code-barres scanné :", barcode);
-            code_input.value = barcode;
-            note_input.disabled = false;
+            input_du_code.value = barcode;
+            matricule_input.disabled = false;
             setTimeout(function() {
-                note_input.focus();
+                matricule_input.focus();
             }, 0);
             submit_button.disabled = false;
             barcode = "";
@@ -77,12 +77,12 @@
     }
 
    async function enregistrer_donnees(formdata){
-        let url = "{{ route('enregistrer_note') }}";
+        let url = "{{ route('enregistrer_entete') }}";
         try {
             let response = await fetch(url, {
             method: 'POST',
             headers: {
-                'Accept': 'application/json',
+                'Accept':'application/json',
                 'Cookie': document.cookie
             },
             credentials: 'include',
@@ -91,12 +91,13 @@
 
             const contentType = response.headers.get('Content-Type');
             console.log('Content type: ', contentType);
-
+            //console.log( await response.text());
 
             let data = await response.json();
             if(response.ok){
-                console.log('Enregistrement note :reponse ok ', data);
-            }else {
+                console.log('Enregistrement matricule :reponse ok ', data);
+            }
+            else {
                 if(response.status == 401){
                     if(data.message != undefined){
                         if(data.message == "Unauthenticated."){
@@ -110,18 +111,18 @@
                         }
                     }
                 }
-                console.error('Enregistrement note :reponse pas ok ', data);
+                console.error('ERREUR: Enregistrement matricule : ', data);
                 barcode = "";
                 //ajouter un label et y afficher les erreurs
-                let div_erreur = document.createElement('div');
+                let div_erreur = document.createElement('div');;
                 div_erreur.className ="alert alert-danger alert-dismissible fade show";
                 div_erreur.setAttribute("role", "alert");
-                //div_erreur.textContent += data.message + ';;; ';
+                div_erreur.textContent += data.message + ';;; ';
                 if(data.errors != undefined){
                     if(data.errors.barcode != undefined)
                         div_erreur.textContent += data.errors.barcode + ";;; ";
-                    if(data.errors.note != undefined)
-                        div_erreur.textContent += data.errors.note;
+                    if(data.errors.matricule != undefined)
+                        div_erreur.textContent += data.errors.matricule;
                     if(data.errors.acces != undefined)
                         div_erreur.textContent += data.errors.acces;
                 }
@@ -143,10 +144,6 @@
         }
 
     }
-
-
-
-
 </script>
 
 @endsection

@@ -98,3 +98,11 @@ select o.*, e.id_session_examen, e.id_au
 from operation_par_examen as o
 join examen_par_au as e on o.id_examen_par_au = e.id_examen_par_au;
 
+--29-10-24 7:30
+-- vérification qu'un étudiant est bien inscrit dans le parcours et le niveau auquel fait partie un element constitutif donné
+create or replace view  v_check_inscription_ue_ec as
+select i.*, ue_ec.id_ue_ec, coefficient, id_examen_par_au, id_unite_enseignement, id_element_constitutif
+from ue_ec_parcours_niveau_au as ue_ec
+join v_inscrits as i on ue_ec.id_parcours = v_inscrits.id_parcours and ue_ec.id_niveau = v_inscrits.id_niveau and ue_ec.id_au = i.id_au;
+
+

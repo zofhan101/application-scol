@@ -11,7 +11,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#examens" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Examen</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-book-half"></i><span>Saisie des notes</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="examens" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -35,6 +35,38 @@
           <li>
             <a href="{{ route('interface_verification_notes') }}">
               <i class="bi bi-circle"></i><span>Interface de vérification des notes</span>
+            </a>
+          </li>
+
+        </ul>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#entetes" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-book-half"></i><span>Sasie des en-têtes</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="entetes" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('controle_saisie_entete') }}">
+              <i class="bi bi-circle"></i><span>Controle de la saisie des en-têtes</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('interface_saisie_entete') }}">
+              <i class="bi bi-circle"></i><span>Interface de Saisie des en-têtes</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('controle_verification_entete') }}">
+              <i class="bi bi-circle"></i><span>Controle de la vérification des en-têtes</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('interface_verification_entete') }}">
+              <i class="bi bi-circle"></i><span>Interface de vérifcation des en-têtes</span>
             </a>
           </li>
 

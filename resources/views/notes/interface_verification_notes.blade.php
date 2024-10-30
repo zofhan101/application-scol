@@ -71,7 +71,7 @@
             let response = await fetch(url, {
             method: 'POST',
             headers: {
-                'Accept': 'application/json, text/html',
+                'Accept': 'application/json',
                 'Cookie': document.cookie
             },
             credentials: 'include',
@@ -81,52 +81,55 @@
             const contentType = response.headers.get('Content-Type');
             console.log('Content type: ', contentType);
 
-            if(contentType.includes('application/json')){
-                let data = await response.json();
 
-                barcode = "";
-                code_input.value = "";
-                note_input.value = "";
-                note_input.disabled = true;
-                submit_button.disabled = true;
+            let data = await response.json();
+            barcode = "";
+            code_input.value = "";
+            note_input.value = "";
+            note_input.disabled = true;
+            submit_button.disabled = true;
+            if(response.ok){
+                console.log('Modification note :reponse ok ', data);
+            }else {
 
-                if(response.ok){
-                    console.log('Modification note :reponse ok ', data);
-
-                }else {
-                    console.error('Modification note :erreur ', data);
-
-                    //ajouter un label et y afficher les erreurs
-                    let div_erreur = document.createElement('div');
-                    div_erreur.className ="alert alert-danger alert-dismissible fade show";
-                    div_erreur.setAttribute("role", "alert");
-                    //div_erreur.textContent += data.message + ';;; ';
-                    if(data.errors != undefined){
-                        if(data.errors.barcode != undefined)
-                            div_erreur.textContent += data.errors.barcode + ";;; ";
-                        if(data.errors.note_modifiee != undefined)
-                            div_erreur.textContent += data.errors.note_modifiee;
-                        if(data.errors.acces != undefined)
-                            div_erreur.textContent += data.errors.acces;
+                if(response.status == 401){
+                    if(data.message != undefined){
+                        if(data.message == "Unauthenticated."){
+                            window.location.href = "{{ route('login') }}";
+                        }
+                        else if(data.message == 'authentification_contradictoire_necessaire'){
+                            window.location.href = "{{ route('authentification_contradictoire.form') }}";
+                        }
+                        else if(data.message == 'au_fermee'){
+                            window.location.href = "{{ route('au_fermee') }}"
+                        }
                     }
-
-                    let bouton = document.createElement('button');
-                    bouton.className = "btn-close";
-                    bouton.setAttribute("type", "button");
-                    bouton.setAttribute("role", "alert");
-                    bouton.setAttribute("data-bs-dismiss", "alert");
-                    bouton.setAttribute("aria-label", "Close");
-                    div_erreur.appendChild(bouton);
-                    document.getElementById("pagetitle").appendChild(div_erreur);
                 }
 
+                console.error('Modification note :erreur ', data);
+                //ajouter un label et y afficher les erreurs
+                let div_erreur = document.createElement('div');
+                div_erreur.className ="alert alert-danger alert-dismissible fade show";
+                div_erreur.setAttribute("role", "alert");
+                //div_erreur.textContent += data.message + ';;; ';
+                if(data.errors != undefined){
+                    if(data.errors.barcode != undefined)
+                        div_erreur.textContent += data.errors.barcode + ";;; ";
+                    if(data.errors.note_modifiee != undefined)
+                        div_erreur.textContent += data.errors.note_modifiee;
+                    if(data.errors.acces != undefined)
+                        div_erreur.textContent += data.errors.acces;
+                }
+                let bouton = document.createElement('button');
+                bouton.className = "btn-close";
+                bouton.setAttribute("type", "button");
+                bouton.setAttribute("role", "alert");
+                bouton.setAttribute("data-bs-dismiss", "alert");
+                bouton.setAttribute("aria-label", "Close");
+                div_erreur.appendChild(bouton);
+                document.getElementById("pagetitle").appendChild(div_erreur);
             }
-            else if(contentType.includes('text/html')){
-                let data = await response.text();
-                document.open();
-                document.write(data);
-                document.close();
-            }
+
         } catch (error) {
             console.error('Enregistrement note :reponse pas ok ',error);
             barcode ="";

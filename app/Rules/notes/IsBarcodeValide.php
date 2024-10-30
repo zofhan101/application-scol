@@ -34,10 +34,10 @@ class IsBarcodeValide implements ValidationRule
                 ', [$id_ue_ec]);
 
                 if(empty($ue_ecs)){
-                    $fail('Code-barres invalide: id_ue_ec inexistant');
+                    $fail('Code-barres invalide: association UE EC inexistante');
                 }
                 else{
-                    
+
                     // la seconde valeur est comprise entre 1 et nbr inscrits + codes barres en plus
 
                     $nbr_inscrits = DB::scalar('

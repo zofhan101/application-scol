@@ -31,6 +31,17 @@ class Inscription extends Model
         'date_annulation' => 'date',
     ];
 
+    public static function verifier_inscription_ue_ec($matricule, $barcode, $id_au){
+        $values = explode("-", $barcode);
+        $id_ue_ec = $values[0];
+        $inscription = DB::select("
+            select * from v_check_inscription_ue_ec where id_ue_ec=? and im=? and id_au=?
+        ", [$id_ue_ec, $matricule, $id_au]);
+        if(empty($inscription))
+            return false;
+        return true;
+    }
+
     public static function annuler_inscription($inscription, $id_user): void{
         $id_inscription = $inscription->id_inscription;
         $inscription_elq = Inscription::find($id_inscription);

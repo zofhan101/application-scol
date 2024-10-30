@@ -5,11 +5,12 @@ namespace App\Http\Middleware\notes;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\notes\Operation_sur_examen;
 use App\Models\AU\AU;
 use Illuminate\Support\Facades\Auth;
+use App\Models\notes\Operation_sur_examen;
 use Illuminate\Support\Facades\Session;
-class CheckOuvertureSaisieNote
+
+class CheckOuvertureSaisieEntete
 {
     /**
      * Handle an incoming request.
@@ -25,14 +26,14 @@ class CheckOuvertureSaisieNote
 
         foreach($operations as $operation){
             //acces à partir de chef de division quand saisie ouverte mais non verrouillée
-            if($operation->date_ouverture_saisie_note !=  null && $operation->date_cloture_saisie_note == null && $user->role->rang_role >= 0){
+            if($operation->date_ouverture_saisie_en_tete !=  null && $operation->date_cloture_saisie_en_tete == null && $user->role->rang_role >= 0){
                 return $next($request);
             }
         }
 
         foreach($operations as $operation){
             //accès privilégié quand saisie cloturée mais résultats non validés
-            if($operation->date_ouverture_saisie_note !=  null && $operation->date_cloture_saisie_note != null && $operation->date_resultats == null && $user->role->rang_role >=40){
+            if($operation->date_ouverture_saisie_en_tete !=  null && $operation->date_cloture_saisie_en_tete != null && $operation->date_resultats == null && $user->role->rang_role >=40){
                 $user2;
                 $cookie = $request->cookie('auth_cont');
                 if(Session::has('user2')){
@@ -45,7 +46,7 @@ class CheckOuvertureSaisieNote
                         if($request->expectsJson())
                             return response()->json(['message'=>'authentification_contradictoire_necessaire'], 401);
                         else return redirect(route('authentification_contradictoire.form'));
-                    }
+                                             }
                 }
                 else{
                     Session::put('url.intended', request()->fullUrl());

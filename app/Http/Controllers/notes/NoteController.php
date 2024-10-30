@@ -10,15 +10,192 @@ use App\Models\notes\Operation_sur_examen;
 use Illuminate\Support\Facades\Auth;
 use App\Rules\notes\IsNoteValide;
 use App\Rules\notes\IsBarcodeValide;
+use App\Rules\notes\IsMatriculeValide;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Exception;
 use Illuminate\Support\Facades\Session;
 use App\Models\UE\Unite_enseignement;
+use App\Models\inscription\Inscription;
 
 
 
 class NoteController extends Controller
 {
+
+    //saisie des entetes
+
+    public function enregistrer_entete(Request $request){
+        $request->validate([
+            'barcode' => ['bail','required','string', new IsBarCodeValide],
+            'matricule' => ['bail','required','string', 'exists:etudiants,im']
+        ]);
+
+        $barcode = $request->input('barcode');
+        $matricule = $request->input('matricule');
+
+        $au_courant = AU::get_au_en_cours();
+
+        //valider l'inscription de l'étudiant au parcours, niveau associé au code barre;
+        $est_inscrit_a_ec = Inscription::verifier_inscription_ue_ec($matricule, $barcode, $au_courant->id_au);
+        //return response()->json(["errors"=>["barcode"=>$barcode, "matricule"=>$matricule, "id_au"=>$au_courant->id_au]], 422);
+        if($est_inscrit_a_ec == false)
+            return response()->json(["errors"=>["barcode"=>'ERREUR: cet étudiant a reçu le code-barres d\'un parcours ou d\'une mention auquel il n\'est pas inscrit']], 422);
+
+
+        $values = explode("-", $barcode);
+        $id_ue_ec = $values[0];
+
+        //d'après la règle de validation, c'est un ue_ec existant
+        $ue_ecs = Unite_enseignement::get_ue_ec_by_id($id_ue_ec);
+
+        $ue_ec = $ue_ecs[0];
+        $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($ue_ec->id_examen_par_au);
+
+        //aucune operation n'a encore été enregistrée <->saisie non encore ouverte
+        if(empty($operations)){
+            return response()->json(["errors"=>["barcode"=>'Saisie des en-têtes non encore ouverte pour l\'évaluation correspondante']], 422);
+        }
+        else{
+            $operation = $operations[0];
+            //Pour que le code barres soit valide, cette operation doit
+            //      -- être ouverte et non verrouillée (tout le monde a partir de chef div a accès)
+            //          OU
+            //      -- etre ouverte, verrouillée mais le resultat de l'examen ne doit pas être déjà généré(accès à partir de SP avec authentification contradictoire)
+            $user = Auth::user();
+
+            if($operation->date_ouverture_saisie_en_tete != null){
+                if($operation->date_cloture_saisie_en_tete == null){
+                    if($user-> role->rang_role >=0){
+                        $response = rescue(
+                            function() use($barcode, $matricule){
+                                Operation_sur_examen::enregistrer_entete($barcode, $matricule);
+                                return [
+                                    ['message'=>'Enregistrement effectué'],
+                                    200
+                                ];
+                            },
+                            function(Exception $ex){
+                                if($ex instanceof UniqueConstraintViolationException){
+                                    return [
+                                        ["errors"=>["acces"=>"ERREUR: code-barres déjà enregistré ou matricule déjà enregistré pour cet élément constitutif"]],
+                                        500
+                                    ];
+                                }
+                                else{
+                                    return [
+                                        ["errors"=>["acces"=>$ex->getMessage()]],
+                                        500
+                                    ];
+                                }
+                            },
+                            false
+                        );
+
+                        return response()->json($response[0], $response[1]);
+                    }
+                    else{
+                        return response()->json(["errors"=>["acces"=>'Accès refusé']], 422);
+                    }
+                }
+                else{
+                    if($operation->date_resultats==null){
+                        if($user-> role->rang_role >=40){
+                            if(Session::has('user2') && $request->cookie('auth_cont') != null){
+                                $user2 = Session::get('user2');
+                                if($user2->role->rang_role >=40){
+                                    $response = rescue(
+                                        function() use($barcode, $matricule){
+                                            Operation_sur_examen::enregistrer_entete($barcode, $matricule);
+                                            return [
+                                                ['message'=>'Enregistrement effectué'],
+                                                200
+                                            ];
+                                        },
+                                        function(Exception $ex){
+                                            if($ex instanceof UniqueConstraintViolationException){
+                                                return [
+                                                    ["errors"=>["acces"=>"ERREUR: code-barres déjà enregistré ou matricule déjà enregistré pour cet élément constitutif"]],
+                                                    500
+                                                ];
+                                            }
+                                            else{
+                                                return [
+                                                    ["errors"=>["acces"=>$ex->getMessage()]],
+                                                    500
+                                                ];
+                                            }
+                                        },
+                                        false
+                                    );
+
+                                    return response()->json($response[0], $response[1]);
+                                }
+                                else{
+                                    Session::put('url.intended', route('interface_saisie_entete'));
+                                    if($request->expectsJson())
+                                        return response()->json(['message'=>'authentification_contradictoire_necessaire'], 401);
+                                    else return redirect(route('authentification_contradictoire.form'));
+                                }
+                            }
+                            else{
+                                Session::put('url.intended', route('interface_saisie_entete'));
+                                if($request->expectsJson())
+                                    return response()->json(['message'=>'authentification_contradictoire_necessaire'], 401);
+                                else return redirect(route('authentification_contradictoire.form'));                            }
+                        }
+                        else{
+                            return response()->json(["errors"=>["acces"=>'Accès refusé']], 422);
+                        }
+                    }
+                    else{
+                        return response()->json(["errors"=>["acces"=>'Accès refusé: aucune modification ne peut plus être faite après la confirmation des résultats']], 422);
+                    }
+                }
+            }
+            else{
+                return response()->json(["errors"=>["acces"=>'Saisie des en-têtes non_encore_ouverte pour l\'évaluation correspondante']], 422);
+            }
+
+        }
+    }
+
+    public function verrouiller_saisie_entete(Request $request){
+        $id_examen_par_au = $request->input('id_examen_par_au');
+        $id_user = Auth::user()->id_user;
+        try {
+            Operation_sur_examen::verrouiller_saisie_entete($id_examen_par_au, $id_user);
+            return response()->json(['message'=>"verrouillage de saisie des en-têtes effectuée"], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error'=>$th->getMessage()], 500);
+        }
+
+    }
+
+    public function ouvrir_saisie_entete(Request $request){
+        $id_examen_par_au = $request->input('id_examen_par_au');
+        $id_user = Auth::user()->id_user;
+        try {
+            Operation_sur_examen::ouvrir_saisie_entete($id_examen_par_au, $id_user);
+            return response()->json(['message'=>"ouverture de la saisie des entetes effectuée"], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error'=>$th->getMessage()], 500);
+        }
+
+    }
+
+
+    public function controle_saisie_entete(){
+        //recupération des examens et des opérations
+        try {
+            $examens = AU::get_liste_examens();
+            return view('notes/controle_saisie_entete',['examens'=>$examens]);
+        } catch (\Exception $th) {
+            return view('notes/controle_saisie_entete',['error'=>$th->getMessage()]);
+        }
+    }
+
+    //vérification des notes
+
     public function modifier_note(Request $request){
         $request->validate([
             'barcode' => ['bail','required','string', new IsBarCodeValide],
@@ -103,12 +280,16 @@ class NoteController extends Controller
                                 }
                                 else{
                                     Session::put('url.intended', route('interface_verification_notes'));
-                                    return redirect(route('authentification_contradictoire.form'));
+                                    if($request->expectsJson())
+                                        return response()->json(['message'=>'authentification_contradictoire_necessaire'], 401);
+                                    else return redirect(route('authentification_contradictoire.form'));
                                 }
                             }
                             else{
                                 Session::put('url.intended', route('interface_verification_notes'));
-                                return redirect(route('authentification_contradictoire.form'));
+                                if($request->expectsJson())
+                                    return response()->json(['message'=>'authentification_contradictoire_necessaire'], 401);
+                                else return redirect(route('authentification_contradictoire.form'));
                             }
                         }
                         else{
@@ -175,7 +356,6 @@ class NoteController extends Controller
 
     }
 
-
     public function controle_verification_note(){
         //recupération des examens et des opérations
         try {
@@ -185,6 +365,8 @@ class NoteController extends Controller
             return view('notes/controle_verification_notes*',['error'=>$th->getMessage()]);
         }
     }
+
+    //saisie des notes
 
     public function verrouiller_saisie_note(Request $request){
         $id_examen_par_au = $request->input('id_examen_par_au');
@@ -296,12 +478,16 @@ class NoteController extends Controller
                                 }
                                 else{
                                     Session::put('url.intended', route('interface_saisie_notes'));
-                                    return redirect(route('authentification_contradictoire.form'));
+                                    if($request->expectsJson())
+                                        return response()->json(['message'=>'authentification_contradictoire_necessaire'], 401);
+                                    else return redirect(route('authentification_contradictoire.form'));
                                 }
                             }
                             else{
                                 Session::put('url.intended', route('interface_saisie_notes'));
-                                return redirect(route('authentification_contradictoire.form'));
+                                if($request->expectsJson())
+                                    return response()->json(['message'=>'authentification_contradictoire_necessaire'], 401);
+                                else return redirect(route('authentification_contradictoire.form'));
                             }
                         }
                         else{

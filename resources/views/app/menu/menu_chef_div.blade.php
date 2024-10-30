@@ -56,6 +56,27 @@
         </ul>
       </li><!-- End Components Nav -->
 
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#entetes" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-book-half"></i><span>Sasie des en-têtes</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="entetes" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('interface_saisie_entete') }}">
+              <i class="bi bi-circle"></i><span>Interface de Saisie des en-têtes</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('interface_verification_entete') }}">
+              <i class="bi bi-circle"></i><span>Interface de vérification des en-têtes</span>
+            </a>
+          </li>
+
+        </ul>
+      </li>
+
+
 
 
 

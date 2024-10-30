@@ -33,7 +33,7 @@
                                                     {{ $mention->nom_mention }}
                                                 </button>
                                             </h2>
-                                            <div id="collapse-me-{{ $mention->id_mention }}" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                            <div id="collapse-me-{{ $mentzion->id_mention }}" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                                                 <div class="accordion-body">
                                                     <div class="accordion" id="accordionExample">
                                                         @foreach($mention->parcours as $parcours)

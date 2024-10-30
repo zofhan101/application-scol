@@ -7,6 +7,78 @@ use Exception;
 
 class Operation_sur_examen
 {
+    //saisie des entetes
+    public static function enregistrer_entete($barcode, $matricule){
+        $values = explode("-", $barcode);
+
+        DB::insert('
+            insert into barcode_matricule(id_ue_ec, numero, matricule) values(?,?,?)
+        ', [$values[0], $values[1], $matricule]);
+    }
+
+    public static function verrouiller_saisie_entete($id_examen_par_au, $id_user){
+        $operations = DB::select('
+            select * from operation_par_examen where id_examen_par_au = ?
+        ', [$id_examen_par_au]);
+
+
+        if(empty($operations))
+            throw new \Exception('ERREUR: les operations d\'ouverture et de verrouillage de la saisie des entetes par rappport à cet examen sont absents');
+        else{
+            $operation = $operations[0];
+            if($operation->date_ouverture_saisie_en_tete != null && $operation->date_cloture_saisie_en_tete == null){
+                try {
+                    DB::update('
+                        update operation_par_examen set date_cloture_saisie_en_tete = ? , id_user_date_cloture_saisie_en_tete = ? where id_examen_par_au = ?
+                    ', [date('Y-m-d'), $id_user, $id_examen_par_au]);
+
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            }
+            else if($operation->date_ouverture_saisie_en_tete == null){
+                throw new Exception("ERREUR: la saisie des en-tetes n'a pas encore été ouverte pour cet examen");
+            }
+            else if($operation->date_cloture_saisie_note != null){
+                throw new Exception("ERREUR: la saisie des en-têtes a déjà été cloturée pour cet examen");
+            }
+
+        }
+    }
+
+    public static function ouvrir_saisie_entete($id_examen_par_au, $id_user){
+        $operations = DB::select('
+            select * from operation_par_examen where id_examen_par_au = ?
+        ', [$id_examen_par_au] );
+        if(empty($operations) == true ){
+            try {
+                DB::insert('
+                    insert into operation_par_examen(id_examen_par_au, date_ouverture_saisie_en_tete, id_user_date_ouverture_saisie_en_tete) values(?,?,?)
+            ', [$id_examen_par_au, date('Y-m-d'), $id_user]);
+
+            } catch (\Exception $th) {
+               throw $th;
+            }
+        }
+        else{
+            $operation = $operations[0];
+            if($operation->date_ouverture_saisie_en_tete != null)
+                throw new Exception('ERREUR: la saisie des en-têtes pour cette évaluation a déjà été ouverte');
+            else{
+                try {
+                    DB::update('
+                        update operation_par_examen set date_ouverture_saisie_en_tete = ?, id_user_date_ouverture_saisie_en_tete = ?
+                ', [date('Y-m-d'), $id_user]);
+
+                } catch (\Exception $th) {
+                   throw $th;
+                }
+            }
+
+        }
+    }
+
+    //vérificationd des notes
     public static function modifier_note($barcode, $note){
         $values = explode("-", $barcode);
         if(count($values) != 2)
@@ -112,6 +184,7 @@ class Operation_sur_examen
         ', [$id_examen_par_au]);
     }
 
+    //saisie des notes
     public static function verrouiller_saisie_note($id_examen_par_au, $id_user){
         $operations = DB::select('
             select * from operation_par_examen where id_examen_par_au = ?
@@ -150,7 +223,7 @@ class Operation_sur_examen
         ', [$values[0], $values[1], $note]);
     }
 
-    public static function get_saisies_ouvertes($id_au){
+    public static function get_operations_par_examen($id_au){
         $operations = DB::select('
             select * from v_operation_par_examen_par_au where id_au = ?
         ', [$id_au]);

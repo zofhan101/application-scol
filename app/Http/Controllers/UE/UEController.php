@@ -71,10 +71,10 @@ class UEController extends Controller
        try {
             Unite_enseignement::ajouter_ue_ec($data);
             return response()->json(
-                ['message'=>'Mise à jour effectuée'],
+                ['message'=>'Enregistrement effectué'],
                 200
             );
-       } catch (\Throwable $th) {
+       } catch (\Exception $th) {
             return response()->json(
                 ['message'=>$th->getMessage(),],
                 500
