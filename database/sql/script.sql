@@ -69,7 +69,7 @@ from ue_ec_parcours_niveau_au as c
 
 
 --11-10-24 11:34
--- association de chaque au aux parcours et à leurs niveaux
+-- association de chaque au aux parcours et à leurs niveaux (cross join)
 create or replace view v_cj_au_parcours_niveau as
 select *
 from au
@@ -105,4 +105,10 @@ select i.*, ue_ec.id_ue_ec, coefficient, id_examen_par_au, id_unite_enseignement
 from ue_ec_parcours_niveau_au as ue_ec
 join v_inscrits as i on ue_ec.id_parcours = v_inscrits.id_parcours and ue_ec.id_niveau = v_inscrits.id_niveau and ue_ec.id_au = i.id_au;
 
+
+--select se.nom_session_examen, ue_ec.id_ue_ec, o.date_ouverture_verification_en_tete
+--from v_liste_ue_ec as ue_ec
+--join operation_par_examen as o on ue_ec.id_examen_par_au = o.id_examen_par_au
+--join examen_par_au as epa on o.id_examen_par_au = epa.id_examen_par_au
+--join session_examen as se on epa.id_session_examen = epa.id_session_examen;
 

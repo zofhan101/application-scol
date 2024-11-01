@@ -7,6 +7,103 @@ use Exception;
 
 class Operation_sur_examen
 {
+    //vérification des en-têtes
+    public static function modifier_matricule($barcode, $matricule){
+        $values = explode("-", $barcode);
+        if(count($values) != 2)
+            throw new Exception('ERREUR à la modification d\'un matricule: code-barres invalide');
+
+        $lignes = DB::select('
+            select * from barcode_matricule where id_ue_ec = ? and numero = ?
+            ', [$values[0], $values [1]]);
+            if(empty($lignes)){
+                throw new Exception("ERREUR: Aucun matricule n'a encore été enregistré pour ce code-barres.");
+            }
+
+            try {
+                DB::update('
+                update barcode_matricule set matricule = ? where id_ue_ec = ? and numero = ?
+            ', [$matricule, $values[0], $values [1]]);
+            } catch (\Exception $th) {
+                throw $th;
+            }
+
+    }
+
+    public static function get_matricule($barcode){
+        $values = explode("-", $barcode);
+        if(count($values) != 2)
+            throw new Exception('ERREUR à la récupération d\'un matricule: code-barres invalide');
+        try {
+            $matricule = DB::scalar('
+            select matricule from barcode_matricule where id_ue_ec = ? and numero = ?
+            ', [$values[0], $values [1]]);
+            if($matricule == null ){
+                throw new Exception("ERREUR: Aucun matricule n'a encore été enregistré pour ce code-barres");
+            }
+
+            DB::update('
+                update barcode_matricule set verifie = TRUE where id_ue_ec = ? and numero = ?
+            ', [$values[0], $values [1]]);
+
+            return $matricule;
+        } catch (Exception $th) {
+            throw $th;
+        }
+    }
+
+    public static function verrouiller_verification_entete($id_examen_par_au, $id_user){
+        $operations = DB::select('
+            select * from operation_par_examen where id_examen_par_au = ?
+        ', [$id_examen_par_au]);
+        if(empty($operations))
+            throw new \Exception('ERREUR: les operations d\'ouverture et de verrouillage par rappport à cet examen sont absents');
+        else{
+            $operation = $operations[0];
+            if($operation->date_ouverture_verification_en_tete != null && $operation->date_cloture_verification_en_tete == null){
+                try {
+                    DB::update('
+                        update operation_par_examen set date_cloture_verification_en_tete = ?, id_user_date_cloture_verification_en_tete = ? where id_examen_par_au = ?
+                    ', [date('Y-m-d'), $id_user, $id_examen_par_au]);
+                } catch (\Exception $th) {
+                    throw $th;
+                }
+            }
+            else if($operation->date_ouverture_verification_en_tete == null){
+                throw new \Exception('ERREUR: la vérification des en-têtes n\'a pas encore été cloturée pour cet examen');
+            }
+            else if($operation->date_cloture_verification_en_tete != null){
+                throw new \Exception('ERREUR: la vérification des en-têtes a déjà été cloturée pour cet examen');
+            }
+        }
+    }
+
+    public static function ouvrir_verification_entete($id_examen_par_au, $id_user){
+        $operations = DB::select('
+            select * from operation_par_examen where id_examen_par_au = ?
+        ', [$id_examen_par_au]);
+        if(empty($operations))
+            throw new \Exception('ERREUR: les operations d\'ouverture et de verrouillage par rappport à cet examen sont absents');
+        else{
+            $operation = $operations[0];
+            if($operation->date_cloture_saisie_en_tete != null && $operation->date_ouverture_verification_en_tete == null){
+                try {
+                    DB::update('
+                        update operation_par_examen set date_ouverture_verification_en_tete = ?, id_user_date_ouverture_verification_en_tete = ? where id_examen_par_au = ?
+                    ', [date('Y-m-d'), $id_user, $id_examen_par_au]);
+                } catch (\Exception $th) {
+                    throw $th;
+                }
+            }
+            else if($operation->date_cloture_saisie_note == null){
+                throw new \Exception('ERREUR: la saisie des en-tetes n\'a pas encore été cloturée pour cet examen');
+            }
+            else if($operation->date_ouverture_verification_note != null){
+                throw new \Exception('ERREUR: la vérification des en-têtes a déjà été ouverte pour cet examen');
+            }
+        }
+    }
+
     //saisie des entetes
     public static function enregistrer_entete($barcode, $matricule){
         $values = explode("-", $barcode);
@@ -78,7 +175,7 @@ class Operation_sur_examen
         }
     }
 
-    //vérificationd des notes
+    //vérification des notes
     public static function modifier_note($barcode, $note){
         $values = explode("-", $barcode);
         if(count($values) != 2)

@@ -81,6 +81,13 @@ Route::middleware('auth')->group(function(){
 
             // NECESSITANT AUTHENTIFICATION ET A.U. OUVERTE
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //modification matricule
+                Route::post('notes/modifier_matricule',[NoteController::class,'modifier_matricule'])->name('modifier_matricule');
+
+                //vérification matricule
+                Route::post('notes/get_matricule',[NoteController::class,'get_matricule'])->name('get_matricule');
+
+
                 //saisie des entetes
                 Route::post('entetes/enregistrer_entete',[NoteController::class,'enregistrer_entete'])->name('enregistrer_entete');
 

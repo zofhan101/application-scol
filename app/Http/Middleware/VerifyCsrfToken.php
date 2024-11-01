@@ -31,6 +31,10 @@ class VerifyCsrfToken extends Middleware
         'notes/verrouiller_verification_note',
         'entetes/ouvrir_saisie_entete',
         'entetes/verrouiller_saisie_entete',
-        'entetes/enregistrer_entete'
+        'entetes/enregistrer_entete',
+        'entetes/ouvrir_verification_entete',
+        'entetes/verrouiller_verification_entete',
+        'notes/get_matricule',
+        'notes/modifier_matricule'
      ];
 }
