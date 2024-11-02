@@ -250,7 +250,9 @@ Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_p
 Route::post('authAdmin',[AdminAuthController::class,'login'])->name('authAdmin');
 
 Route::get('/', function () {
-    return view('auth/login2');
+    if(Auth::user() == null)
+        return view('auth/login2');
+    else return redirect(route('accueil'));
 });
 
 require __DIR__.'/auth.php';
