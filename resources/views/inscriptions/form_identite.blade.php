@@ -101,6 +101,17 @@
                     <input type="text" class="form-control" id="inputAddress" name="contact" value={{ old('contact') }}>
                   </div>
 
+                  <div class="col-12">
+                    <label for="inputAddress" class="form-label">Adresse E-mail</label>
+                        @error('email')
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ $message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @enderror
+                    <input type="text" class="form-control" id="inputAddress" name="email" value="{{ old('email') }}">
+                  </div>
+
                   <div class="text-center">
                     <button type="submit" class="btn btn-primary">Suivant</button>
                   </div>

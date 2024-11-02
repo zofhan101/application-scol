@@ -277,7 +277,8 @@ class Inscription_controller extends Controller
             'contact'=> ['required', 'numeric','digits:10'],
             'date_delivrance'=>['nullable','date'],
             'lieu_delivrance'=>['nullable','max:255'],
-            'type_pi'=>['nullable',Rule::in(['cin','pass'])]
+            'type_pi'=>['nullable',Rule::in(['cin','pass'])],
+            'email'=>['nullable', 'email']
         ]);
 
         // enregistrer ces informations dans la session
@@ -290,6 +291,7 @@ class Inscription_controller extends Controller
         $new_etu->lieu_delivrance = $request->input('lieu_delivrance');
         $new_etu->adresse = $request->input('adresse');
         $new_etu->contact = $request->input('contact');
+        $new_etu->email = $request->input('email');
 
         return redirect('inscription/form_bacc');
     }

@@ -197,7 +197,8 @@ class Etudiant extends Model
             'id_province'=>$new_etu->id_province,
             'id_nationalite'=>$new_etu->id_nationalite,
             'id_parcours'=>$new_etu->id_parcours,
-            'id_agent'=>$id_user
+            'id_agent'=>$id_user,
+            'email'=>$new_etu->email
         ]);
 
         //enregistrement des autres inscription
