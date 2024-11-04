@@ -49,7 +49,8 @@ class Etudiant extends Model
         'id_nationalite',
         'id_parcours',
         'id_agent',
-        'email'
+        'email',
+        'photo'
     ];
 
     protected $casts = [
@@ -81,18 +82,15 @@ class Etudiant extends Model
         $id_user = $user->id;
         $au = AU::get_au_en_cours();
 
+        $nom_fichier = "photo_".$new_etu->im.".".$new_etu->photoExtension;
+        $chemin = storage_path('photo_etudiants/' . $nom_fichier);
+        file_put_contents($chemin, $new_etu->photoContent);
 
-        DB::transaction(function () use($new_etu, $id_user,$au, $autre_inscription, $niveau_inscription){
+
+        DB::transaction(function () use($new_etu, $id_user,$au, $autre_inscription, $niveau_inscription, $chemin){
             //enregistrement de l'étudiant
             $new_etu->id_agent = $id_user;
 
-            //echo $new_etu->id_niveau_transfert;
-
-            //var_dump($new_etu);
-            echo '<br>';
-            echo 'new_etu à enregistrer id_etablissement_transfert: '.$new_etu->id_etablissement_transfert;
-            echo '<br>';
-            echo 'new_etu à enregistrer email: '.$new_etu->email;
 
 
             $etu = Etudiant::create([
@@ -127,15 +125,11 @@ class Etudiant extends Model
                 'id_etablissement_transfert'=>$new_etu->id_etablissement_transfert,
                 'id_au_transfert'=>$new_etu->id_au_transfert,
                 'id_niveau_transfert'=>$new_etu->id_niveau_transfert,
-                'email'=>$new_etu->email
+                'email'=>$new_etu->email,
+                'photo'=>$chemin
 
             ]);
 
-            //var_dump($etu);
-            echo '<br>';
-            echo 'etu enregistré id_etablissement_transfert: '.$etu->id_etablissement_transfert;
-            echo '<br>';
-            echo 'etu enregistré email: '.$etu->email;
 
 
             // enregistremement des autres inscriptions
@@ -166,65 +160,72 @@ class Etudiant extends Model
         //recuperation du niveau L1
         $l1 = DB::Select('select * from niveau where rang = ?',[1]);
 
+        $nom_fichier = "photo_".$new_etu->matricule.".".$new_etu->photoExtension;
+        $chemin = storage_path('photo_etudiants/' . $nom_fichier);
+        file_put_contents($chemin, $new_etu->photoContent);
 
-        DB::transaction(function () use($new_etu, $id_user,$au, $l1){
+        DB::transaction(function () use($new_etu, $id_user,$au, $l1, $chemin){
             //créationd de l'étudiant
-        $etu = Etudiant::create([
-            'im'=>$new_etu->matricule,
-            'nom'=>$new_etu->nom_candidat,
-            'prenoms'=>$new_etu->prenom_candidat,
-            'sexe'=>$new_etu->sexe,
-            'date_premiere_inscription'=>date('Y-m-d'),
-            'date_naissance'=>$new_etu->dtn,
-            'lieu_naissance'=>$new_etu->ldn,
-            'type_piece_identite'=>$new_etu->type_pi,
-            'num_piece_identite'=>$new_etu->num_pi,
-            'date_delivrance'=>$new_etu->date_delivrance,
-            'lieu_delivrance'=>$new_etu->lieu_delivrance,
-            'adresse'=>$new_etu->adresse,
-            'telephone'=>$new_etu->contact,
-            'pere'=>$new_etu->nom_pere,
-            'profession_pere'=>$new_etu->profession_pere,
-            'tel_pere'=>$new_etu->contact_pere,
-            'adresse_pere'=>$new_etu->adresse_pere,
-            'mere'=>$new_etu->nom_mere,
-            'profession_mere'=>$new_etu->profession_mere,
-            'tel_mere'=>$new_etu->contact_mere,
-            'adresse_mere'=>$new_etu->adresse_mere,
-            'est_officier'=>$new_etu->est_officier,
-            'annee_bacc'=>$new_etu->annee_bacc,
-            'id_serie'=>$new_etu->id_serie,
-            'id_province'=>$new_etu->id_province,
-            'id_nationalite'=>$new_etu->id_nationalite,
-            'id_parcours'=>$new_etu->id_parcours,
-            'id_agent'=>$id_user,
-            'email'=>$new_etu->email
-        ]);
-
-        //enregistrement des autres inscription
-        if($new_etu->autre_etab !== null){
-            Autre_inscription::create([
-                'id_au'=>$au->id_au,
-                'id_etudiants'=>$etu->id_etudiants,
-                'etablissement'=>$new_etu->autre_etab,
-                'niveau'=>$new_etu->autre_ae,
+            $etu = Etudiant::create([
+                'im'=>$new_etu->matricule,
+                'nom'=>$new_etu->nom_candidat,
+                'prenoms'=>$new_etu->prenom_candidat,
+                'sexe'=>$new_etu->sexe,
+                'date_premiere_inscription'=>date('Y-m-d'),
+                'date_naissance'=>$new_etu->dtn,
+                'lieu_naissance'=>$new_etu->ldn,
+                'type_piece_identite'=>$new_etu->type_pi,
+                'num_piece_identite'=>$new_etu->num_pi,
+                'date_delivrance'=>$new_etu->date_delivrance,
+                'lieu_delivrance'=>$new_etu->lieu_delivrance,
+                'adresse'=>$new_etu->adresse,
+                'telephone'=>$new_etu->contact,
+                'pere'=>$new_etu->nom_pere,
+                'profession_pere'=>$new_etu->profession_pere,
+                'tel_pere'=>$new_etu->contact_pere,
+                'adresse_pere'=>$new_etu->adresse_pere,
+                'mere'=>$new_etu->nom_mere,
+                'profession_mere'=>$new_etu->profession_mere,
+                'tel_mere'=>$new_etu->contact_mere,
+                'adresse_mere'=>$new_etu->adresse_mere,
+                'est_officier'=>$new_etu->est_officier,
+                'annee_bacc'=>$new_etu->annee_bacc,
+                'id_serie'=>$new_etu->id_serie,
+                'id_province'=>$new_etu->id_province,
+                'id_nationalite'=>$new_etu->id_nationalite,
+                'id_parcours'=>$new_etu->id_parcours,
+                'id_agent'=>$id_user,
+                'email'=>$new_etu->email,
+                'photo'=>$chemin
             ]);
-        }
 
-        //enregistrement de l'inscription
-        Inscription::create([
-            'date_inscription'=>date('Y-m-d'),
-            'id_agent_inscription'=>$id_user,
-            'id_etudiant'=>$etu->id_etudiants,
-            'id_au'=>$au->id_au,
-            'id_niveau'=>$l1[0]->id_niveau
-        ]);
+            //enregistrement des autres inscription
+            if($new_etu->autre_etab !== null){
+                Autre_inscription::create([
+                    'id_au'=>$au->id_au,
+                    'id_etudiants'=>$etu->id_etudiants,
+                    'etablissement'=>$new_etu->autre_etab,
+                    'niveau'=>$new_etu->autre_ae,
+                ]);
+            }
 
-        // bloquer la possibilité de s'inscrire à nouveau pour cette personne
+            //enregistrement de l'inscription
+            Inscription::create([
+                'date_inscription'=>date('Y-m-d'),
+                'id_agent_inscription'=>$id_user,
+                'id_etudiant'=>$etu->id_etudiants,
+                'id_au'=>$au->id_au,
+                'id_niveau'=>$l1[0]->id_niveau
+            ]);
 
-        $maj = DB::update('update selectionnes set est_inscrit = true where num_bacc =? and id_au = ?',[$new_etu->num_bacc, $au->id_au]);
+            // bloquer la possibilité de s'inscrire à nouveau pour cette personne
 
-     });
+            $maj = DB::update('update selectionnes set est_inscrit = true where num_bacc =? and id_au = ?',[$new_etu->num_bacc, $au->id_au]);
+
+        });
+
+
+
 
     }
 }

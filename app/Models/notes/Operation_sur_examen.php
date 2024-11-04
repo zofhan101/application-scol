@@ -7,6 +7,25 @@ use Exception;
 
 class Operation_sur_examen
 {
+    public static function get_nbr_enregistres($id_ue_ec){
+        $nbr_enregistres = DB::scalar('
+            select count(numero)
+            from barcode_note
+            where id_ue_ec = ?
+        ', [$id_ue_ec]);
+        return $nbr_enregistres;
+    }
+
+    //nombre d'inscrits par rapport à un EC (qui est déterminé par une AU, parcours, nivau et UE)
+    public static function get_nbr_inscrits($id_ue_ec){
+        $inscrits = DB::scalar('
+            select nbr_inscrits
+            from v_liste_ue_ec_avec_nbr_inscrits
+            where id_ue_ec = ?
+        ', [$id_ue_ec]);
+        return $inscrits;
+    }
+
     //vérification des en-têtes
     public static function modifier_matricule($barcode, $matricule){
         $values = explode("-", $barcode);

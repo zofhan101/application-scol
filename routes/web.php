@@ -18,6 +18,11 @@ use App\Http\Middleware\notes\CheckOuvertureSaisieNote;
 use App\Http\Middleware\notes\CheckOuvertureSaisieEntete;
 use App\Http\Controllers\UE\UEController;
 use App\Http\Controllers\notes\NoteController;
+use App\Models\inscription\Nationalite;
+use App\Models\inscription\Serie;
+use App\Models\inscription\Province;
+use App\Models\mention_parcours\Parcours;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -61,7 +66,10 @@ Route::middleware('auth')->group(function(){
 
         //accèes à l'interface saisie des notes d'examen
         Route::middleware(CheckOpenedAU::class, CheckOuvertureSaisieNote::class)->group(function () {
-            Route::get('notes/interface_saisie_notes',function(){ return view('notes/interface_saisie_notes');})->name('interface_saisie_notes');
+            Route::get('notes/interface_saisie_notes',function(){
+                $parcours = Parcours::all();
+                return view('notes/interface_saisie_notes', ['parcours' => $parcours]);
+            })->name('interface_saisie_notes');
 
         });
 
@@ -73,14 +81,39 @@ Route::middleware('auth')->group(function(){
 
             //Mise à jour des données étudiant
             Route::post('etudiant/form_parents',[EtudiantController::class,'form_parents'])->name('form_parents_modif');
+            Route::get('etudiant/form_parents',function(){ return view('etudiants/form_parents'); })->name('etudiant.form_parents');
             Route::post('etudiant/form_bacc',[EtudiantController::class,'form_bacc'])->name('form_bacc_modif');
+            Route::get('etudiant/form_bacc',function(){
+                $series = Serie::all();
+                $provinces =  Province::all();
+                return view('etudiants/form_bacc',['series'=>$series, 'provinces'=>$provinces]);
+
+            })->name('etudiant.form_bacc');
+
             Route::post('etudiant/form_identite',[EtudiantController::class,'form_identite'])->name('form_identite_modif');
+            Route::get('etudiant/form_identite',function(){
+                $nationalites = Nationalite::all();
+                return view('etudiants/form_identite',['nationalites' =>$nationalites]);
+            })->name('form_identite_modif_form');
             Route::post('etudiant/form_etudiant',[EtudiantController::class,'form_etudiant'])->name('form_etudiant_modif');
+            Route::get('etudiant/form_etudiant',function(){ return view('etudiants/form_etudiant'); })->name('form_etudiant_modif_form');
             Route::post('etudiant/search_matricule',[EtudiantController::class,'search_etudiant'])->name('maj_etu_search');
             Route::get('etudiant/search_matricule',function(){ return view('etudiants/check_etudiant');})->name('maj_etu_search_form');
 
             // NECESSITANT AUTHENTIFICATION ET A.U. OUVERTE
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //statistiques sur les saisies des notes get_stats_saisie_note
+                Route::post('ue/get_stats_saisie_note',[NoteController::class,'get_stats_saisie_note'])->name('get_stats_saisie_note');
+
+                //EC correspondant à un parcorus, niveau et ue donnés
+                Route::post('ue/get_liste_ec',[UEController::class,'get_liste_ec'])->name('get_liste_ec');
+
+                // UE correspondants à un parcours et à un niveau donnés
+                Route::post('ue/get_liste_ue',[UEController::class,'get_liste_ue'])->name('get_liste_ue');
+
+                //niveaux appartenant à un parours
+                Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_parcours'])->name('get_niveaux_parcours');
+
                 //modification matricule
                 Route::post('notes/modifier_matricule',[NoteController::class,'modifier_matricule'])->name('modifier_matricule');
 
@@ -245,7 +278,6 @@ Route::middleware('auth')->group(function(){
 
 
 
-Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_parcours'])->name('get_niveaux_parcours');
 
 Route::post('authAdmin',[AdminAuthController::class,'login'])->name('authAdmin');
 

@@ -15,6 +15,44 @@ use PDF;
 
 class UEController extends Controller
 {
+    public function get_liste_ec(Request $request){
+        $request->validate([
+            'id_niveau' => ['required', 'numeric', 'exists:niveau,id_niveau'],
+            'id_parcours'=>['required', 'numeric', 'exists:parcours,id_parcours'],
+            'id_ue' => ['required', 'numeric', 'exists:unite_enseignement,id_unite_enseignement']
+        ]);
+
+        $id_niveau = $request->input('id_niveau');
+        $id_parcours = $request->input('id_parcours');
+        $id_ue = $request->input('id_ue');
+
+        try {
+            $au_courant = AU::get_au_en_cours();
+            $liste_ec = Unite_enseignement::get_liste_ec($id_parcours, $id_niveau, $id_ue, $au_courant->id_au);
+            return response()->json(["ecs" => $liste_ec], 200);
+        } catch (\Exception $th) {
+            return response()->json(["errors" =>["autres" => $th->getMessage()] ], 500);
+        }
+
+    }
+
+    public function get_liste_ue(Request $request){
+        $request->validate([
+            'id_niveau' => ['required', 'numeric', 'exists:niveau,id_niveau'],
+            'id_parcours'=>['required', 'numeric', 'exists:parcours,id_parcours']
+        ]);
+        $id_niveau = $request->input('id_niveau');
+        $id_parcours = $request->input('id_parcours');
+
+        try {
+            $au_courant = AU::get_au_en_cours();
+            $liste_ue = Unite_enseignement::get_liste_ue($id_parcours, $id_niveau, $au_courant->id_au);
+            return response()->json(["ues" => $liste_ue], 200);
+        } catch (\Exception $th) {
+            return response()->json(["errors" =>["autres" => $th->getMessage()] ], 500);
+        }
+
+    }
 
     public function down_barcode(Request $request){
         $liste_code_barre = session('liste_code_barre');

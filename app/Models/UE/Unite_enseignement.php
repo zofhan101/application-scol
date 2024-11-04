@@ -22,6 +22,32 @@ class Unite_enseignement extends Model
         'nom_unite_enseignement'
     ];
 
+    public static function get_liste_ec($id_parcours, $id_niveau, $id_ue, $id_au){
+        try {
+            $liste_ec = DB::select('
+                select distinct id_ue_ec, id_element_constitutif, nom_element_constitutif from  v_liste_ue_ec where id_au = ? and id_parcours = ? and id_niveau = ? and id_unite_enseignement = ?
+            ', [$id_au, $id_parcours, $id_niveau, $id_ue]);
+            if(empty($liste_ec))
+                throw new Exception('Aucune EC ne correspond aux AU, parcours ,niveau et UE sélectionnés');
+            return $liste_ec;
+        } catch (\Exception $th) {
+            throw $th;
+        }
+    }
+
+    public static function get_liste_ue($id_parcours, $id_niveau, $id_au){
+        try {
+            $liste_ue = DB::select('
+                select distinct id_unite_enseignement, nom_unite_enseignement from  v_liste_ue_ec where id_au = ? and id_parcours = ? and id_niveau = ?
+            ', [$id_au, $id_parcours, $id_niveau]);
+            if(empty($liste_ue))
+                throw new Exception('Aucune UE ne correspond aux AU, parcours et niveau sélectionnés');
+            return $liste_ue;
+        } catch (\Exception $th) {
+            throw $th;
+        }
+    }
+
 
     public static function get_ue_ec_by_id($id_ue_ec){
         return DB::select('

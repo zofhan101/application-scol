@@ -16,13 +16,44 @@ use Exception;
 use Illuminate\Support\Facades\Session;
 use App\Models\UE\Unite_enseignement;
 use App\Models\inscription\Inscription;
-
+;
 
 
 class NoteController extends Controller
 {
-    //vérification des en-têtes
+    //statistiques sur la saisie
+    public function get_stats_saisie_note(Request $request){
+        $request->validate([
+            'id_ue_ec' => ['required','numeric', 'exists:ue_ec_parcours_niveau_au,id_ue_ec']
+        ]);
+        $id_ue_ec = $request->input('id_ue_ec');
 
+        try {
+            //récupérer le nombre des inscrits
+            $inscrits = Operation_sur_examen::get_nbr_inscrits($id_ue_ec);
+
+            // récupérer le nombre des copies déjà enregistrées
+            $nbr_enregistres = Operation_sur_examen::get_nbr_enregistres($id_ue_ec);
+
+            //calculer le nombre de copies à encore enregistrer
+            $nbr_restants = $inscrits - $nbr_enregistres;
+
+            return response()->json([
+                "inscrits" => $inscrits,
+                "nbr_enregistres" => $nbr_enregistres,
+                "nbr_restants" => $nbr_restants
+            ], 200);
+
+        } catch (\Exception $th) {
+            return response()->json(["errors"=>["autres"=> $th->getMessage()]], 500);
+        }
+
+
+
+    }
+
+
+    //vérification des en-têtes
     public function modifier_matricule(Request $request){
         $request->validate([
             'barcode' => ['bail','required','string', new IsBarCodeValide],

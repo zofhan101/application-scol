@@ -112,3 +112,10 @@ join v_inscrits as i on ue_ec.id_parcours = v_inscrits.id_parcours and ue_ec.id_
 --join examen_par_au as epa on o.id_examen_par_au = epa.id_examen_par_au
 --join session_examen as se on epa.id_session_examen = epa.id_session_examen;
 
+-- 4-11-24 22:12
+--liste des ue et ec avec le nombre d'inscrits vue matérialisée
+create materialized view v_liste_ue_ec_avec_nbr_inscrits as
+select l.*, n.nbr_inscrits
+from v_liste_ue_ec_avec_mentions as l
+join v_nbr_etu_par_au_parcours_niveau as n on l.id_parcours = n.id_parcours and l.id_niveau = n.id_niveau and l.id_au = n.id_au;
+

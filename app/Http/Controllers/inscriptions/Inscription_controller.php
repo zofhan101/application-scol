@@ -69,8 +69,13 @@ class Inscription_controller extends Controller
         ]);
 
         $id_parcours = $request->input('id_parcours');
-        $niveaux = Niveau::get_niveaux_parcours($id_parcours);
-        return response()->json($niveaux);
+        try {
+            $niveaux = Niveau::get_niveaux_parcours($id_parcours);
+            return response()->json($niveaux, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['errors' => ["autres" => $th->getMessage()]], 500);
+        }
+
     }
 
 
@@ -278,7 +283,8 @@ class Inscription_controller extends Controller
             'date_delivrance'=>['nullable','date'],
             'lieu_delivrance'=>['nullable','max:255'],
             'type_pi'=>['nullable',Rule::in(['cin','pass'])],
-            'email'=>['nullable', 'email']
+            'email'=>['nullable', 'email'],
+            'photo'=>['required', 'file','mimes:jpg,png,jpeg', 'max:2048']
         ]);
 
         // enregistrer ces informations dans la session
@@ -292,6 +298,11 @@ class Inscription_controller extends Controller
         $new_etu->adresse = $request->input('adresse');
         $new_etu->contact = $request->input('contact');
         $new_etu->email = $request->input('email');
+
+        $photo = $request->file('photo');
+        $photoContent = file_get_contents($photo->getRealPath());
+        $new_etu->photoContent = $photoContent;
+        $new_etu->photoExtension = $photo->getClientOriginalExtension();
 
         return redirect('inscription/form_bacc');
     }
