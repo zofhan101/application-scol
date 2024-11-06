@@ -7,7 +7,34 @@ use Exception;
 
 class Operation_sur_examen
 {
-    public static function get_nbr_enregistres($id_ue_ec){
+    public static function get_nbr_verifies_entete($id_ue_ec){
+        $nbr_verifies = DB::scalar('
+            select count(numero)
+            from barcode_matricule
+            where id_ue_ec = ? and verifie = true
+        ', [$id_ue_ec]);
+        return $nbr_verifies;
+    }
+
+    public static function get_nbr_verifies_note($id_ue_ec){
+        $nbr_verifies = DB::scalar('
+            select count(numero)
+            from barcode_notes
+            where id_ue_ec = ? and verifie = true
+        ', [$id_ue_ec]);
+        return $nbr_verifies;
+    }
+
+    public static function get_nbr_enregistres_entete($id_ue_ec){
+        $nbr_enregistres = DB::scalar('
+            select count(matricule)
+            from barcode_matricule
+            where id_ue_ec = ?
+        ', [$id_ue_ec]);
+        return $nbr_enregistres;
+    }
+
+    public static function get_nbr_enregistres_note($id_ue_ec){
         $nbr_enregistres = DB::scalar('
             select count(numero)
             from barcode_note

@@ -60,7 +60,10 @@ Route::middleware('auth')->group(function(){
 
         //accèes à l'interface saisie des en-tetes
         Route::middleware(CheckOpenedAU::class, CheckOuvertureSaisieEntete::class)->group(function () {
-            Route::get('notes/interface_saisie_entete',function(){ return view('notes/interface_saisie_entete');})->name('interface_saisie_entete');
+            Route::get('notes/interface_saisie_entete',function(){
+                $parcours = Parcours::all();
+                return view('notes/interface_saisie_entete', ['parcours' => $parcours]);
+            })->name('interface_saisie_entete');
 
         });
 
@@ -102,8 +105,18 @@ Route::middleware('auth')->group(function(){
 
             // NECESSITANT AUTHENTIFICATION ET A.U. OUVERTE
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //statistiques sur les vérification des en-têtes
+                Route::post('notes/get_stats_verification_entete',[NoteController::class,'get_stats_verification_entete'])->name('get_stats_verification_entete');
+
+                //statistiques sur les vérifications des notes
+                Route::post('notes/get_stats_verification_note',[NoteController::class,'get_stats_verification_note'])->name('get_stats_verification_note');
+
+                //statistiques sur les saisies des entêtes
+                Route::post('notes/get_stats_saisie_entete',[NoteController::class,'get_stats_saisie_entete'])->name('get_stats_saisie_entete');
+
+
                 //statistiques sur les saisies des notes get_stats_saisie_note
-                Route::post('ue/get_stats_saisie_note',[NoteController::class,'get_stats_saisie_note'])->name('get_stats_saisie_note');
+                Route::post('notes/get_stats_saisie_note',[NoteController::class,'get_stats_saisie_note'])->name('get_stats_saisie_note');
 
                 //EC correspondant à un parcorus, niveau et ue donnés
                 Route::post('ue/get_liste_ec',[UEController::class,'get_liste_ec'])->name('get_liste_ec');
@@ -125,7 +138,10 @@ Route::middleware('auth')->group(function(){
                 Route::post('entetes/enregistrer_entete',[NoteController::class,'enregistrer_entete'])->name('enregistrer_entete');
 
                 //vérification des entetes
-                Route::get('entetes/interface_verification_entete',function(){ return view('notes/interface_verification_entete'); })->name('interface_verification_entete');
+                Route::get('entetes/interface_verification_entete',function(){
+                    $parcours = Parcours::all();
+                    return view('notes/interface_verification_entete', ["parcours" => $parcours]);
+                })->name('interface_verification_entete');
 
                 //modification note
                 Route::post('notes/modifier_note',[NoteController::class,'modifier_note'])->name('modifier_note');
@@ -137,7 +153,10 @@ Route::middleware('auth')->group(function(){
 
                 //vérification des notes
                 Route::post('notes/get_note',[NoteController::class,'get_note'])->name('get_note');
-                Route::get('notes/interface_verification_notes',function(){ return view('notes/interface_verification_notes'); })->name('interface_verification_notes');
+                Route::get('notes/interface_verification_notes',function(){
+                    $parcours = Parcours::all();
+                    return view('notes/interface_verification_notes', ["parcours" => $parcours]);
+                })->name('interface_verification_notes');
 
                 //transfert d'étudiant
                 Route::post('transfert/autres_inscriptions',[TransfertController::class,'inscription'])->name('autres_inscriptions_transfert');

@@ -102,7 +102,7 @@
 
                     <div class="d-flex align-items-center justify-content-center">
                       <div class="ps-3 card-title">
-                        <h1  id="inscrits" style="font-size: 50pt">300</h1>
+                        <h1  id="inscrits" style="font-size: 50pt"></h1>
                       </div>
                     </div>
                   </div>
@@ -117,7 +117,7 @@
 
                     <div class="d-flex align-items-center justify-content-center">
                       <div class="ps-3 card-title">
-                        <h1  id="nombre_enregistres" style="font-size: 50pt">300</h1>
+                        <h1  id="nombre_enregistres" style="font-size: 50pt"></h1>
                       </div>
                     </div>
                   </div>
@@ -132,7 +132,7 @@
 
                     <div class="d-flex align-items-center justify-content-center">
                       <div class="ps-3 card-title">
-                        <h1  id="nombre_restants" style="font-size: 50pt">300</h1>
+                        <h1  id="nombre_restants" style="font-size: 50pt"></h1>
                       </div>
                     </div>
                   </div>
