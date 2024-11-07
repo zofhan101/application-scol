@@ -21,6 +21,34 @@ use App\Models\inscription\Inscription;
 
 class NoteController extends Controller
 {
+    //génération des résultats
+    public function generer_resultats(Request $request){
+        $request->validate([
+            'id_examen_par_au' => ['required','numeric', 'exists:examen_par_au,id_examen_par_au']
+        ]);
+        $id_examen_par_au = $request->input('id_examen_par_au');
+
+        //Récupérer les éventuelles anomalies(oubli de saisie d'en tete ou  de note)
+        $anomalies = Operation_sur_examen::get_anomalies_saisie($id_examen_par_au);
+        if(empty($anomalies[0]) == false || empty($anomalies[1]) == false){
+            //afficher ces anomalies
+            return view('notes/anomalies_note', ['anomalies' =>$anomalies]);
+        }
+        else{
+
+        }
+    }
+
+    public function controle_resultats(){
+        //recupération des examens
+        try {
+            $examens = AU::get_liste_examens();
+            return view('notes/controle_resultats',['examens'=>$examens]);
+        } catch (\Exception $th) {
+            return view('notes/controle_resultats',['error'=>$th->getMessage()]);
+        }
+    }
+
     // statistiques sur la vérification des entetes
     public function get_stats_verification_entete(Request $request){
         $request->validate([

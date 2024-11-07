@@ -7,6 +7,30 @@ use Exception;
 
 class Operation_sur_examen
 {
+    //calcul de résultat
+        //anomalies dans les saisies
+    public static function get_anomalies_saisie($id_examen_par_au){
+        // récupérer et insérer le anomalies
+        $anomalies =  DB::select('
+            select id_ue_ec_matricule, numero_matricule, matricule, id_ue_ec_note, numero_note, note, id_examen_par_au
+            from v_correspondance_note_matricule
+            where id_examen_par_au = ? and (matricule is  null or note is null);
+        ', [$id_examen_par_au]);
+
+        $matricule_abs =[];
+        $note_abs = [];
+        foreach($anomalies as $anomalie){
+            if($anomalie->matricule == null)
+                $matricule_abs[] = $anomalie;
+            else if($anomalie->note == null)
+                $note_abs[] = $anomalie;
+        }
+
+        $res=[$matricule_abs, $note_abs];
+        return $res;
+    }
+
+    //statistiques de saisie et de vérification de notes et matricules
     public static function get_nbr_verifies_entete($id_ue_ec){
         $nbr_verifies = DB::scalar('
             select count(numero)
@@ -379,8 +403,14 @@ class Operation_sur_examen
             select * from operation_par_examen where id_examen_par_au = ?
         ', [$id_examen_par_au] );
         if(empty($operations) == false ){
-            if($operations[0]->date_ouverture_saisie_note != null)
-            throw new Exception('Erreur: la saisie des notes a déjà été ouverte pour cet  examen');
+            if($operations[0]->date_ouverture_saisie_note == null){
+                DB::update('
+                    update operation_par_examen set date_ouverture_saisie_note = ?, id_user_date_ouverture_saisie_note = ? where id_examen_par_au = ?
+                ', [date('Y-m-d'), $id_user, $id_examen_par_au]);
+            }
+            else {
+                throw new Exception('ERREUR: saisie des notes déjà ouverte pour l\'examen choisi');
+            }
         }
         else{
             try {

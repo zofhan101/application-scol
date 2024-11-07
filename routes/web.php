@@ -233,6 +233,9 @@ Route::middleware('auth')->group(function(){
         Route::middleware(EnsureIsSP::class)->group(function () {
 
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //génération des résultats d'examen
+                Route::post('notes/generer_resultats',[NoteController::class,'generer_resultats'])->name('notes.generer_resultats');
+                Route::get('notes/generer_resultats',[NoteController::class,'controle_resultats'])->name('notes.generer_resultats.page');
 
                 //ouverture et cloture des vérification des en-têtes
                 Route::post('entetes/verrouiller_verification_entete',[NoteController::class,'verrouiller_verification_entete'])->name('verrouiller_verification_entete');
