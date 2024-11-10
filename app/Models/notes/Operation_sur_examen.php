@@ -8,9 +8,48 @@ use Exception;
 class Operation_sur_examen
 {
     //calcul de résultat
+
+    public static function get_resultats_eval($id_au, $id_parcours, $id_niveau, $id_examen_par_au){
+        DB::statement('
+            select creer_v_resultats_eval(?, ?, ?, ?)
+        ',[$id_au, $id_parcours, $id_niveau, $id_examen_par_au]);
+
+        $resultats_eval =  DB::select('select * from v_resultats_eval');
+        $entetes = array_keys(get_object_vars($resultats_eval[0]));
+        $valeurs = [];
+
+        foreach($resultats_eval as $resultat_eval){
+            $valeurs[] = array_values(get_object_vars($resultat_eval));
+        }
+
+        return [$entetes, $valeurs];
+    }
+
+    public static function verrouiller_resultats($id_examen_par_au, $id_user){
+        DB::update('update operation_par_examen set date_resultats = ? , id_user_date_resultats = ?
+        ',[date('Y-m-d'), $id_user]);
+    }
+
+    public static function remplir_note_eval($id_examen_par_au){
+        DB::statement('
+            insert into note_eval(id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, id_unite_enseignement, id_ue_ec, id_element_constitutif, im, id_etudiants, note_ec, note_ue, valide)
+            select id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation, coefficient, id_unite_enseignement, id_ue_ec, id_element_constitutif, im, id_etudiants, note_ec, note_ue, valide
+            from v_note_validation_ue_avec_ec
+            where id_examen_par_au = ?;
+        ',[$id_examen_par_au]);
+    }
+
+    public static function get_session_examen($id_examen_par_au){
+        $session = DB::select('
+            select se.id_session_examen, nom_session_examen, type_session, id_examen_par_au, id_au
+            from examen_par_au as epa
+            join session_examen as se on epa.id_session_examen = se.id_session_examen
+        ');
+        return $session[0];
+    }
         //anomalies dans les saisies
     public static function get_anomalies_saisie($id_examen_par_au){
-        // récupérer et insérer le anomalies
+        // récupérer  le anomalies
         $anomalies =  DB::select('
             select id_ue_ec_matricule, numero_matricule, matricule, id_ue_ec_note, numero_note, note, id_examen_par_au
             from v_correspondance_note_matricule

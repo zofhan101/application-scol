@@ -90,6 +90,7 @@
                     let data = await response.json();
 
                     if(response.ok){
+                        console.log(data);
                         get_status();
 
                     }
@@ -106,9 +107,16 @@
                                     window.location.href = "{{ route('au_fermee') }}"
                                 }
                             }
+
                         }
-                        console.error('Erreur lors de la génération des résultats: ', data);
-                        alert('Erreur lors de la génération des résultats:');
+                        else if(response.status == 422){
+                            alert(data.error);
+                        }
+                        else{
+                            console.error('Erreur lors de la génération des résultats: ', data);
+                            alert('Erreur lors de la génération des résultats:');
+                        }
+
                     }
                 }
                 else if(contentType.includes('text/html')){

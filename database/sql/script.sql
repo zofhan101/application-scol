@@ -136,61 +136,109 @@ join etudiants as e on i.id_etudiant = e.id_etudiants;
 
 
 -- 6-11-24 15:28
--- récupération de tous les ec dont l'examen correspondant est une evaluation ou un repechage
+-- récupération de tous les ec dont l'examen correspondant est une evaluationz
 create or replace view v_ue_ec_eval as
             select ue_ec.*, se.id_session_examen, nom_session_examen, type_session
             from ue_ec_parcours_niveau_au as ue_ec
             join examen_par_au as epa on ue_ec.id_examen_par_au = epa.id_examen_par_au
             join session_examen as se on epa.id_session_examen = se.id_session_examen
-            where (type_session = \'eval\' or type_session = \'repe\') ;
+            where type_session = \'eval\' or type_session = \'repe\';
 
--- filtrer le résultat de la vue pour correspondre à une seule évaluation(id_examen_par_au)
-CREATE OR REPLACE FUNCTION ue_ec_eval_filtre(p_id_examen_par_au bigint)
-RETURNS TABLE (id_ue_ec bigint, coefficient double precision, id_examen_par_au bigint, id_parcours bigint, id_niveau bigint, id_unite_enseignement bigint, id_element_constitutif bigint, id_au bigint, id_session_examen bigint, nom_session_examen varchar, type_session varchar) AS
-$$
-BEGIN
-    RETURN QUERY SELECT v.id_ue_ec, v.coefficient , v.id_examen_par_au, v.id_parcours, v.id_niveau, v.id_unite_enseignement, v.id_element_constitutif, v.id_au, v.id_session_examen, v.nom_session_examen, v.type_session FROM v_ue_ec_eval as v
-                    WHERE v.id_examen_par_au = p_id_examen_par_au;
-END;
-$$ LANGUAGE plpgsql;
-
-
--- vue de combinaison de chaque etudiant à chaque ue_ec de son parours et niveau, à chaque A.U.
-create or replace function f_association_etu_ec(p_id_examen_par_au bigint)
-returns table(id_au bigint, id_parcours bigint, id_niveau bigint, coefficient double precision, id_unite_enseignement bigint, id_ue_ec bigint, id_examen_par_au bigint, id_session_examen bigint, nom_session_examen varchar,  type_session varchar,id_etudiants bigint, im varchar, date_annulation date) as
-$$
-BEGIN
-    return query select i.id_au, i.id_parcours, i.id_niveau, ue_ec.coefficient, ue_ec.id_unite_enseignement, ue_ec.id_ue_ec, ue_ec.id_examen_par_au, ue_ec.id_session_examen, ue_ec.nom_session_examen, ue_ec.type_session,i.id_etudiants, i.im, i.date_annulation
-                    from ue_ec_eval_filtre(p_id_examen_par_au) as ue_ec
-                    left join v_inscrits2 as i on i.id_parcours = ue_ec.id_parcours and i.id_niveau =  ue_ec.id_niveau and i.id_au = ue_ec.id_au;
-
-end;
-$$ LANGUAGE plpgsql;
+-- vue d'association de chaque etudiant à chaque ue_ec de son parours et niveau à chaque A.U.
+create or replace view v_association_etu_ec as
+            select ue_ec.id_au, ue_ec.id_parcours, ue_ec.id_niveau, ue_ec.coefficient, id_unite_enseignement, id_ue_ec, ue_ec.id_element_constitutif, ue_ec.id_examen_par_au, id_session_examen, nom_session_examen, type_session,id_etudiants, im, date_annulation
+            from v_ue_ec_eval as ue_ec
+            left join v_inscrits2 as i on i.id_parcours = ue_ec.id_parcours and i.id_niveau =  ue_ec.id_niveau and i.id_au = ue_ec.id_au;
 
  -- 6-11-24 15:44
  -- association des combinaisons ue_ec-etu avec les notes enregistrees
-create or replace function f_note(p_id_examen_par_au bigint)
-returns table(id_au bigint, id_parcours bigint, id_niveau bigint, id_unite_enseignement bigint, id_ue_ec bigint, id_examen_par_au bigint, id_session_examen bigint, nom_session_examen varchar, type_session varchar, im varchar, id_etudiants bigint, note double precision) as
-$$
-begin
-    return query select a.id_au, a.id_parcours, a.id_niveau, a.id_unite_enseignement, a.id_ue_ec, a.id_examen_par_au, a.id_session_examen, a.nom_session_examen, a.type_session, a.im, a.id_etudiants,coalesce(n.note, 0) as note
-                    from v_correspondance_note_matricule as n
-                    right join f_association_etu_ec(p_id_examen_par_au) as a on a.id_ue_ec = n.id_ue_ec and a.im = n.matricule;
-end;
-$$ language plpgsql;
-
-
+ create or replace view v_note as
+ select a.id_au, a.id_parcours, a.id_niveau, a.coefficient, a.id_unite_enseignement, a.id_ue_ec, a.id_element_constitutif, a.id_examen_par_au, id_session_examen, nom_session_examen, type_session, a.im, a.id_etudiants,coalesce(n.note, 0) as note, date_annulation
+ from v_correspondance_note_matricule as n
+ right join v_association_etu_ec as a on a.id_ue_ec = n.id_ue_ec and a.im = n.matricule;
 
  --6-11-24 22:13
 -- moyenne des UE
 create or replace view v_note_moyenne_ue as
-            select id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants,avg(note) as note
+            select id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants,avg(note) as note, date_annulation
             from v_note
-            group by id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants
+            group by id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants, date_annulation
+
+-- 7-11-24 11:35
+-- mention validé , non validé ou éliminatoire dans le résultat
+create or replace view v_note_validation_ue as
+        select id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, coefficient, id_unite_enseignement, date_annulation,im, id_etudiants,note,
+            case
+                when note >= (select (note_max/2) as moyenne from note_max order by id_note_max desc limit 1) then 'V'
+                when note > (select note_elim from note_eliminatoire order by id_note_eliminatoire desc limit 1) and note < (select (note_max/2) as moyenne from note_max order by id_note_max desc limit 1) then 'N'
+                else 'E'
+            end AS valide
+        from v_note_moyenne_ue
+
+
+-- 7-11-24 12:49
+-- assemblage des ue avec leurs ec respectifs
+create or replace view v_note_validation_ue_avec_ec as
+    select n.id_au, n.id_parcours, n.id_niveau, n.id_examen_par_au, n.id_session_examen, n.nom_session_examen, n.type_session, n.date_annulation, n.coefficient, n.id_unite_enseignement, n.id_ue_ec, n.id_element_constitutif, n.im, n.id_etudiants, n.note as note_ec, v.note as note_ue, v.valide
+    from v_note_validation_ue as v
+    join v_note as n on n.id_au = v.id_au and n.id_parcours = v.id_parcours and n.id_niveau = v.id_niveau and n.id_unite_enseignement = v.id_unite_enseignement and n.id_examen_par_au = v.id_examen_par_au and n.id_etudiants = v.id_etudiants
+
+-- 7-11-24 17:23
+create or replace view v_note_eval_ue as
+select distinct on( id_au, id_parcours, id_niveau, id_examen_par_au,id_unite_enseignement,im)id_note_eval, id_au, id_parcours, id_niveau, id_examen_par_au,id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, id_unite_enseignement, im, id_etudiants, note_ue, valide
+from note_eval
+order by id_au, id_parcours, id_niveau, id_examen_par_au,id_unite_enseignement,im, id_ue_ec asc
+
+
+
 -- 6-11-24 22:32
-create or replace view v_note_moyenne as
-select id_au, id_parcours, id_niveau, id_examen_par_au, im, id_etudiants, sum(coefficient) as total_coefficient, sum(note*coefficient) as total, (sum(note*coefficient)/sum(coefficient)) as moyenne
-from v_note_moyenne_ue
-group by id_au, id_parcours, id_niveau, id_examen_par_au, im, id_etudiants;
+--create or replace view v_note_moyenne as
+--select id_au, id_parcours, id_niveau, id_examen_par_au, im, id_etudiants, sum(coefficient) as total_coefficient, sum(note*coefficient) as total, (sum(note*coefficient)/sum(coefficient)) as moyenne
+--from v_note_moyenne_ue
+--group by id_au, id_parcours, id_niveau, id_examen_par_au, im, id_etudiants;
+--
+
+-- 8-11-24 9:44
+-- jointure avec les tables pour ajouter les libeles aux resultats
+create or replace view v_note_eval_ue_complet as
+select  id_note_eval, au.id_au, au.intitule, p.id_parcours, p.nom_parcours, n.id_niveau, n.nom_niveau, id_examen_par_au,id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, ue.id_unite_enseignement, ue.nom_unite_enseignement, v.im, e.id_etudiants, e.nom, e.prenoms, note_ue, valide
+from v_note_eval_ue as v
+join au on v.id_au = au.id_au
+join parcours as p on v.id_parcours = p.id_parcours
+join niveau as n on v.id_niveau = n.id_niveau
+join unite_enseignement as ue on v.id_unite_enseignement = ue.id_unite_enseignement
+left join etudiants as e on v.id_etudiants = e.id_etudiants;
+
+-- génération de l'affichage de réusltats par au,parcours,niveau, session d'examen
+create or replace function creer_v_resultats_eval(a_id_au bigint, a_id_parcours bigint, a_id_niveau bigint, a_id_examen_par_au bigint)
+RETURNS void AS
+$$
+DECLARE
+    nom_ue RECORD;
+    requete TEXT := 'CREATE OR REPLACE VIEW v_resultats_eval AS SELECT ROW_NUMBER() OVER (ORDER BY NULL) AS n° ,im, nom, prenoms';
+    colonnes TEXT := '';
+BEGIN
+    FOR nom_ue IN
+        select distinct nom_unite_enseignement
+        from v_note_eval_ue_complet as v
+        where v.id_au = a_id_au
+            and v.id_parcours = a_id_parcours
+            and v.id_niveau = a_id_niveau
+            and v.id_examen_par_au = a_id_examen_par_au
+    LOOP
+        colonnes := colonnes ||
+            ', Max(CASE WHEN nom_unite_enseignement = ''' || nom_ue.nom_unite_enseignement || ''' THEN valide END) AS \"Résultats ' || nom_ue.nom_unite_enseignement || '\"';
+    END LOOP;
+
+    requete := requete || colonnes || ' FROM  v_note_eval_ue_complet WHERE id_au = ' || a_id_au || ' and id_parcours = ' || a_id_parcours || ' and id_niveau = ' || a_id_niveau || ' and id_examen_par_au = ' || a_id_examen_par_au || ' GROUP BY im, nom, prenoms;' ;
+
+    EXECUTE 'DROP view if exists v_resultats_eval;' ;
+    RAISE NOTICE '%',requete;
+    EXECUTE requete;
+
+
+END;
+$$ LANGUAGE plpgsql;
+
 
 

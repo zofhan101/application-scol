@@ -171,7 +171,7 @@
 
     //rafraichissement des statistiques en fonction des parcours, niveau, UE, ec
     let ecs_el = document.getElementById('ec');
-    ecs_el.addEventListener('change', get_stats_saisie_entete);
+    ecs_el.addEventListener('change', get_stats_verification_note);
 
     async function get_stats_verification_note(){
         //récupération des ec correspondants aux niveau et parcours et ue sélectionnés

@@ -80,7 +80,11 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
+            //liste d'examens pour une au donnée
+            Route::post('au/liste_examen_par_au',[AUcontroller::class,'get_liste_examen'])->name('au.get_liste_examen');
 
+            //niveaux appartenant à un parours
+            Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_parcours'])->name('get_niveaux_parcours');
 
             //Mise à jour des données étudiant
             Route::post('etudiant/form_parents',[EtudiantController::class,'form_parents'])->name('form_parents_modif');
@@ -124,8 +128,6 @@ Route::middleware('auth')->group(function(){
                 // UE correspondants à un parcours et à un niveau donnés
                 Route::post('ue/get_liste_ue',[UEController::class,'get_liste_ue'])->name('get_liste_ue');
 
-                //niveaux appartenant à un parours
-                Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_parcours'])->name('get_niveaux_parcours');
 
                 //modification matricule
                 Route::post('notes/modifier_matricule',[NoteController::class,'modifier_matricule'])->name('modifier_matricule');
@@ -196,6 +198,9 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            // résultats d'examen
+            Route::post('notes/get_resultats',[NoteController::class,'get_resultats_eval'])->name('notes.get_resultats.eval');
+            Route::get('notes/get_resultats.page',[NoteController::class,'get_resultats_page'])->name('notes.get_resultats.page');
 
             //liste des inscrits
             Route::post('inscription/liste_inscrits',[Inscription_controller::class,'get_liste_inscrits'])->name('liste_inscrits');

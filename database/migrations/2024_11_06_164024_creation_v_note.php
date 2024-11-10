@@ -12,15 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement('
-            create or replace function f_note(p_id_examen_par_au bigint)
-            returns table(id_au bigint, id_parcours bigint, id_niveau bigint, id_unite_enseignement bigint, id_ue_ec bigint, id_examen_par_au bigint, id_session_examen bigint, nom_session_examen varchar, type_session varchar, im varchar, id_etudiants bigint, note double precision) as
-            $$
-            begin
-                return query select a.id_au, a.id_parcours, a.id_niveau, a.id_unite_enseignement, a.id_ue_ec, a.id_examen_par_au, a.id_session_examen, a.nom_session_examen, a.type_session, a.im, a.id_etudiants,coalesce(n.note, 0) as note
-                                from v_correspondance_note_matricule as n
-                                right join f_association_etu_ec(p_id_examen_par_au) as a on a.id_ue_ec = n.id_ue_ec and a.im = n.matricule;
-            end;
-            $$ language plpgsql;
+            create or replace view v_note as
+                select a.id_au, a.id_parcours, a.id_niveau, a.coefficient, a.id_unite_enseignement, a.id_ue_ec, a.id_element_constitutif, a.id_examen_par_au, id_session_examen, nom_session_examen, type_session, a.im, a.id_etudiants,coalesce(n.note, 0) as note, date_annulation
+                from v_correspondance_note_matricule as n
+                right join v_association_etu_ec as a on a.id_ue_ec = n.id_ue_ec and a.im = n.matricule;
+
         ');
 
     }
@@ -31,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         DB::statement('
-            drop view if exists f_note;
+            drop view if exists v_note;
         ');
     }
 };

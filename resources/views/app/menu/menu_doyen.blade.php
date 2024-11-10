@@ -84,6 +84,13 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.get_resultats.page') }}">
+              <i class="bi bi-circle"></i><span>Consulter les résultats d'examen</span>
+            </a>
+          </li>
+
+
 
 
         </ul>

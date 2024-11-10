@@ -16,5 +16,9 @@ class note_max_seeder extends Seeder
         DB::table('note_max')->insert([
             ['note_max'=>20]
         ]);
+
+        DB::table('note_eliminatoire')->insert([
+            ['note_elim'=>5]
+        ]);
     }
 }

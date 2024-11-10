@@ -16,27 +16,150 @@ use Exception;
 use Illuminate\Support\Facades\Session;
 use App\Models\UE\Unite_enseignement;
 use App\Models\inscription\Inscription;
-;
+use App\Models\mention_parcours\Parcours;
+use App\Models\mention_parcours\Niveau;
+
 
 
 class NoteController extends Controller
 {
     //génération des résultats
+    public function down_resultats_specifique(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+            'id_examen_par_au' => ['required','numeric', 'exists:examen_par_au,id_examen_par_au']
+        ]);
+
+        $id_au = $request->input('id_au');
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+        $id_examen_par_au = $request->input('id_examen_par_au');
+
+        $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($id_examen_par_au);
+        if(empty($operations)){
+            return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car aucune opération d'ouverture et de cloture des saisies et vérification des notes/en-têtes n'a été trouvée ");
+        }
+        else{
+            $operation = $operations[0];
+            if($operation->date_resultats != null){
+                $resultats = operation_sur_examen::get_resultats_eval($id_au, $id_parcours, $id_niveau, $id_examen_par_au);
+                $au = AU::find($id_au);
+                $parcours = Parcours::find($id_parcours);
+                $niveau = Niveau::find($id_niveau);
+                $eval = AU::get_examen_by_id($id_examen_par_au);
+
+                
+            }
+            else if($operation->date_cloture_verification_note == null){
+                return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car ils n'ont pas encore été générés ");
+
+            }
+        }
+
+    }
+
+    public function get_resultats_page(){
+        $au = AU::all();
+        $parcours = Parcours::all();
+        return view('notes/get_resultats_page',[
+            "aus" => $au,
+            "parcours" => $parcours
+        ]);
+
+    }
+
+    public function get_resultats_eval(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+            'id_examen_par_au' => ['required','numeric', 'exists:examen_par_au,id_examen_par_au']
+        ]);
+        $id_au = $request->input('id_au');
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+        $id_examen_par_au = $request->input('id_examen_par_au');
+
+        $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($id_examen_par_au);
+        if(empty($operations)){
+            return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car aucune opération d'ouverture et de cloture des saisies et vérification des notes/en-têtes n'a été trouvée ");
+        }
+        else{
+            $operation = $operations[0];
+            if($operation->date_resultats != null){
+                $resultats = operation_sur_examen::get_resultats_eval($id_au, $id_parcours, $id_niveau, $id_examen_par_au);
+                $au = AU::find($id_au);
+                $parcours = Parcours::find($id_parcours);
+                $niveau = Niveau::find($id_niveau);
+                $eval = AU::get_examen_by_id($id_examen_par_au);
+
+                return view('notes/resultats_eval',[
+                    "resultats" => $resultats,
+                    "au" => $au,
+                    "parcours" => $parcours,
+                    "niveau" => $niveau,
+                    "eval" => $eval
+                ]);
+            }
+            else if($operation->date_cloture_verification_note == null){
+                return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car ils n'ont pas encore été générés ");
+
+            }
+        }
+    }
+
     public function generer_resultats(Request $request){
         $request->validate([
             'id_examen_par_au' => ['required','numeric', 'exists:examen_par_au,id_examen_par_au']
         ]);
         $id_examen_par_au = $request->input('id_examen_par_au');
-
-        //Récupérer les éventuelles anomalies(oubli de saisie d'en tete ou  de note)
-        $anomalies = Operation_sur_examen::get_anomalies_saisie($id_examen_par_au);
-        if(empty($anomalies[0]) == false || empty($anomalies[1]) == false){
-            //afficher ces anomalies
-            return view('notes/anomalies_note', ['anomalies' =>$anomalies]);
+        $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($id_examen_par_au);
+        if(empty($operations)){
+            return response()->json(["error"=>"ERREUR: génération des résultats impossible car aucune opération d'ouverture et de cloture des saisies et vérification des notes/en-têtes n'a été trouvée: "], 422);
         }
         else{
+            $operation = $operations[0];
+            if($operation->date_cloture_verification_note != null && $operation->date_cloture_verification_en_tete != null && $operation->date_resultats == null){
+                $session = Operation_sur_examen::get_session_examen($id_examen_par_au);
+                if($session->type_session == "eval"){
+                    //Récupérer les éventuelles anomalies(oubli de saisie d'en tete ou  de note)
+                    $anomalies = Operation_sur_examen::get_anomalies_saisie($id_examen_par_au);
+                    if(empty($anomalies[0]) == false || empty($anomalies[1]) == false){
+                        //afficher ces anomalies
+                        return view('notes/anomalies_note', ['anomalies' =>$anomalies]);
+                    }
+                    else{
+                        //absence d'anomalie ->génération des résultat
+                        $id_user = Auth::user()->id_user;
+                        Operation_sur_examen::remplir_note_eval($id_examen_par_au);
+                        Operation_sur_examen::verrouiller_resultats($id_examen_par_au, $id_user);
+                        return response()->json(["message"=>"Génération des résultats effectuée"], 200);
 
+                    }
+                }
+                else if($session->type_session == "repe"){
+
+                }
+                else{
+                    // cas du concours PACES qui est géré par une autres application
+                    return response()->json(["error"=>"ERREUR: La génération des résultats des examens de type: ".$type_session->type_session."ne sont  pas pris en charge"], 422);
+                }
+            }
+            else if($operation->date_cloture_verification_note == null){
+                return response()->json(["error"=>"ERREUR: génération des résultats impossible car la vérification des notes n'est pas encore cloturée "], 422);
+
+            }
+            else if($operation->date_cloture_verification_en_tete == null){
+                return response()->json(["error"=>"ERREUR: génération des résultats impossible car la vérification des en-têtes n'est pas encore cloturée "], 422);
+            }
+            else if($operation->date_resultats != null){
+                return response()->json(["error"=>"ERREUR: génération des résultats impossible car elle a déjà été effectuée pour cet examen "], 422);
+            }
         }
+
+
     }
 
     public function controle_resultats(){
