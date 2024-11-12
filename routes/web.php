@@ -199,6 +199,9 @@ Route::middleware('auth')->group(function(){
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
             // résultats d'examen
+            Route::post('notes/down_resultats',[NoteController::class,'down_resultats_all'])->name('notes.down_resultats');
+            Route::post('notes/down_resultats_specifique',[NoteController::class,'down_resultats_specifique'])->name('notes.down_resultats_specifique');
+            Route::get('notes/down_resultats_specifique.page',[NoteController::class,'down_resultats_page'])->name('notes.down_resultats_specifique.page');
             Route::post('notes/get_resultats',[NoteController::class,'get_resultats_eval'])->name('notes.get_resultats.eval');
             Route::get('notes/get_resultats.page',[NoteController::class,'get_resultats_page'])->name('notes.get_resultats.page');
 

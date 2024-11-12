@@ -127,6 +127,13 @@
               <i class="bi bi-circle"></i><span>Consulter les résultats d'examen</span>
             </a>
           </li>
+
+          <li>
+            <a href="{{ route('notes.down_resultats_specifique.page') }}">
+              <i class="bi bi-circle"></i><span>Télécharger des résultats d'examen</span>
+            </a>
+          </li>
+
         </ul>
       </li>
 

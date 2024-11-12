@@ -14,15 +14,10 @@ class Operation_sur_examen
             select creer_v_resultats_eval(?, ?, ?, ?)
         ',[$id_au, $id_parcours, $id_niveau, $id_examen_par_au]);
 
+
         $resultats_eval =  DB::select('select * from v_resultats_eval');
-        $entetes = array_keys(get_object_vars($resultats_eval[0]));
-        $valeurs = [];
+        return $resultats_eval;
 
-        foreach($resultats_eval as $resultat_eval){
-            $valeurs[] = array_values(get_object_vars($resultat_eval));
-        }
-
-        return [$entetes, $valeurs];
     }
 
     public static function verrouiller_resultats($id_examen_par_au, $id_user){

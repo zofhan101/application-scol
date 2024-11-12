@@ -18,12 +18,71 @@ use App\Models\UE\Unite_enseignement;
 use App\Models\inscription\Inscription;
 use App\Models\mention_parcours\Parcours;
 use App\Models\mention_parcours\Niveau;
+use Excel;
+use App\Exports\ResultatsEvalExport;
+use App\Exports\AllResultsExport;
+
 
 
 
 class NoteController extends Controller
 {
     //génération des résultats
+
+    public function down_resultats_all(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+            'id_examen_par_au' => ['required','numeric', 'exists:examen_par_au,id_examen_par_au']
+        ]);
+
+        $id_au = $request->input('id_au');
+        $id_examen_par_au = $request->input('id_examen_par_au');
+
+        $parcours = Parcours::all();
+        $eval = AU::get_examen_by_id($id_examen_par_au);
+        $au = AU::find($id_au);
+
+        $resultats = [];
+        $sous_titres = [];
+        $sous_titre;
+
+        $niveaux;
+        $titre = "resultats"."_".$au->intitule."_".$eval->nom_session_examen;
+
+        $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($id_examen_par_au);
+
+        if(empty($operations)){
+            return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car aucune opération d'ouverture et de cloture des saisies et vérification des notes/en-têtes n'a été trouvée ");
+        }
+        else{
+            $operation = $operations[0];
+            if($operation->date_resultats != null){
+                foreach($parcours as $parcour){
+                    $niveaux = Niveau::get_niveaux_parcours($parcour->id_parcours);
+                    foreach($niveaux as $niveau){
+                        $resultats[] = operation_sur_examen::get_resultats_eval($id_au, $parcour->id_parcours, $niveau->id_niveau, $id_examen_par_au);
+
+                        $sous_titre = [];
+                        $sous_titre[] = "Résusltats ".$eval->nom_session_examen;
+                        $sous_titre[] = $niveau->nom_niveau." - ".$parcour->nom_parcours;
+                        $sous_titre[] = "Année Universitaire ".$au->intitule;
+                        $sous_titres[] = $sous_titre;
+
+                    }
+                }
+
+                return Excel::download(new AllResultsExport($resultats, $sous_titres), $titre.'.xlsx');
+            }
+            else if($operation->date_cloture_verification_note == null){
+                return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car ils n'ont pas encore été générés ");
+
+            }
+
+        }
+
+
+    }
+
     public function down_resultats_specifique(Request $request){
         $request->validate([
             'id_au' => ['required','numeric', 'exists:au,id_au'],
@@ -50,13 +109,31 @@ class NoteController extends Controller
                 $niveau = Niveau::find($id_niveau);
                 $eval = AU::get_examen_by_id($id_examen_par_au);
 
-                
+                $sous_titres = [];
+                $sous_titres[] = "Résusltats ".$eval->nom_session_examen;
+                $sous_titres[] = $niveau->nom_niveau." - ".$parcours->nom_parcours;
+                $sous_titres[] = "Année Universitaire ".$au->intitule;
+
+                $titre = "resultats_".$parcours->nom_parcours." - ".$niveau->nom_niveau."_".$au->intitule."_".$eval->nom_session_examen;
+
+                return Excel::download(new ResultatsEvalExport($resultats, $sous_titres), $titre.'.xlsx');
+
             }
             else if($operation->date_cloture_verification_note == null){
                 return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car ils n'ont pas encore été générés ");
 
             }
         }
+
+    }
+
+    public function down_resultats_page(){
+        $au = AU::all();
+        $parcours = Parcours::all();
+        return view('notes/down_resultats_page',[
+            "aus" => $au,
+            "parcours" => $parcours
+        ]);
 
     }
 
@@ -89,14 +166,21 @@ class NoteController extends Controller
         else{
             $operation = $operations[0];
             if($operation->date_resultats != null){
-                $resultats = operation_sur_examen::get_resultats_eval($id_au, $id_parcours, $id_niveau, $id_examen_par_au);
+                $resultats_eval = operation_sur_examen::get_resultats_eval($id_au, $id_parcours, $id_niveau, $id_examen_par_au);
+                $entetes = array_keys(get_object_vars($resultats_eval[0]));
+                $valeurs = [];
+
+                foreach($resultats_eval as $resultat_eval){
+                    $valeurs[] = array_values(get_object_vars($resultat_eval));
+                }
+
                 $au = AU::find($id_au);
                 $parcours = Parcours::find($id_parcours);
                 $niveau = Niveau::find($id_niveau);
                 $eval = AU::get_examen_by_id($id_examen_par_au);
 
                 return view('notes/resultats_eval',[
-                    "resultats" => $resultats,
+                    "resultats" => [$entetes, $valeurs],
                     "au" => $au,
                     "parcours" => $parcours,
                     "niveau" => $niveau,
