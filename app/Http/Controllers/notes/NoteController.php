@@ -166,28 +166,21 @@ class NoteController extends Controller
         else{
             $operation = $operations[0];
             if($operation->date_resultats != null){
-                $resultats_eval = operation_sur_examen::get_resultats_eval($id_au, $id_parcours, $id_niveau, $id_examen_par_au);
-                $entetes = array_keys(get_object_vars($resultats_eval[0]));
-                $valeurs = [];
-
-                foreach($resultats_eval as $resultat_eval){
-                    $valeurs[] = array_values(get_object_vars($resultat_eval));
-                }
-
+                $resultats_eval = operation_sur_examen::get_resultats_eval_back($id_au, $id_parcours, $id_niveau, $id_examen_par_au);
                 $au = AU::find($id_au);
                 $parcours = Parcours::find($id_parcours);
                 $niveau = Niveau::find($id_niveau);
                 $eval = AU::get_examen_by_id($id_examen_par_au);
 
                 return view('notes/resultats_eval',[
-                    "resultats" => [$entetes, $valeurs],
+                    "resultats" => $resultats_eval,
                     "au" => $au,
                     "parcours" => $parcours,
                     "niveau" => $niveau,
                     "eval" => $eval
                 ]);
             }
-            else if($operation->date_cloture_verification_note == null){
+            else if($operation->date_resultats == null){
                 return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car ils n'ont pas encore été générés ");
 
             }

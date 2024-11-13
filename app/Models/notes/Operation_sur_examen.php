@@ -4,10 +4,100 @@ namespace App\Models\notes;
 
 use Illuminate\Support\Facades\DB;
 use Exception;
+use stdClass;
 
 class Operation_sur_examen
 {
     //calcul de résultat
+
+    public static function get_resultats_eval_back($id_au, $id_parcours, $id_niveau, $id_examen_par_au){
+        $resultats_base = DB::select('
+            select * from v_note_eval_complet
+            where id_au = ? and id_parcours = ? and id_niveau = ? and id_examen_par_au = ?
+            order by im asc, id_unite_enseignement asc , id_element_constitutif asc
+        ', [$id_au, $id_parcours, $id_niveau, $id_examen_par_au]);
+
+        $ligne1 = $resultats_base[0];
+
+        $etudiants = [];
+        $etu = new stdClass();
+        $etu->id_etudiant = $ligne1->id_etudiants;
+        $etu->im = $ligne1->im;
+        $etu->nom = $ligne1->nom;
+        $etu->prenoms = $ligne1->prenoms;
+        $etu->date_annulation = $ligne1->date_annulation_inscription;
+        $id_etudiant;
+        $id_etudiant_prec = $ligne1->id_etudiants;
+
+        $ues = [];
+        $ue = new stdClass();
+        $ue->id_ue = $ligne1->id_unite_enseignement;
+        $ue->nom_ue = $ligne1->nom_unite_enseignement;
+        $ue->note_ue = $ligne1->note_ue;
+        $ue->validation = $ligne1->valide;
+        $id_ue;
+        $id_ue_prec = $ligne1->id_unite_enseignement;
+        $ecs = [];
+        $ec;
+        foreach($resultats_base as $resultat){
+            $id_etudiant = $resultat->id_etudiants;
+            $id_ue = $resultat->id_unite_enseignement;
+
+
+
+            if($id_etudiant != $id_etudiant_prec){
+
+                $ue->ecs = $ecs;
+                $ues[] = $ue;
+
+                $ue = new stdClass();
+                $ue->id_ue = $id_ue;
+                $ue->nom_ue = $resultat->nom_unite_enseignement;
+                $ue->note_ue = $resultat->note_ue;
+                $ue->validation = $resultat->valide;
+                $ecs  = [];
+
+                $etu->ues = $ues;
+                $etudiants[] = $etu;
+
+                $etu = new stdClass();
+                $etu->id_etudiant = $resultat->id_etudiants;
+                $etu->im = $resultat->im;
+                $etu->nom = $resultat->nom;
+                $etu->prenoms = $resultat->prenoms;
+                $etu->date_annulation = $resultat->date_annulation_inscription;
+                $ues = [];
+            }
+            else if($id_ue != $id_ue_prec){
+                $ue->ecs = $ecs;
+                $ues[] = $ue;
+
+                $ue = new stdClass();
+                $ue->id_ue = $id_ue;
+                $ue->nom_ue = $resultat->nom_unite_enseignement;
+                $ue->note_ue = $resultat->note_ue;
+                $ue->validation = $resultat->valide;
+                $ecs  = [];
+            }
+
+            $ec = new stdClass();
+            $ec->id_ec = $resultat->id_element_constitutif;
+            $ec->id_ue_ec = $resultat->id_ue_ec;
+            $ec->nom_ec = $resultat->nom_element_constitutif;
+            $ec->note_ec = $resultat->note_ec;
+            $ecs[] = $ec;
+
+            $id_etudiant_prec = $id_etudiant;
+            $id_ue_prec = $id_ue;
+        }
+
+        $ue->ecs = $ecs;
+        $ues[] = $ue;
+        $etu->ues = $ues;
+        $etudiants[] = $etu;
+
+        return $etudiants;
+    }
 
     public static function get_resultats_eval($id_au, $id_parcours, $id_niveau, $id_examen_par_au){
         DB::statement('

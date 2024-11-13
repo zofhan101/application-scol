@@ -8,6 +8,10 @@
     <h1>{{ $parcours->nom_parcours }} - {{ $niveau->nom_niveau }}</h1>
     <h1>Année Universitaire {{ $au->intitule }}</h1>
 </div>
+@php
+    $etu1 = $resultats[0];
+
+@endphp
 
 <section class="section">
     <div class="row">
@@ -19,17 +23,40 @@
               <table class="table">
                 <thead>
                   <tr>
-                    @foreach($resultats[0] as $entete)
-                        <th class="text-centers">{{ $entete }}</th>
+                    <th rowspan="2" class ="sticky-gauche alignement-vertical-centre">IM</th>
+                    <th rowspan="2" class="alignement-vertical-centre">Nom</th>
+                    <th rowspan="2" class="alignement-vertical-centre">Prénoms</th>
+                    @foreach($etu1->ues as $ue)
+                        <th colspan="{{ count($ue->ecs)+2 }}" class ="alignement-vertical-centre">{{ $ue->nom_ue }}</th>
+
                     @endforeach
                   </tr>
+
+                  <tr>
+                    @foreach($etu1->ues as $ue)
+                        @foreach ($ue->ecs as $ec)
+                            <th>{{ $ec->nom_ec }}</th>
+                        @endforeach
+                        <th>Note U.E.</th>
+                        <th>Validation</th>
+                    @endforeach
+                  </tr>
+
                 </thead>
                 <tbody>
-                    @foreach($resultats[1] as $valeur)
+                    @foreach($resultats as $resultat)
                         <tr>
-                            @foreach ($valeur as $element)
-                                <td class="text-center">{{ $element }}</td>
+                            <td class ="sticky-gauche">  {{ $resultat->im }} </td>
+                            <td>{{ $resultat->nom }}</td>
+                            <td>{{ $resultat->prenoms }}</td>
+                            @foreach($resultat->ues as $ue)
+                                @foreach ($ue->ecs as $ec)
+                                    <td> {{ $ec->note_ec }}</td>
+                                @endforeach
+                                <td> {{ $ue->note_ue }} </td>
+                                <td> {{ $ue->validation }} </td>
                             @endforeach
+
                         </tr>
                     @endforeach
 
