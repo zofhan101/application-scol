@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\notes\operation_sur_resultats;
 use App\Models\AU\AU;
 use App\Models\notes\Operation_sur_examen;
+use App\Models\notes\Operation_sur_au;
 use Illuminate\Support\Facades\Auth;
 use App\Rules\notes\IsNoteValide;
 use App\Rules\notes\IsBarcodeValide;
@@ -27,7 +28,105 @@ use App\Exports\AllResultsExport;
 
 class NoteController extends Controller
 {
-    //génération des résultats
+
+    // lecture des resultats de l'au avant le repechage
+    public function get_resultats_avant_repechage_page(){
+        $au = AU::all();
+        $parcours = Parcours::all();
+        return view('notes/get_resultats_avant_repechage_page',[
+            "aus" => $au,
+            "parcours" => $parcours
+        ]);
+
+    }
+
+    public function get_resultats_avant_repechage(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+        $id_au = $request->input('id_au');
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $au_courant = AU::get_au_en_cours();
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($au_courant->id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: récupération des résultats annuels avant repêchage impossible car aucune opération de génération des résultats annuels n'a été trouvée ");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_avant_repechage != null){
+                //récupérer les résultats
+                try {
+                    $resultats = Operation_sur_au::get_resultats_avant_repechage($id_au, $id_parcours, $id_niveau);
+                    //passer les résultats à la vue
+                    return view('notes/resultats_avant_repechage',[
+                        "resultats" => $resultats,
+                    ]);
+                } catch (\Exception $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+
+                }
+
+
+
+
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: récupération des résultats annuels avant repêchage impossible car ils n'ont pas encore été générés ");
+            }
+        }
+    }
+
+    // génération des résultats sur toute l'AU
+    public function generer_resultats_au(){
+        $au_courant = AU::get_au_en_cours();
+
+        //CONTROLE: resultats de toutes les évaluations de l'AU générés et résultats avant repechage non générés
+        //examens à faire sur l'A.U.
+        $examens = AU::get_liste_evaluations($au_courant->id_au);
+
+        //operations sur les examens_individuels
+        $operations_sur_examen = operation_sur_examen::get_operations_sur_eval($au_courant->id_au);
+
+        if(empty($operations_sur_examen)){
+            return response()->json(["error"=>"ERREUR: génération des résultats sur l'A.U. impossible car aucune opération d'ouverture et de cloture des saisies et vérification des notes/en-têtes d'examens n'a été trouvée: "], 422);
+        }
+        else if(count($operations_sur_examen) < count($examens)){
+            return response()->json(["error"=>"ERREUR: génération des résultats sur l'A.U. impossible car la totalité des évaluations n'a pas encore été traitée "], 422);
+        }
+        else if(count($operations_sur_examen) == count($examens)){
+            //boucler sur les operation et vérifier que les résultats individuels des evaluations sont générés
+            foreach($operations_sur_examen as $operation){
+                if($operation->date_resultats == null)
+                    return response()->json(["error"=>"ERREUR: génération des résultats sur l'A.U. impossible car certains resultats d'examens n'ont pas encore été générés: ".$operation->nom_session_examen], 422);
+            }
+            $operation_sur_au = Operation_sur_au::get_operation_by_id_au($au_courant->id_au);
+            if(empty($operation_sur_au)){
+                Operation_sur_au::generer_resultats_au($au_courant->id_au);
+                $user = Auth::user();
+                Operation_sur_au::verrouiller_resultats($au_courant->id_au, $user->id_user);
+                return response()->json(["message"=>"Génération des résultats avant le repêchage effectuée"], 200);
+            }
+            else if($operation_sur_au->date_resultats_avant_deliberation != null){
+                return response()->json(["error"=>"ERREUR: génération des résultats sur l'A.U. selectionnée déjà effectuée"], 422);
+            }
+
+        }
+
+    }
+
+    public function generer_resultats_au_page(){
+        $au_courant = AU::get_au_en_cours();
+        //récupérer les opérations sur l'au
+        $operation = Operation_sur_au::get_operation_by_id_au($au_courant->id_au);
+        return view('notes/controle_resultats_au', ['operation'=>$operation, 'au'=>$au_courant]);
+    }
+
+    //génération des résultats des évaluations individuelles
 
     public function down_resultats_all(Request $request){
         $request->validate([

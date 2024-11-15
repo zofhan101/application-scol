@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('
-        create or replace view v_moyennes as
-            select id_au, id_parcours, id_niveau, date_annulation_inscription, im, id_etudiants,total, total_coefficient, (total/total_coefficient) as moyenne
-            from v_total_note;
-        ');
+        Schema::create('moyenne_admission', function (Blueprint $table) {
+            $table->id('id_moyenne_admission');
+            $table->double('moyenne_admission');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -23,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('
-            drop view if exists v_moyennes;
-        ');
+        Schema::dropIfExists('moyenne_admission');
     }
 };

@@ -75,7 +75,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#resultats" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Résultats des examens</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-book-half"></i><span>Résultats des évaluations individuelles</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="resultats" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -86,7 +86,7 @@
 
           <li>
             <a href="{{ route('notes.get_resultats.page') }}">
-              <i class="bi bi-circle"></i><span>Consulter les résultats d'examen</span>
+              <i class="bi bi-circle"></i><span>Consulter les résultats d'évaluation</span>
             </a>
           </li>
 
@@ -97,6 +97,27 @@
           </li>
 
 
+
+
+        </ul>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#resultats_au" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-book-half"></i><span>Résultats sur l'année universitaire</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="resultats_au" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('notes.generer_resultats_au.page') }}">
+              <i class="bi bi-circle"></i><span>Générer les résultats des évaluations avant le repêchage</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('notes.get_resultats_avant_repechage.page') }}">
+              <i class="bi bi-circle"></i><span>Consulter les résultats des evaluations avant le repechage</span>
+            </a>
+          </li>
 
 
         </ul>

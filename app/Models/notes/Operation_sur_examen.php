@@ -8,6 +8,20 @@ use stdClass;
 
 class Operation_sur_examen
 {
+
+    public static function get_operations_sur_eval($id_au){
+        $operations = DB::select("
+            select ope.*, epa.id_examen_par_au, epa.id_au, se.id_session_examen, se.nom_session_examen, se.type_session
+            from operation_par_examen as ope
+            join examen_par_au as epa on ope.id_examen_par_au = epa.id_examen_par_au
+            join session_examen as se on epa.id_session_examen = se.id_session_examen
+            where se.type_session = 'eval' and id_au = ?;
+        ", [$id_au]);
+
+        return $operations;
+
+    }
+
     //calcul de résultat
 
     public static function get_resultats_eval_back($id_au, $id_parcours, $id_niveau, $id_examen_par_au){
@@ -167,7 +181,7 @@ class Operation_sur_examen
     public static function get_nbr_verifies_note($id_ue_ec){
         $nbr_verifies = DB::scalar('
             select count(numero)
-            from barcode_notes
+            from barcode_note
             where id_ue_ec = ? and verifie = true
         ', [$id_ue_ec]);
         return $nbr_verifies;

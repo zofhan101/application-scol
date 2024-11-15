@@ -148,7 +148,7 @@ class UEController extends Controller
     }
 
     public function liste_ec(){
-        $ecs = Element_constitutif::all();
+        $ecs = Element_constitutif::orderBy('nom_element_constitutif', 'asc')->get();
         return response()->json(
             ['ecs'=>$ecs],
             200
@@ -179,7 +179,7 @@ class UEController extends Controller
     }
 
     public function liste_ue(){
-        $ues = Unite_enseignement::all();
+        $ues = Unite_enseignement::orderBy('nom_unite_enseignement', 'asc')->get();
         return response()->json(
             ['ues'=>$ues],
             200

@@ -198,6 +198,11 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+
+            //résultats annuels avant repechage
+            Route::post('notes/get_resultats_avant_repechage',[NoteController::class,'get_resultats_avant_repechage'])->name('notes.get_resultats_avant_repechage');
+            Route::get('notes/get_resultats_avant_repechage.page',[NoteController::class,'get_resultats_avant_repechage_page'])->name('notes.get_resultats_avant_repechage.page');
+
             // résultats d'examen
             Route::post('notes/down_resultats',[NoteController::class,'down_resultats_all'])->name('notes.down_resultats');
             Route::post('notes/down_resultats_specifique',[NoteController::class,'down_resultats_specifique'])->name('notes.down_resultats_specifique');
@@ -241,6 +246,10 @@ Route::middleware('auth')->group(function(){
         Route::middleware(EnsureIsSP::class)->group(function () {
 
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                // résultats généraux sur l'AU
+                Route::post('notes/generer_resultats_au',[NoteController::class,'generer_resultats_au'])->name('notes.generer_resultats_au');
+                Route::get('notes/generer_resultats_au',[NoteController::class,'generer_resultats_au_page'])->name('notes.generer_resultats_au.page');
+
                 //génération des résultats d'examen
                 Route::post('notes/generer_resultats',[NoteController::class,'generer_resultats'])->name('notes.generer_resultats');
                 Route::get('notes/generer_resultats',[NoteController::class,'controle_resultats'])->name('notes.generer_resultats.page');
