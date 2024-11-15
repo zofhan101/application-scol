@@ -365,8 +365,8 @@ create or replace view v_resultats_avec_notes as
 
 -- CREATION DE LA TABLE RESULTATS_AVANT_REPECHAGE
 
--- vue des resultats annuels avec tous les libellés
-create or replace view v_resultats_avant_repechage_complet as
+-- vue des resultats annuels avec tous les libellés (VM RAFRAICHIE APRES LA GENERATION DES RESULTATS ANNUELS AVANT REPECHAGE)
+create materialized view v_resultats_avant_repechage_complet as
     select id_resultats_avant_repechage, id_note_eval, au.id_au, au.intitule, p.id_parcours, p.nom_parcours, n.id_niveau, n.nom_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, ue.id_unite_enseignement, ue.nom_unite_enseignement, id_ue_ec, ec.id_element_constitutif, ec.nom_element_constitutif, e.id_etudiants, e.im, e.nom, e.prenoms, note_ec, note_ue, valide,  total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire, decision
     from resultats_avant_repechage as r
     join au on r.id_au = au.id_au
@@ -380,6 +380,45 @@ create or replace view v_resultats_avant_repechage_complet as
     --select DENSE_RANK() OVER (ORDER BY moyenne desc) AS rang , im, nom_unite_enseignement, note_ec, note_ue, moyenne, decision from v_resultats_avant_repechage_complet
     --        where id_au = 4 and id_parcours = 4 and id_niveau = 2
     --        order by rang asc, id_session_examen asc, id_unite_enseignement asc , id_element_constitutif asc
+
+
+-- LISTE DE REPECHAGE
+-- vue des candidats qui devront subir les épreuves de repêchage (VM RAFRAICHIE APRES LA GENERATION DES RESULTATS ANNUELS AVANT REPECHAGE)
+create materialized view v_liste_repechage as
+    select distinct on (id_au, id_parcours, id_niveau, id_etudiants, id_unite_enseignement) id_au, intitule, id_parcours, nom_parcours, id_niveau, nom_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, id_unite_enseignement, nom_unite_enseignement, id_etudiants, im, nom, prenoms, valide, decision
+    from v_resultats_avant_repechage_complet
+    where decision = 'repechage'
+    order by id_au, id_parcours, id_niveau, id_etudiants, id_unite_enseignement, id_ue_ec asc;
+
+-- création de l'affichage de la liste de repechage
+create or replace function creer_v_liste_repechage_affichage(a_id_au bigint, a_id_parcours bigint, a_id_niveau bigint)
+RETURNS void AS
+$$
+DECLARE
+    nom_ue RECORD;
+    requete TEXT := 'CREATE MATERIALIZED VIEW v_liste_repechage_affichage AS SELECT ROW_NUMBER() OVER (ORDER BY NULL) AS N° ,im, nom, prenoms';
+    colonnes TEXT := '';
+BEGIN
+    FOR nom_ue IN
+        select distinct nom_unite_enseignement
+        from v_liste_repechage as v
+        where v.id_au = a_id_au
+            and v.id_parcours = a_id_parcours
+            and v.id_niveau = a_id_niveau
+    LOOP
+        colonnes := colonnes ||
+            ', Max(CASE WHEN nom_unite_enseignement = ''' || nom_ue.nom_unite_enseignement || ''' THEN valide END) AS \"Résultats ' || nom_ue.nom_unite_enseignement || '\"';
+    END LOOP;
+
+    requete := requete || colonnes || ' FROM  v_liste_repechage WHERE id_au = ' || a_id_au || ' and id_parcours = ' || a_id_parcours || ' and id_niveau = ' || a_id_niveau ||  ' GROUP BY im, nom, prenoms;' ;
+
+    EXECUTE 'DROP MATERIALIZED VIEW  if exists v_liste_repechage_affichage;' ;
+    RAISE NOTICE '%',requete;
+    EXECUTE requete;
+
+
+END;
+$$ LANGUAGE plpgsql;
 
 
 

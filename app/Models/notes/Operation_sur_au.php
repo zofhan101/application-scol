@@ -8,6 +8,16 @@ use stdClass;
 
 class Operation_sur_au
 {
+    //liste de repechage
+    public static function get_liste_repechage($id_au, $id_parcours, $id_niveau){
+        DB::statement('
+            select creer_v_liste_repechage_affichage(?, ?, ?);
+        ',[$id_au, $id_parcours, $id_niveau]);
+
+
+        $liste_repechage =  DB::select('select *  from v_liste_repechage_affichage');
+        return $liste_repechage;
+    }
 
     //résultats de l'AU avant repechages
 
@@ -191,6 +201,14 @@ class Operation_sur_au
             FROM v_resultats_avec_notes
             WHERE id_au = ?;
         ', [$id_au]);
+
+        DB::statement('
+            refresh materialized view v_resultats_avant_repechage_complet;
+        ');
+
+        DB::statement('
+            refresh materialized view v_liste_repechage;
+        ');
     }
 
 
@@ -198,8 +216,6 @@ class Operation_sur_au
         $operations = DB::select('
             select * from operation_par_au where id_au = ?
         ', [$id_au]);
-        if(empty($operations))
-            return[];
         return $operations;
     }
 

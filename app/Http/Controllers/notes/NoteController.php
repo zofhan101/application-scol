@@ -28,6 +28,57 @@ use App\Exports\AllResultsExport;
 
 class NoteController extends Controller
 {
+    //affichage de la liste de repechage
+    public function get_liste_repechage_page(){
+        $au = AU::all();
+        $parcours = Parcours::all();
+        return view('notes/liste_repechage_page',[
+            "aus" => $au,
+            "parcours" => $parcours
+        ]);
+    }
+
+    public function get_liste_repechage(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+        $id_au = $request->input('id_au');
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: récupération de la liste de repêchage impossible car aucune opération de génération des résultats annuels n'a été trouvée ");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_avant_repechage != null){
+                //récupérer les résultats
+                try {
+                    $resultats = Operation_sur_au::get_liste_repechage($id_au, $id_parcours, $id_niveau);
+                    $au = AU::find($id_au);
+                    $parcours = Parcours::find($id_parcours);
+                    $niveau = Niveau::find($id_niveau);
+                    //passer les résultats à la vue
+                    return view('notes/liste_repechage',[
+                        "resultats" => $resultats,
+                        "au" => $au,
+                        "parcours" => $parcours,
+                        "niveau" => $niveau,
+                    ]);
+                } catch (\Exception $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+
+                }
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: récupération de la liste de repêchage impossible car les résultats annuels avant repêchage n'ont pas encore été générés ");
+            }
+        }
+
+    }
 
     // lecture des resultats de l'au avant le repechage
     public function get_resultats_avant_repechage_page(){
@@ -70,10 +121,6 @@ class NoteController extends Controller
                     return redirect()->back()->with("error", $th->getMessage());
 
                 }
-
-
-
-
             }
             else{
                 return redirect()->back()->with("error", "ERREUR: récupération des résultats annuels avant repêchage impossible car ils n'ont pas encore été générés ");
@@ -104,14 +151,14 @@ class NoteController extends Controller
                 if($operation->date_resultats == null)
                     return response()->json(["error"=>"ERREUR: génération des résultats sur l'A.U. impossible car certains resultats d'examens n'ont pas encore été générés: ".$operation->nom_session_examen], 422);
             }
-            $operation_sur_au = Operation_sur_au::get_operation_by_id_au($au_courant->id_au);
-            if(empty($operation_sur_au)){
+            $operations_sur_au = Operation_sur_au::get_operation_by_id_au($au_courant->id_au);
+            if(empty($operations_sur_au)){
                 Operation_sur_au::generer_resultats_au($au_courant->id_au);
                 $user = Auth::user();
                 Operation_sur_au::verrouiller_resultats($au_courant->id_au, $user->id_user);
                 return response()->json(["message"=>"Génération des résultats avant le repêchage effectuée"], 200);
             }
-            else if($operation_sur_au->date_resultats_avant_deliberation != null){
+            else if($operations_sur_au[0]->date_resultats_avant_repechage != null){
                 return response()->json(["error"=>"ERREUR: génération des résultats sur l'A.U. selectionnée déjà effectuée"], 422);
             }
 

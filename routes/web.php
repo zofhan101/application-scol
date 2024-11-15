@@ -198,6 +198,9 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            // liste de repechage
+            Route::post('notes/get_liste_repechage',[NoteController::class,'get_liste_repechage'])->name('notes.get_liste_repechage');
+            Route::get('notes/get_liste_repechage.page',[NoteController::class,'get_liste_repechage_page'])->name('notes.get_liste_repechage.page');
 
             //résultats annuels avant repechage
             Route::post('notes/get_resultats_avant_repechage',[NoteController::class,'get_resultats_avant_repechage'])->name('notes.get_resultats_avant_repechage');

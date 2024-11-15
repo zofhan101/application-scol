@@ -119,6 +119,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.get_liste_repechage.page') }}">
+              <i class="bi bi-circle"></i><span>Consulter la liste de repechage</span>
+            </a>
+          </li>
+
 
         </ul>
       </li>
