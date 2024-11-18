@@ -125,6 +125,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.down_liste_repechage.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger les listes de repêchage</span>
+            </a>
+          </li>
+
 
         </ul>
       </li>

@@ -22,12 +22,79 @@ use App\Models\mention_parcours\Niveau;
 use Excel;
 use App\Exports\ResultatsEvalExport;
 use App\Exports\AllResultsExport;
+use App\Exports\ListeRepechageAllExport;
 
 
 
 
 class NoteController extends Controller
 {
+
+    // téléchargement des listes de repêchage
+    public function down_liste_repechage(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+
+        $id_au = $request->input('id_au');
+
+        $parcours = Parcours::all();
+        $au = AU::find($id_au);
+
+        $resultats = [];
+        $sous_titres = [];
+        $sous_titre;
+
+        $niveaux;
+        $titre = "Listes_repêchage"."_".$au->intitule;
+
+        $legendes = [];
+        $legendes[] = "V = Validé";
+        $legendes[] = "N = Non-Validé";
+        $legendes[] = "E = Eliminatoire";
+
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: récupération de la liste de repêchage impossible car les résultats annuels avant repêchage n'ont pas encore été générés ");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_avant_repechage != null){
+                //récupérer les résultats
+                foreach($parcours as $parcour){
+                    $niveaux = Niveau::get_niveaux_parcours($parcour->id_parcours);
+                    foreach($niveaux as $niveau){
+                        $res = Operation_sur_au::get_liste_repechage($id_au, $parcour->id_parcours, $niveau->id_niveau);
+                        if(empty($res) == false){
+                            $resultats[] = $res;
+
+                            $sous_titre = [];
+                            $sous_titre[] = "Repêchage des évaluations";
+                            $sous_titre[] = $niveau->nom_niveau." - ".$parcour->nom_parcours;
+                            $sous_titre[] = "Année Universitaire ".$au->intitule;
+                            $sous_titres[] = $sous_titre;
+                        }
+
+                    }
+                }
+
+                return Excel::download(new ListeRepechageAllExport($resultats, $sous_titres, $legendes), $titre.'.xlsx');
+
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: récupération de la liste de repêchage impossible car les résultats annuels avant repêchage n'ont pas encore été générés ");
+            }
+        }
+
+    }
+
+    public function down_liste_repechage_form(){
+        $au = AU::all();
+        return view('notes/down_liste_repechage_page',[
+            "aus" => $au
+        ]);
+    }
     //affichage de la liste de repechage
     public function get_liste_repechage_page(){
         $au = AU::all();
@@ -206,20 +273,23 @@ class NoteController extends Controller
                 foreach($parcours as $parcour){
                     $niveaux = Niveau::get_niveaux_parcours($parcour->id_parcours);
                     foreach($niveaux as $niveau){
-                        $resultats[] = operation_sur_examen::get_resultats_eval($id_au, $parcour->id_parcours, $niveau->id_niveau, $id_examen_par_au);
+                        $res = operation_sur_examen::get_resultats_eval($id_au, $parcour->id_parcours, $niveau->id_niveau, $id_examen_par_au);
+                        if( empty($res) == false){
+                            $resultats[] = $res;
+                            $sous_titre = [];
+                            $sous_titre[] = "Résusltats ".$eval->nom_session_examen;
+                            $sous_titre[] = $niveau->nom_niveau." - ".$parcour->nom_parcours;
+                            $sous_titre[] = "Année Universitaire ".$au->intitule;
+                            $sous_titres[] = $sous_titre;
 
-                        $sous_titre = [];
-                        $sous_titre[] = "Résusltats ".$eval->nom_session_examen;
-                        $sous_titre[] = $niveau->nom_niveau." - ".$parcour->nom_parcours;
-                        $sous_titre[] = "Année Universitaire ".$au->intitule;
-                        $sous_titres[] = $sous_titre;
+                        }
 
                     }
                 }
 
                 return Excel::download(new AllResultsExport($resultats, $sous_titres), $titre.'.xlsx');
             }
-            else if($operation->date_cloture_verification_note == null){
+            else{
                 return redirect()->back()->with("error", "ERREUR: récupération des résultats impossible car ils n'ont pas encore été générés ");
 
             }
