@@ -23,12 +23,52 @@ use Excel;
 use App\Exports\ResultatsEvalExport;
 use App\Exports\AllResultsExport;
 use App\Exports\ListeRepechageAllExport;
+use App\Exports\ListeAppelAllExport;
 
 
 
 
 class NoteController extends Controller
 {
+    // téléchargement des lites d'appel
+    public function down_liste_appel(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+
+        $id_au = $request->input('id_au');
+
+        $au = AU::find($id_au);
+
+        $titre = "Listes_appel_repêchage"."_".$au->intitule;
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: récupération de la liste d'appel impossible car les résultats annuels avant repêchage n'ont pas encore été générés ");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_avant_repechage != null){
+                //récupérer les résultats
+                $resultats = Operation_sur_au::get_liste_appel($id_au);
+
+                //var_dump($resultats);
+                return Excel::download(new ListeAppelAllExport($resultats), $titre.'.xlsx');
+
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: récupération de la liste d'appel impossible car les résultats annuels avant repêchage n'ont pas encore été générés ");
+            }
+        }
+
+    }
+
+    public function down_liste_appel_form(){
+        $au = AU::all();
+        return view('notes/down_liste_appel_form',[
+            "aus" => $au
+        ]);
+    }
 
     // téléchargement des listes de repêchage
     public function down_liste_repechage(Request $request){
@@ -433,7 +473,17 @@ class NoteController extends Controller
                     }
                 }
                 else if($session->type_session == "repe"){
+                    // CAS DE LA SESSION DE REPECHAGE
+                    $anomalies = Operation_sur_examen::get_anomalies_saisie($id_examen_par_au);
+                    if(empty($anomalies[0]) == false || empty($anomalies[1]) == false){
+                        //afficher ces anomalies
+                        return view('notes/anomalies_note', ['anomalies' =>$anomalies]);
+                    }
+                    else{
+                        //absence d'anomalie -> génération des résultats
 
+
+                    }
                 }
                 else{
                     // cas du concours PACES qui est géré par une autres application

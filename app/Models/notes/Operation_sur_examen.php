@@ -126,7 +126,8 @@ class Operation_sur_examen
 
     public static function verrouiller_resultats($id_examen_par_au, $id_user){
         DB::update('update operation_par_examen set date_resultats = ? , id_user_date_resultats = ?
-        ',[date('Y-m-d'), $id_user]);
+                    where id_examen_par_au = ?
+        ',[date('Y-m-d'), $id_user, $id_examen_par_au]);
     }
 
     public static function remplir_note_eval($id_examen_par_au){

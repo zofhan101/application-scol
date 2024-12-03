@@ -84,7 +84,7 @@
                             <td>{{ $resultat->date_annulation }}</td>
                             <td>{{ $resultat->total }}</td>
                             <td>{{ $resultat->total_coefficient }}</td>
-                            <td>{{ $resultat->moyenne }}</td>
+                            <td>{{ round($resultat->moyenne, 2) }}</td>
                             <td>{{ $resultat->nombre_ue }}</td>
                             <td>{{ $resultat->nombre_ue_validees }}</td>
                             <td>{{ $resultat->pourcentage_validation }}</td>

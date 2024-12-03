@@ -22,7 +22,7 @@ return new class extends Migration
         ');
         DB::statement('
             create or replace view v_association_etu_ec as
-            select ue_ec.id_au, ue_ec.id_parcours, ue_ec.id_niveau, ue_ec.coefficient, id_unite_enseignement, id_ue_ec, ue_ec.id_element_constitutif, ue_ec.id_examen_par_au, id_session_examen, nom_session_examen, type_session,id_etudiants, im, date_annulation
+            select ue_ec.id_au, ue_ec.id_parcours, ue_ec.id_niveau, ue_ec.coefficient, id_unite_enseignement, id_ue_ec, ue_ec.id_element_constitutif, ue_ec.id_examen_par_au, id_session_examen, nom_session_examen, type_session,id_etudiants, im, date_annulation, statut, a_passe_examen
             from v_ue_ec_eval as ue_ec
             left join v_inscrits2 as i on i.id_parcours = ue_ec.id_parcours and i.id_niveau =  ue_ec.id_niveau and i.id_au = ue_ec.id_au;
 

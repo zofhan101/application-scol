@@ -160,6 +160,13 @@
           </li>
 
 
+          <li>
+            <a href="{{ route('notes.down_liste_appel.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger les listes d'appel au repêchage</span>
+            </a>
+          </li>
+
+
 
         </ul>
       </li>

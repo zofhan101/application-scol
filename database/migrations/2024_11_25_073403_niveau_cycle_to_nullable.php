@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('
-            create materialized view v_inscrits2 as
-            select i.id_au, e.id_parcours, i.id_niveau, i.id_inscription, e.id_etudiants, e.im, i.date_annulation, statut, a_passe_examen
-            from inscription as i
-            join etudiants as e on i.id_etudiant = e.id_etudiants;
-        ');
+
+            DB::statement('
+                alter table niveau alter column cycle set not null;
+            ');
+
     }
 
     /**
@@ -25,7 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         DB::statement('
-            drop materialized view if exists v_inscrits2;
+            alter table niveau alter column cycle drop not null;
         ');
+
     }
 };

@@ -198,6 +198,10 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //liste d'appel au repêchage
+            Route::post('notes/down_liste_appel',[NoteController::class,'down_liste_appel'])->name('notes.down_liste_appel');
+            Route::get('notes/down_liste_appel',[NoteController::class,'down_liste_appel_form'])->name('notes.down_liste_appel.form');
+
             // liste de repechage
             Route::post('notes/down_liste_repechage',[NoteController::class,'down_liste_repechage'])->name('notes.down_liste_repechage');
             Route::get('notes/down_liste_repechage',[NoteController::class,'down_liste_repechage_form'])->name('notes.down_liste_repechage.form');

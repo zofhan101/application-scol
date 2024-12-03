@@ -8,6 +8,75 @@ use stdClass;
 
 class Operation_sur_au
 {
+    //liste d'appel au repechage
+    public static function get_liste_appel($id_au){
+        $liste_globale = DB::select("
+            select ROW_NUMBER () OVER (PARTITION BY id_parcours, id_niveau, id_unite_enseignement ORDER BY  im) as \"N°\", * from v_liste_repechage
+            where id_au = ? and (valide = 'N' or valide = 'E') and im is not null
+            order by  id_parcours asc, id_niveau asc, id_examen_par_au asc, id_unite_enseignement asc, \"N°\" asc
+        ", [$id_au]);
+
+        $ligne1 = $liste_globale[0];
+
+        $res = [];
+
+        $id_parcours_prec = $ligne1->id_parcours;
+        $id_niveau_prec = $ligne1->id_niveau;
+        $id_ue_prec = $ligne1->id_unite_enseignement;
+
+        $liste_etu = [];
+        $etu;
+
+        $liste_courante = new stdClass();
+        $liste_courante->intitule = $ligne1->intitule;
+        $liste_courante->nom_parcours = $ligne1->nom_parcours;
+        $liste_courante->nom_ue = $ligne1->nom_unite_enseignement;
+        $liste_courante->nom_niveau = $ligne1->nom_niveau;
+
+
+        $id_parcours;
+        $id_niveau;
+        $id_ue;
+
+        foreach($liste_globale as $ligne_courante){
+            $id_parcours = $ligne_courante->id_parcours;
+            $id_niveau = $ligne_courante->id_niveau;
+            $id_ue = $ligne_courante->id_unite_enseignement;
+
+            if($id_parcours != $id_parcours_prec || $id_niveau != $id_niveau_prec || $id_ue != $id_ue_prec){
+                $liste_courante->liste_etu = $liste_etu;
+                $res[] = $liste_courante;
+
+                $liste_courante = new stdClass();
+                $liste_courante->intitule = $ligne_courante->intitule;
+                $liste_courante->nom_parcours = $ligne_courante->nom_parcours;
+                $liste_courante->nom_ue = $ligne_courante->nom_unite_enseignement;
+                $liste_courante->nom_niveau = $ligne_courante->nom_niveau;
+
+                $liste_etu = [];
+
+            }
+
+            $etu = new stdClass();
+            $etu->N° = $ligne_courante->N°;
+            $etu->im = $ligne_courante->im;
+            $etu->nom = $ligne_courante->nom;
+            $etu->prenoms = $ligne_courante->prenoms;
+            $liste_etu[] = $etu;
+
+            $id_parcours_prec = $id_parcours;
+            $id_niveau_prec = $id_niveau;
+            $id_ue_prec = $id_ue;
+
+
+        }
+        $liste_courante->liste_etu = $liste_etu;
+        $res[] = $liste_courante;
+
+        return $res;
+    }
+
+
     //liste de repechage
     public static function get_liste_repechage($id_au, $id_parcours, $id_niveau){
         DB::statement('

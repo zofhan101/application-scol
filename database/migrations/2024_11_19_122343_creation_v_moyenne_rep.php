@@ -12,10 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement('
-            create materialized view v_inscrits2 as
-            select i.id_au, e.id_parcours, i.id_niveau, i.id_inscription, e.id_etudiants, e.im, i.date_annulation, statut, a_passe_examen
-            from inscription as i
-            join etudiants as e on i.id_etudiant = e.id_etudiants;
+            create or replace view v_moyenne_rep as
+                select id_au, id_parcours, id_niveau, date_annulation_inscription, im, id_etudiants,total, total_coefficient, (total/total_coefficient) as moyenne, statut, a_passe_examen
+                from v_total_note_rep;
         ');
     }
 
@@ -25,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         DB::statement('
-            drop materialized view if exists v_inscrits2;
+            drop view if exists v_moyenne_rep;
         ');
     }
 };

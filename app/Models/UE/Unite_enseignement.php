@@ -106,9 +106,6 @@ class Unite_enseignement extends Model
             $ecs = [];
             $ec;
 
-            $en_plus = DB::scalar('
-                select cte_codes_barres_en_plus from cte_codes_barres_en_plus order by id_cte_codes_barres_en_plus desc limit 1;
-                ');
 
             foreach($liste_ue_ec as $ue_ec){
                 $id_session_examen = $ue_ec->id_session_examen;
@@ -201,8 +198,6 @@ class Unite_enseignement extends Model
             $mentions[] = $mention;
             $evaluation->mentions = $mentions;
             $res[] = $evaluation;
-
-            $res_assoc['en_plus'] = $en_plus;
 
             //résultat pour la vue qui liste les ue_ec par eval, mention, parcours, niveau, ue
             //var_dump($res);

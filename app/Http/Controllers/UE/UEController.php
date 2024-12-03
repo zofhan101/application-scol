@@ -218,8 +218,8 @@ class UEController extends Controller
         $niveaux =  Niveau::get_niveaux_parcours($id_parcour_1);
 
         //récupération de tous les EC et UE préexistantes
-        $UE = Unite_enseignement::all();
-        $EC = Element_constitutif::all();
+        $UE = Unite_enseignement::orderBy('nom_unite_enseignement', 'asc')->get();
+        $EC = Element_constitutif::orderBy('nom_element_constitutif', 'asc')->get();
 
         //récupération des sessions d'examen
         $exams;

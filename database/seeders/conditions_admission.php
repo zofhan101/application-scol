@@ -20,5 +20,18 @@ class conditions_admission extends Seeder
         DB::table('pourcentage_admission')->insert([
             ['pourcentage_admission'=>75]
         ]);
+
+        DB::table('note_validation_ue')->insert([
+            ['note_validation_ue'=>10]
+        ]);
+
+        DB::table('note_max')->insert([
+            ['note_max'=>20]
+        ]);
+
+        DB::table('note_eliminatoire')->insert([
+            ['note_elim'=>5]
+        ]);
+
     }
 }

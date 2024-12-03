@@ -117,6 +117,21 @@ join v_inscrits as i on ue_ec.id_parcours = v_inscrits.id_parcours and ue_ec.id_
 --join examen_par_au as epa on o.id_examen_par_au = epa.id_examen_par_au
 --join session_examen as se on epa.id_session_examen = epa.id_session_examen;
 
+
+-- ******** ---
+
+-- GESTION DES NOTES
+
+-- ******** ---
+
+    -- ******** ---
+
+    -- GESTION DES NOTES
+    -- NOTES DES EVALUATIONS INDIVIDUELLES
+
+    -- ******** ---
+
+
 -- 4-11-24 22:12
 --liste des ue et ec avec le nombre d'inscrits vue matérialisée (à rafraichir à la fin des inscriptions )
 create materialized view v_liste_ue_ec_avec_nbr_inscrits as
@@ -137,13 +152,13 @@ join ue_ec_parcours_niveau_au as ue_ec on n.id_ue_ec = ue_ec.id_ue_ec or m.id_ue
 -- 6-11-24 14:10
 -- vue allégée des inscriptions (rafraichissement à la cloture des inscriptions)
 create materialized view v_inscrits2 as
-select i.id_au, e.id_parcours, i.id_niveau, i.id_inscription, e.id_etudiants, e.im, i.date_annulation
+select i.id_au, e.id_parcours, i.id_niveau, i.id_inscription, e.id_etudiants, e.im, i.date_annulation, statut, a_passe_examen
 from inscription as i
 join etudiants as e on i.id_etudiant = e.id_etudiants;
 
 
 -- 6-11-24 15:28
--- récupération de tous les ec dont l'examen correspondant est une evaluation ou un repechage
+-- récupération de tous les ec dont l'examen correspondant est une evaluation ou un repechage (pour exclure les matière du concours PACES)
 create or replace view v_ue_ec_eval as
             select ue_ec.*, se.id_session_examen, nom_session_examen, type_session
             from ue_ec_parcours_niveau_au as ue_ec
@@ -153,14 +168,14 @@ create or replace view v_ue_ec_eval as
 
 -- vue d'association de chaque etudiant à chaque ue_ec de son parours et niveau à chaque A.U.
 create or replace view v_association_etu_ec as
-            select ue_ec.id_au, ue_ec.id_parcours, ue_ec.id_niveau, ue_ec.coefficient, id_unite_enseignement, id_ue_ec, ue_ec.id_element_constitutif, ue_ec.id_examen_par_au, id_session_examen, nom_session_examen, type_session,id_etudiants, im, date_annulation
+            select ue_ec.id_au, ue_ec.id_parcours, ue_ec.id_niveau, ue_ec.coefficient, id_unite_enseignement, id_ue_ec, ue_ec.id_element_constitutif, ue_ec.id_examen_par_au, id_session_examen, nom_session_examen, type_session,id_etudiants, im, date_annulation, statut, a_passe_examen
             from v_ue_ec_eval as ue_ec
             left join v_inscrits2 as i on i.id_parcours = ue_ec.id_parcours and i.id_niveau =  ue_ec.id_niveau and i.id_au = ue_ec.id_au;
 
  -- 6-11-24 15:44
  -- association des combinaisons ue_ec-etu avec les notes enregistrees
  create or replace view v_note as
- select a.id_au, a.id_parcours, a.id_niveau, a.coefficient, a.id_unite_enseignement, a.id_ue_ec, a.id_element_constitutif, a.id_examen_par_au, id_session_examen, nom_session_examen, type_session, a.im, a.id_etudiants,coalesce(n.note, 0) as note, date_annulation
+ select a.id_au, a.id_parcours, a.id_niveau, a.coefficient, a.id_unite_enseignement, a.id_ue_ec, a.id_element_constitutif, a.id_examen_par_au, id_session_examen, nom_session_examen, type_session, a.im, a.id_etudiants,coalesce(n.note, 0) as note, date_annulation, statut, a_passe_examen
  from v_correspondance_note_matricule as n
  right join v_association_etu_ec as a on a.id_ue_ec = n.id_ue_ec and a.im = n.matricule;
 
@@ -170,6 +185,18 @@ create or replace view v_note_moyenne_ue as
             select id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants,avg(note) as note, date_annulation
             from v_note
             group by id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants, date_annulation
+
+-- 18-11-24 16:17
+-- ******** ---
+    --MODIFACATION DU CALCUL DE NOTE MOYENNE D'UNE UE
+ -- ******** ---
+
+create or replace view v_note_moyenne_ue as
+            select id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants,avg(note) as note, date_annulation
+            from v_note
+            WHERE type_session = 'eval'
+            group by id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants, date_annulation
+
 
 -- 7-11-24 11:35
 -- mention validé , non validé ou éliminatoire dans le résultat
@@ -200,6 +227,7 @@ from note_eval
 order by id_au, id_parcours, id_niveau, id_examen_par_au,id_unite_enseignement,im, id_ue_ec asc
 
 
+
 -- 8-11-24 9:44
 -- jointure avec les tables pour ajouter les libeles aux resultats
 create or replace view v_note_eval_ue_complet as
@@ -210,6 +238,9 @@ join parcours as p on v.id_parcours = p.id_parcours
 join niveau as n on v.id_niveau = n.id_niveau
 join unite_enseignement as ue on v.id_unite_enseignement = ue.id_unite_enseignement
 left join etudiants as e on v.id_etudiants = e.id_etudiants;
+
+--select intitule, nom_parcours, nom_niveau, nom_unite_enseignement, im, note_ue, valide
+--from v_note_eval_ue_complet;
 
 -- génération de l'affichage de réusltats par au,parcours,niveau, session d'examen
 create or replace function creer_v_resultats_eval(a_id_au bigint, a_id_parcours bigint, a_id_niveau bigint, a_id_examen_par_au bigint)
@@ -258,7 +289,14 @@ create or replace view v_note_eval_complet as
 
 
 --11-11-24 23:09
--- APPLICATION DES CONDITIONS DE PASSAGE
+-- ******** ---
+
+    -- GESTION DES NOTES
+    -- NOTES DES EVALUATIONS INDIVIDUELLES
+    -- APPLICATION DES CONDITIONS DE PASSAGE
+
+ -- ******** ---
+
 -- vue des totaux des notes
 create or replace view v_total_note as
 select id_au, id_parcours, id_niveau,  date_annulation_inscription, im, id_etudiants, sum(note_ue) as total, sum(coefficient) as total_coefficient
@@ -271,6 +309,14 @@ create or replace view v_moyennes as
 select id_au, id_parcours, id_niveau, date_annulation_inscription, im, id_etudiants,total, total_coefficient, (total/total_coefficient) as moyenne
 from v_total_note;
 
+    --select intitule, nom_parcours, nom_niveau, im, moyenne
+    --from v_moyennes as v
+    --join au on v.id_au = au.id_au
+    --join parcours as p on v.id_parcours = p.id_parcours
+    --join niveau as n on v.id_niveau = n.id_niveau;
+
+
+
 -- 12-11-24 8:51
 
 -- liste des ue par AU, parcours, niveau dont les examens correspondant sont des evaluations
@@ -281,6 +327,20 @@ join examen_par_au as epa on ue_ec.id_examen_par_au = epa.id_examen_par_au
 join session_examen as se on epa.id_session_examen = se.id_session_examen
 where type_session = 'eval'
 order by ue_ec.id_au desc, id_parcours, id_niveau, id_unite_enseignement, id_ue_ec asc;
+
+-- ******** --
+-- MODIFICATION v_liste_ue
+-- 19-11-24 13:54
+create or replace view v_liste_ue as
+select distinct on (ue_ec.id_au, id_parcours, id_niveau, id_unite_enseignement, epa.id_examen_par_au) ue_ec.id_au, id_parcours, id_niveau, id_unite_enseignement
+from ue_ec_parcours_niveau_au as ue_ec
+join examen_par_au as epa on ue_ec.id_examen_par_au = epa.id_examen_par_au
+join session_examen as se on epa.id_session_examen = se.id_session_examen
+where type_session = 'eval'
+order by ue_ec.id_au desc, id_parcours, id_niveau, id_unite_enseignement, epa.id_examen_par_au,id_ue_ec asc;
+
+
+-- ******** --
 
 -- calcul du nombre d'UE par année
 create or replace view v_nombre_ue as
@@ -352,6 +412,13 @@ create or replace view v_decision as
     from v_resultats;
 
 
+    --select intitule, nom_parcours, nom_niveau, im, moyenne, decision
+    --from v_decision as v
+    --join au on v.id_au = au.id_au
+    --join parcours as p on v.id_parcours = p.id_parcours
+    --join niveau as n on v.id_niveau = n.id_niveau
+
+
 --select dense_rank() over(order by moyenne desc) as rang, im, moyenne, pourcentage_validation, nombre_note_eliminatoire, decision
 --    from v_decision
 --    where id_au = 4 and id_parcours = 4 and id_niveau = 2;
@@ -375,11 +442,6 @@ create materialized view v_resultats_avant_repechage_complet as
     join unite_enseignement as ue on r.id_unite_enseignement = ue.id_unite_enseignement
     join element_constitutif as ec on r.id_element_constitutif = ec.id_element_constitutif
     left join etudiants as e on r.id_etudiants = e.id_etudiants;
-
-
-    --select DENSE_RANK() OVER (ORDER BY moyenne desc) AS rang , im, nom_unite_enseignement, note_ec, note_ue, moyenne, decision from v_resultats_avant_repechage_complet
-    --        where id_au = 4 and id_parcours = 4 and id_niveau = 2
-    --        order by rang asc, id_session_examen asc, id_unite_enseignement asc , id_element_constitutif asc
 
 
 -- LISTE DE REPECHAGE
@@ -419,6 +481,265 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+-- ******** ---
+
+    -- GESTION DES NOTES
+    -- NOTES DES EVALUATIONS INDIVIDUELLES
+    -- PRISE EN COMPTE DES NOTES DE REPECHAGE
+
+-- ******** ---
+    --18-11-24 18:32
+    --  note moyenne de chaque ue repêchée
+    create or replace view v_note_moyenne_ue_rep as
+            select id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants,avg(note) as note, date_annulation, statut, a_passe_examen
+            from v_note
+            WHERE type_session = 'repe'
+            group by id_au, id_parcours, id_niveau, coefficient, id_unite_enseignement, id_examen_par_au, id_session_examen, im, id_etudiants, date_annulation, statut, a_passe_examen;
+
+    -- assemblage des ue REPÊCHEES avec leurs ec respectifs
+    create or replace view v_note_ue_avec_ec_rep as
+        select n.id_au, n.id_parcours, n.id_niveau, n.id_examen_par_au, n.id_session_examen, n.nom_session_examen, n.type_session, n.date_annulation, n.coefficient, n.id_unite_enseignement, n.id_ue_ec, n.id_element_constitutif, n.im, n.id_etudiants, n.note as note_ec, v.note as note_ue, n.statut, n.a_passe_examen
+        from v_note_moyenne_ue_rep as v
+        join v_note as n on (n.id_au = v.id_au and n.id_parcours = v.id_parcours and n.id_niveau = v.id_niveau and n.id_unite_enseignement = v.id_unite_enseignement and n.id_examen_par_au = v.id_examen_par_au and n.id_etudiants = v.id_etudiants) or (n.id_au = v.id_au and n.id_parcours = v.id_parcours and n.id_niveau = v.id_niveau and n.id_unite_enseignement = v.id_unite_enseignement and n.id_examen_par_au = v.id_examen_par_au and n.id_etudiants is null and v.id_etudiants is null);
+
+
+    --  assemblage des notes des évaluations avec les notes de repêchage PAR EC, on retiendra la note supérieure entre évaluation et repechage par ue par étudiant
+    create or replace view v_assemblage_eval_repe as
+        select eval.id_au, eval.id_parcours, eval.id_niveau, eval.id_examen_par_au, eval.id_session_examen, eval.nom_session_examen,
+        CASE
+            WHEN rep.note_ue >= eval.note_ue THEN rep.type_session
+            WHEN eval.note_ue > rep.note_ue THEN eval.type_session
+        END as type_session_retenue,
+        eval.date_annulation_inscription, eval.coefficient, eval.id_unite_enseignement, eval.id_element_constitutif, eval.im, eval.id_etudiants,
+        GREATEST(rep.note_ue, eval.note_ue) as note_ue,
+        CASE
+            WHEN rep.note_ue >= eval.note_ue THEN rep.note_ec
+            WHEN eval.note_ue > rep.note_ue THEN eval.note_ec
+        END as note_ec,
+        rep.statut, rep.a_passe_examen
+        from v_note_ue_avec_ec_rep as rep
+        join resultats_avant_repechage as eval on (rep.id_au = eval.id_au and rep.id_parcours = eval.id_parcours and rep.id_niveau = eval.id_niveau  and rep.id_unite_enseignement = eval.id_unite_enseignement and  rep.id_element_constitutif = eval.id_element_constitutif and rep.id_etudiants = eval.id_etudiants) or (rep.id_au = eval.id_au and rep.id_parcours = eval.id_parcours and rep.id_niveau = eval.id_niveau  and rep.id_unite_enseignement = eval.id_unite_enseignement and  rep.id_element_constitutif = eval.id_element_constitutif and rep.id_etudiants is null and eval.id_etudiants is null);
+
+
+
+
+    -- elimination des elements constitutifs
+    create or replace view v_note_ue_rep as
+        select distinct on(id_au, id_parcours, id_niveau, id_examen_par_au, id_unite_enseignement, id_etudiants) id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session_retenue, date_annulation_inscription, coefficient, id_unite_enseignement, im, id_etudiants, note_ue, statut, a_passe_examen
+        from v_assemblage_eval_repe
+        order by id_au, id_parcours, id_niveau, id_examen_par_au, id_unite_enseignement, id_etudiants, id_element_constitutif;
+
+
+    -- RÉÉVALUATION DES CONDITIONS DE PASSAGE
+    -- vue des totaux des notes
+    create or replace view v_total_note_rep as
+        select id_au, id_parcours, id_niveau, date_annulation_inscription, im, id_etudiants, sum(note_ue * coefficient) as total, sum(coefficient) as total_coefficient, statut, a_passe_examen
+        from v_note_ue_rep
+        group by id_au, id_parcours, id_niveau, date_annulation_inscription, im, id_etudiants, statut, a_passe_examen;
+
+    -- vue des moyennes
+    create or replace view v_moyenne_rep as
+        select id_au, id_parcours, id_niveau, date_annulation_inscription, im, id_etudiants,total, total_coefficient, (total/total_coefficient) as moyenne, statut, a_passe_examen
+        from v_total_note_rep;
+
+    -- validation des UE
+    create or replace view v_validation_ue_rep as
+        select id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session_retenue, date_annulation_inscription, coefficient, id_unite_enseignement, im, id_etudiants, note_ue, statut, a_passe_examen,
+            case
+                when note_ue >= (select note_validation_ue as moyenne from note_validation_ue order by id_note_validation_ue desc limit 1) then 'V'
+                when note_ue > (select note_elim from note_eliminatoire order by id_note_eliminatoire desc limit 1) and note_ue < (select note_validation_ue from note_validation_ue order by id_note_validation_ue desc limit 1) then 'N'
+                else 'E'
+            end AS valide
+        from v_note_ue_rep;
+
+    -- COMPTAGE DES UE VALIDEES
+    -- nombre des ue_validees
+    create or replace view v_nombre_ue_validees_rep as
+        select id_au, id_parcours, id_niveau, im, id_etudiants, count(valide) as nombre_ue_validees
+        from v_validation_ue_rep
+        where valide = 'V'
+        group by id_au, id_parcours, id_niveau, im, id_etudiants, statut;
+
+    -- cas des parcours et niveaux sans inscrits
+    create or replace view v_nombre_ue_validees_sans_inscrits_rep as
+        select distinct on(id_au, id_parcours, id_niveau) id_au, id_parcours, id_niveau, im, id_etudiants, 0 as nombre_ue_validees
+        from v_validation_ue_rep
+        where id_etudiants is null
+        order by id_au, id_parcours, id_niveau, id_examen_par_au asc ,id_unite_enseignement asc;
+
+    -- assemblage des deux nombres d'UE validées
+    create or replace view v_nombre_ue_validees_complet_rep as
+        select * from v_nombre_ue_validees_rep
+        union all
+        select * from  v_nombre_ue_validees_sans_inscrits_rep;
+
+
+    -- nombre d'ue à valider par au, parcours, niveau
+    create or replace view v_nombre_ue_a_valider as
+        select id_au, id_parcours, id_niveau, nombre_ue, FLOOR((nombre_ue * (select pourcentage_admission from pourcentage_admission order by id_pourcentage_admission desc limit 1))/100) AS nombre_ue_a_valider
+        from v_nombre_ue;
+
+    -- nombre d'UE avec notes eliminatoires
+    create or replace view v_nombre_note_eliminatoire_rep as
+        select id_au, id_parcours, id_niveau, im, id_etudiants, count(valide) as nombre_note_eliminatoire
+        from v_validation_ue_rep
+        where valide = 'E'
+        group by id_au, id_parcours, id_niveau, im, id_etudiants;
+
+    --assemblage des conditions de passage
+    create or replace view v_conditions_passage as
+        select m.id_au, m.id_parcours, m.id_niveau, m.im, m.id_etudiants, m.date_annulation_inscription, m.statut, m.a_passe_examen, m.total, m.total_coefficient, m.moyenne,  av.nombre_ue, av.nombre_ue_a_valider, nv.nombre_ue_validees, ne.nombre_note_eliminatoire
+        from v_moyenne_rep as m
+        join v_nombre_ue_validees_complet_rep as nv on (nv.id_au = m.id_au and nv.id_parcours = m.id_parcours and nv.id_niveau = m.id_niveau and nv.id_etudiants = m.id_etudiants) or (nv.id_au = m.id_au and nv.id_parcours = m.id_parcours and nv.id_niveau = m.id_niveau and nv.id_etudiants is null and m.id_etudiants is null)
+        join v_nombre_ue_a_valider as av on av.id_au = m.id_au and av.id_parcours = m.id_parcours and av.id_niveau = m.id_niveau
+        join v_nombre_note_eliminatoire_rep as ne on (ne.id_au = m.id_au and ne.id_parcours = m.id_parcours and ne.id_niveau = m.id_niveau and ne.id_etudiants = m.id_etudiants) or (ne.id_au = m.id_au and ne.id_parcours = m.id_parcours and ne.id_niveau = m.id_niveau and ne.id_etudiants is null and m.id_etudiants is null);
+
+
+    -- CAS DES ETUDIANTS NE REMPLISSANT PAS LES CONDITIONS DE PASSAGE
+
+    create or replace function statuer(a_id_etudiant bigint, a_id_niveau bigint)
+        RETURNS VARCHAR AS
+        $$
+        DECLARE
+            niveau_v RECORD;
+            nb_triplements INTEGER;
+            nb_redoublements INTEGER;
+            dernier_redoublement RECORD;
+        BEGIN
+            SELECT *
+            INTO niveau_v
+            FROM niveau
+            WHERE id_niveau = a_id_niveau;
+
+            -- récuperer les triplements
+            CREATE TEMP TABLE triplements AS
+                SELECT DISTINCT ON(id_au, id_etudiants) id_etudiants, statut_au_suivante
+                FROM resultats_definitifs
+                WHERE id_etudiants = a_id_etudiant
+                AND cycle = niveau_v.cycle
+                AND statut_au_suivante = 'triplant'
+                ORDER BY id_au, id_etudiants, id_ue asc;
+
+            SELECT COUNT(*) INTO nb_triplements FROM triplements;
+            IF nb_triplements > 0
+                THEN
+                    DROP TABLE triplements;
+                    RETURN 'exclus'::VARCHAR;
+            END IF;
+            DROP TABLE triplements;
+
+            -- cas des redoublements
+            CREATE TEMP TABLE redoublements AS
+                SELECT DISTINCT ON(id_au, id_etudiants) id_etudiants, id_niveau, rang, statut_au_suivante
+                FROM resultats_definitifs
+                WHERE id_etudiants = a_id_etudiant
+                AND cycle = niveau_v.cycle
+                AND statut_au_suivante = 'redoublant'
+                ORDER BY id_au, id_etudiants, id_ue asc;
+
+            SELECT COUNT(*) INTO nb_redoublements FROM redoublements;
+            IF nb_redoublements >= 2
+                THEN
+                    DROP TABLE redoublements;
+                    return 'exclus'::VARCHAR;
+            ELSEIF nb_redoublements = 1
+                THEN
+                    SELECT *
+                    INTO dernier_redoublement
+                    FROM redoublements;
+
+                    IF ABS(niveau_v.rang - dernier_redoublement.rang) = 1
+                        THEN
+                            DROP TABLE redoublements;
+                            RETURN 'exclus'::VARCHAR;
+                    ELSEIF ABS(niveau_v.rang - dernier_redoublement.rang) > 1
+                        THEN
+                            DROP TABLE redoublements;
+                            RETURN 'redoublant'::VARCHAR;
+                    ELSEIF ABS(niveau_v.rang - dernier_redoublement.rang) = 0
+                        THEN
+                            DROP TABLE redoublements;
+                            RETURN 'triplant'::VARCHAR;
+                    END IF;
+            ELSEIF nb_redoublements = 0
+                THEN
+                    DROP TABLE redoublements;
+                    RETURN 'redoublant'::VARCHAR;
+            END IF;
+    END;
+    $$ LANGUAGE plpgsql;
+
+        -- créationd de la fonction statuer pour décider de leur statut à l'année suivante
+
+
+    -- decision avant la deliberation
+
+    create or replace view v_statut_avant_deliberation as
+        select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,
+        CASE
+            WHEN date_annulation_inscription is not null AND statut = 'passant' and a_passe_examen = FALSE
+            THEN 'passant'::VARCHAR
+            WHEN date_annulation_inscription is not null AND statut = 'passant' and a_passe_examen = FALSE
+            THEN 'redoublant'::VARCHAR
+            WHEN
+                moyenne >= (select moyenne_admission from moyenne_admission order by id_moyenne_admission desc limit 1)
+                AND nombre_ue_validees >= nombre_ue_a_valider
+                AND nombre_note_eliminatoire = 0
+            THEN  'passant'::varchar
+            ELSE statuer(id_etudiants, id_niveau)
+        END AS statut_au_suivante
+        from v_conditions_passage;
+
+
+
+    -- fonction pour récupérer le niveau à l'année suivante
+    create or replace function get_niveau_suivant(a_statut VARCHAR, a_id_niveau BIGINT)
+        RETURNS BIGINT AS
+        $$
+        DECLARE
+            niveau_v RECORD;
+            niveau_suivant RECORD;
+        BEGIN
+            SELECT *
+            INTO niveau_v
+            FROM niveau
+            WHERE id_niveau = a_id_niveau;
+
+            IF a_statut = 'exclus'
+                THEN RETURN NULL;
+            ELSEIF a_statut = 'redoublant' or a_statut = 'triplant'
+                THEN RETURN a_id_niveau;
+            ELSEIF a_statut = 'passant'
+                THEN
+                    SELECT *
+                    INTO niveau_suivant
+                    FROM niveau
+                    WHERE rang = niveau_v + 1;
+
+                    IF niveau_suivant IS NOT NULL
+                        THEN RETURN niveau_suivant.id_niveau;
+                    ELSE
+                        THEN RETURN NULL;
+                    END IF;
+            END IF;
+
+        END;
+    $$ LANGUAGE plpgsql;
+
+
+
+    -- niveau pour l'année universtaire suivante
+    create or replace view v_niveau_suivant_avant_deliberation as
+        select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, stotal, total_coefficient, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,statut_au_suivante, get_niveau_suivant(statut, id_niveau)
+
+        from v_statut_avant_deliberation;
+
+
+
+
 
 
 
