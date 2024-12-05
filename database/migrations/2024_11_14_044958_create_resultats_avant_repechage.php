@@ -54,10 +54,10 @@ return new class extends Migration
             $table->double('total');
             $table->double('total_coefficient');
             $table->double('moyenne');
-            $table->double('nombre_ue');
-            $table->double('nombre_ue_validees');
-            $table->double('pourcentage_validation');
-            $table->double('nombre_note_eliminatoire');
+            $table->integer('nombre_ue');
+            $table->integer('nombre_ue_validees');
+            $table->integer('nombre_ue_a_valider');
+            $table->integer('nombre_note_eliminatoire');
             $table->enum('decision',['valide', 'repechage']);
 
             $table->timestamps();

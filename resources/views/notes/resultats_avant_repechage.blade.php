@@ -32,8 +32,8 @@
                     <th rowspan="3" class="alignement-vertical-centre">Total Coefficient</th>
                     <th rowspan="3" class="alignement-vertical-centre">Moyenne</th>
                     <th rowspan="3" class="alignement-vertical-centre">Nombre d'U.E.</th>
+                    <th rowspan="3" class="alignement-vertical-centre">U.E. à valider</th>
                     <th rowspan="3" class="alignement-vertical-centre">U.E. validées</th>
-                    <th rowspan="3" class="alignement-vertical-centre">Pourcentage validation</th>
                     <th rowspan="3" class="alignement-vertical-centre">Nombre note eliminatoire</th>
                     <th rowspan="3" class="alignement-vertical-centre demarcation" >Decision</th>
 
@@ -86,8 +86,8 @@
                             <td>{{ $resultat->total_coefficient }}</td>
                             <td>{{ round($resultat->moyenne, 2) }}</td>
                             <td>{{ $resultat->nombre_ue }}</td>
+                            <td>{{ $resultat->nombre_ue_a_valider }}</td>
                             <td>{{ $resultat->nombre_ue_validees }}</td>
-                            <td>{{ $resultat->pourcentage_validation }}</td>
                             <td>{{ $resultat->nombre_note_eliminatoire }}</td>
                             <td class="demarcation">{{ $resultat->decision }}</td>
 

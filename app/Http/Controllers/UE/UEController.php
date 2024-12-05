@@ -58,10 +58,9 @@ class UEController extends Controller
         $liste_code_barre = session('liste_code_barre');
         $id_ue_ec = $request->input('id_ue_ec');
         $ue_ec = $liste_code_barre[$id_ue_ec];
-        $en_plus = $liste_code_barre['en_plus'];
         //var_dump($ue_ec);
-        $pdf = PDF::loadview('copies_examen/codes_barres', ['ue_ec'=>$ue_ec, 'en_plus'=>$en_plus]);
-        return $pdf->stream('codes-barre-'.$ue_ec->intitule.'-'.$ue_ec->nom_session_examen.'-'.$ue_ec->nom_parcours.'-'.$ue_ec->nom_niveau.'-'.$ue_ec->nom_unite_enseignement.'-'.$ue_ec->nom_element_constitutif.'.pdf');
+        $pdf = PDF::loadview('copies_examen/codes_barres', ['ue_ec'=>$ue_ec]);
+        return $pdf->download('codes-barre-'.$ue_ec->intitule.'-'.$ue_ec->nom_session_examen.'-'.$ue_ec->nom_parcours.'-'.$ue_ec->nom_niveau.'-'.$ue_ec->nom_unite_enseignement.'-'.$ue_ec->nom_element_constitutif.'.pdf');
     }
 
     public function get_liste_ue_ec_code_barre(){

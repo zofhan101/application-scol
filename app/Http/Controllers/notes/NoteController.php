@@ -449,6 +449,8 @@ class NoteController extends Controller
         ]);
         $id_examen_par_au = $request->input('id_examen_par_au');
         $operations = Operation_sur_examen::get_operation_by_id_examen_par_au($id_examen_par_au);
+        $id_user = Auth::user()->id_user;
+
         if(empty($operations)){
             return response()->json(["error"=>"ERREUR: génération des résultats impossible car aucune opération d'ouverture et de cloture des saisies et vérification des notes/en-têtes n'a été trouvée: "], 422);
         }
@@ -456,6 +458,7 @@ class NoteController extends Controller
             $operation = $operations[0];
             if($operation->date_cloture_verification_note != null && $operation->date_cloture_verification_en_tete != null && $operation->date_resultats == null){
                 $session = Operation_sur_examen::get_session_examen($id_examen_par_au);
+
                 if($session->type_session == "eval"){
                     //Récupérer les éventuelles anomalies(oubli de saisie d'en tete ou  de note)
                     $anomalies = Operation_sur_examen::get_anomalies_saisie($id_examen_par_au);
@@ -465,7 +468,6 @@ class NoteController extends Controller
                     }
                     else{
                         //absence d'anomalie ->génération des résultat
-                        $id_user = Auth::user()->id_user;
                         Operation_sur_examen::remplir_note_eval($id_examen_par_au);
                         Operation_sur_examen::verrouiller_resultats($id_examen_par_au, $id_user);
                         return response()->json(["message"=>"Génération des résultats effectuée"], 200);
@@ -473,17 +475,41 @@ class NoteController extends Controller
                     }
                 }
                 else if($session->type_session == "repe"){
+                    $au = AU::get_au_en_cours();
                     // CAS DE LA SESSION DE REPECHAGE
-                    $anomalies = Operation_sur_examen::get_anomalies_saisie($id_examen_par_au);
-                    if(empty($anomalies[0]) == false || empty($anomalies[1]) == false){
-                        //afficher ces anomalies
-                        return view('notes/anomalies_note', ['anomalies' =>$anomalies]);
+                    $operations_par_au = Operation_sur_au::get_operation_by_id_au($au->id_au);
+                    if(empty($operations_par_au)){
+                        return response()->json(["error"=>"ERREUR: génération des résultats de repêchage impossible car aucune opération de génération des résultats annuels n'a été trouvée "]);
                     }
                     else{
-                        //absence d'anomalie -> génération des résultats
+                        $operation = $operations_par_au[0];
+                        if($operation->date_resultats_avant_repechage != null){
+                            $anomalies = Operation_sur_examen::get_anomalies_saisie($id_examen_par_au);
+                            if(empty($anomalies[0]) == false || empty($anomalies[1]) == false){
+                                //afficher ces anomalies
+                                return view('notes/anomalies_note', ['anomalies' =>$anomalies]);
+                            }
+                            else{
+                                //absence d'anomalie -> génération des résultats
 
 
+                                    Operation_sur_au::generer_resultats_avant_deliberation($au->id_au);
+                                    Operation_sur_examen::verrouiller_resultats($id_examen_par_au, $id_user);
+                                    Operation_sur_au::verrouiller_resultats_avant_deliberation($au->id_au, $id_user);
+                                    return response()->json(["message"=>"Génération des résultats effectuée"], 200);
+
+
+
+                            }
+                        }
+                        else{
+                            return response()->json(["error"=>"ERREUR: génération des résultats de repêchage impossible car les résultats avant repêchage n'ont pas encore été générés "]);
+
+                        }
                     }
+
+
+
                 }
                 else{
                     // cas du concours PACES qui est géré par une autres application

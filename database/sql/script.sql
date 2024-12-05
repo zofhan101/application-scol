@@ -91,6 +91,7 @@ group by apn.id_au, apn.id_parcours, apn.id_niveau
 
 --11-10-24 12:52
 --liste des ue et ec avec le nombre d'inscrits
+-- TRANSFORMEE EN VUE MATERIALISEE RAFRAICHIE  APRES LES INSCRIPTIONS ET LA DEFINITION DES UE ET EC
 create or replace view v_liste_ue_ec_avec_nbr_inscrits as
 select l.*, n.nbr_inscrits
 from v_liste_ue_ec_avec_mentions as l
@@ -133,7 +134,7 @@ join v_inscrits as i on ue_ec.id_parcours = v_inscrits.id_parcours and ue_ec.id_
 
 
 -- 4-11-24 22:12
---liste des ue et ec avec le nombre d'inscrits vue matérialisée (à rafraichir à la fin des inscriptions )
+--liste des ue et ec avec le nombre d'inscrits vue matérialisée (à rafraichir à la fin des inscriptions ET LA DEFINITION DES UE ET EC )
 create materialized view v_liste_ue_ec_avec_nbr_inscrits as
 select l.*, n.nbr_inscrits
 from v_liste_ue_ec_avec_mentions as l
@@ -371,12 +372,12 @@ select * from v_nombre_ue_validees
 union all
 select * from  v_nombre_ue_validees_sans_inscrits;
 
---12-11-24 11:51
--- taux des UE validee
-create or replace view v_taux_ue_validees as
-select v.id_au, v.id_parcours, v.id_niveau, im, id_etudiants, nombre_ue, nombre_ue_validees, ((nombre_ue_validees::DOUBLE PRECISION/nombre_ue::DOUBLE PRECISION)*100) as pourcentage_validation
-from v_nombre_ue_validees_complet as v
-join v_nombre_ue as n on v.id_au = n.id_au and v.id_parcours = n.id_parcours and v.id_niveau = n.id_niveau;
+-- deplacé dans cette section le 3-12-24 14:33
+-- nombre d'ue à valider par au, parcours, niveau
+    create or replace view v_nombre_ue_a_valider as
+        select id_au, id_parcours, id_niveau, nombre_ue, FLOOR((nombre_ue * (select pourcentage_admission from pourcentage_admission order by id_pourcentage_admission desc limit 1))/100) AS nombre_ue_a_valider
+        from v_nombre_ue;
+
 
 --12-11-24 13:22
 -- nombre d'UE avec notes eliminatoires
@@ -388,10 +389,11 @@ group by id_au, id_parcours, id_niveau, im, id_etudiants;
 
 -- résultats de l'addition des évaluations au long de l'année avant le repechage
 create or replace view v_resultats as
-    select m.id_au, m.id_parcours, m.id_niveau, m.id_etudiants, m.im, total, total_coefficient, moyenne, nombre_ue,  nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire
+    select m.id_au, m.id_parcours, m.id_niveau, m.id_etudiants, m.im, total, total_coefficient, moyenne, nombre_ue,  nombre_ue_validees, nombre_ue_a_valider, nombre_note_eliminatoire
     from v_moyennes as m
-    join v_taux_ue_validees as v on (m.id_au = v.id_au and m.id_parcours = v.id_parcours and m.id_niveau = v.id_niveau and m.id_etudiants = v.id_etudiants) or (m.id_au = v.id_au and m.id_parcours = v.id_parcours and m.id_niveau = v.id_niveau and m.id_etudiants is null and  v.id_etudiants is null )
-    join v_nombre_note_eliminatoire as e on (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants = e.id_etudiants) or (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants is null and e.id_etudiants is null);
+    join v_nombre_ue_a_valider as v on (m.id_au = v.id_au and m.id_parcours = v.id_parcours and m.id_niveau = v.id_niveau )
+    join v_nombre_note_eliminatoire as e on (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants = e.id_etudiants) or (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants is null and e.id_etudiants is null)
+    join v_nombre_ue_validees_complet as c on (m.id_au = c.id_au and m.id_parcours = c.id_parcours and m.id_niveau = c.id_niveau and m.id_etudiants = c.id_etudiants) or (m.id_au = c.id_au and m.id_parcours = c.id_parcours and m.id_niveau = c.id_niveau and m.id_etudiants is null and c.id_etudiants is null);
 
 
 --select dense_rank() over(order by moyenne desc) as rang, im, moyenne, pourcentage_validation, nombre_note_eliminatoire
@@ -400,11 +402,11 @@ create or replace view v_resultats as
 
 -- première décision en fonction du résultat
 create or replace view v_decision as
-    select id_au, id_parcours, id_niveau, id_etudiants, im, total, total_coefficient, moyenne, nombre_ue,  nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire,
+    select id_au, id_parcours, id_niveau, id_etudiants, im, total, total_coefficient, moyenne, nombre_ue,  nombre_ue_validees, nombre_ue_a_valider, nombre_note_eliminatoire,
     CASE
         WHEN
             moyenne >= (select moyenne_admission from moyenne_admission order by id_moyenne_admission desc limit 1)
-            AND pourcentage_validation >= (select pourcentage_admission from pourcentage_admission order by id_pourcentage_admission desc limit 1)
+            AND nombre_ue_validees >= nombre_ue_a_valider
             AND nombre_note_eliminatoire = 0
         THEN  'admis'::varchar
         ELSE 'repechage'::varchar
@@ -426,7 +428,7 @@ create or replace view v_decision as
 
 -- vue complète avec les notes des ue, ec et la moyenne
 create or replace view v_resultats_avec_notes as
-    select n.*, total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire, decision
+    select n.*, total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, nombre_ue_a_valider, nombre_note_eliminatoire, decision
     from v_decision as d
     join note_eval as n on (d.id_au = n.id_au and d.id_parcours = n.id_parcours and d.id_niveau = n.id_niveau and d.id_etudiants = n.id_etudiants) or (d.id_au = n.id_au and d.id_parcours = n.id_parcours and d.id_niveau = n.id_niveau and d.id_etudiants is null and n.id_etudiants is null);
 
@@ -434,7 +436,7 @@ create or replace view v_resultats_avec_notes as
 
 -- vue des resultats annuels avec tous les libellés (VM RAFRAICHIE APRES LA GENERATION DES RESULTATS ANNUELS AVANT REPECHAGE)
 create materialized view v_resultats_avant_repechage_complet as
-    select id_resultats_avant_repechage, id_note_eval, au.id_au, au.intitule, p.id_parcours, p.nom_parcours, n.id_niveau, n.nom_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, ue.id_unite_enseignement, ue.nom_unite_enseignement, id_ue_ec, ec.id_element_constitutif, ec.nom_element_constitutif, e.id_etudiants, e.im, e.nom, e.prenoms, note_ec, note_ue, valide,  total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire, decision
+    select id_resultats_avant_repechage, id_note_eval, au.id_au, au.intitule, p.id_parcours, p.nom_parcours, n.id_niveau, n.nom_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, ue.id_unite_enseignement, ue.nom_unite_enseignement, id_ue_ec, ec.id_element_constitutif, ec.nom_element_constitutif, e.id_etudiants, e.im, e.nom, e.prenoms, note_ec, note_ue, valide,  total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, nombre_ue_a_valider, nombre_note_eliminatoire, decision
     from resultats_avant_repechage as r
     join au on r.id_au = au.id_au
     join parcours as p on r.id_parcours = p.id_parcours
@@ -487,7 +489,7 @@ $$ LANGUAGE plpgsql;
 -- ******** ---
 
     -- GESTION DES NOTES
-    -- NOTES DES EVALUATIONS INDIVIDUELLES
+    -- RESULTATS SUR L'A.U.
     -- PRISE EN COMPTE DES NOTES DE REPECHAGE
 
 -- ******** ---
@@ -577,10 +579,6 @@ $$ LANGUAGE plpgsql;
         select * from  v_nombre_ue_validees_sans_inscrits_rep;
 
 
-    -- nombre d'ue à valider par au, parcours, niveau
-    create or replace view v_nombre_ue_a_valider as
-        select id_au, id_parcours, id_niveau, nombre_ue, FLOOR((nombre_ue * (select pourcentage_admission from pourcentage_admission order by id_pourcentage_admission desc limit 1))/100) AS nombre_ue_a_valider
-        from v_nombre_ue;
 
     -- nombre d'UE avec notes eliminatoires
     create or replace view v_nombre_note_eliminatoire_rep as
@@ -678,7 +676,7 @@ $$ LANGUAGE plpgsql;
     -- decision avant la deliberation
 
     create or replace view v_statut_avant_deliberation as
-        select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,
+        select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, (select moyenne_admission from moyenne_admission order by id_moyenne_admission desc limit 1) as moyenne_passage, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,
         CASE
             WHEN date_annulation_inscription is not null AND statut = 'passant' and a_passe_examen = FALSE
             THEN 'passant'::VARCHAR
@@ -717,12 +715,12 @@ $$ LANGUAGE plpgsql;
                     SELECT *
                     INTO niveau_suivant
                     FROM niveau
-                    WHERE rang = niveau_v + 1;
+                    WHERE rang = niveau_v.rang + 1;
 
                     IF niveau_suivant IS NOT NULL
                         THEN RETURN niveau_suivant.id_niveau;
                     ELSE
-                        THEN RETURN NULL;
+                        RETURN NULL;
                     END IF;
             END IF;
 
@@ -733,9 +731,148 @@ $$ LANGUAGE plpgsql;
 
     -- niveau pour l'année universtaire suivante
     create or replace view v_niveau_suivant_avant_deliberation as
-        select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, stotal, total_coefficient, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,statut_au_suivante, get_niveau_suivant(statut, id_niveau)
+        select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, moyenne_passage, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,statut_au_suivante, get_niveau_suivant(statut, id_niveau) as niveau suivant
 
         from v_statut_avant_deliberation;
+
+
+    -- assemblage avec les ue et ec
+
+    CREATE OR REPLACE VIEW v_calcul_resultats_avant_deliberation AS
+         SELECT
+             eval.id_au,
+             eval.id_parcours,
+             eval.id_niveau,
+             eval.id_etudiants,
+
+             eval.id_examen_par_au,
+             eval.id_session_examen,
+             eval.nom_session_examen,
+             eval.type_session_retenue,
+             eval.coefficient,
+             eval.id_unite_enseignement,
+             eval.id_element_constitutif,
+             eval.im,
+             eval.note_ue,
+             eval.note_ec,
+             val.valide,
+             eval.statut,
+             eval.a_passe_examen,
+
+             niv.date_annulation_inscription,
+             niv.total,
+             niv.total_coefficient,
+             niv.moyenne_passage,
+             niv.moyenne,
+             niv.nombre_ue,
+             niv.nombre_ue_a_valider,
+             niv.nombre_ue_validees,
+             niv.nombre_note_eliminatoire,
+             niv.statut_au_suivante,
+             niv.niveau_suivant
+
+         FROM
+             v_assemblage_eval_repe AS eval
+         JOIN
+             v_niveau_suivant_avant_deliberation AS niv
+         ON
+             eval.id_au = niv.id_au AND
+             eval.id_parcours = niv.id_parcours AND
+             eval.id_niveau = niv.id_niveau AND
+             (eval.id_etudiants = niv.id_etudiants OR (eval.id_etudiants IS NULL AND niv.id_etudiants IS NULL))
+
+        JOIN
+            v_validation_ue_rep AS val
+        ON
+            eval.id_au = val.id_au AND
+            eval.id_parcours = val.id_parcours AND
+            eval.id_niveau = val.id_niveau AND
+            (eval.id_etudiants = val.id_etudiants OR (val.id_etudiants IS NULL AND val.id_etudiants IS NULL)) AND
+            eval.id_unite_enseignement = val.id_unite_enseignement;
+
+
+
+
+
+    -- CREATION DE LA TABLE RESULTATS AVANT DELIBERATION
+
+    -- résultats complets avant délibération (VM RAFRAICHIE A L GENERATION DES RESULTATS AVANT DELIBERATION )
+    CREATE MATERIALIZED VIEW v_resultats_avant_deliberation AS
+        SELECT
+            ra.id_resultat_avant_deliberation,
+            ra.id_au,
+            ra.id_parcours,
+            ra.id_niveau,
+            ra.id_etudiants,
+            ra.id_examen_par_au,
+            ra.id_session_examen,
+            ra.nom_session_examen,
+            ra.type_session_retenue,
+            ra.coefficient,
+            ra.id_unite_enseignement,
+            ra.id_element_constitutif,
+            ra.im,
+            ra.note_ue,
+            ra.note_ec,
+            ra.statut,
+            ra.a_passe_examen,
+            ra.date_annulation_inscription,
+            ra.total,
+            ra.total_coefficient,
+            ra.moyenne_passage,
+            ra.moyenne,
+            ra.nombre_ue,
+            ra.nombre_ue_a_valider,
+            ra.nombre_ue_validees,
+            ra.nombre_note_eliminatoire,
+            ra.statut_au_suivante,
+            ra.id_niveau_suivant,
+
+            au.intitule AS intitule_au,
+
+            p.nom_parcours,
+
+
+            n.nom_niveau,
+            n.rang,
+            n.nom_niveau_long,
+            n.cycle,
+
+            e.nom AS nom_etudiant,
+            e.prenoms,
+            e.date_naissance,
+            e.lieu_naissance,
+
+            ue.nom_unite_enseignement,
+
+            ec.nom_element_constitutif,
+
+            ns.nom_niveau AS nom_niveau_suivant,
+            ns.rang AS rang_suivant,
+            ns.cycle as cycle_suivant
+        FROM
+            resultats_avant_deliberation ra
+        JOIN
+            au ON ra.id_au = au.id_au
+        JOIN
+            parcours p ON ra.id_parcours = p.id_parcours
+        JOIN
+            niveau n ON ra.id_niveau = n.id_niveau
+        JOIN
+            etudiants e ON ra.id_etudiants = e.id_etudiants
+        JOIN
+            unite_enseignement ue ON ra.id_unite_enseignement = ue.id_unite_enseignement
+        JOIN
+            element_constitutif ec ON ra.id_element_constitutif = ec.id_element_constitutif
+        LEFT JOIN
+            niveau ns ON ra.id_niveau_suivant = ns.id_niveau;
+
+
+
+
+
+
+
 
 
 

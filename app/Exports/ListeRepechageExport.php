@@ -65,7 +65,7 @@ class ListeRepechageExport implements FromCollection, WithDrawings, WithHeadings
 
     public function startCell(): string
     {
-        return 'A17'; 
+        return 'A17';
     }
 
 

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         DB::statement("
             create or replace view v_statut_avant_deliberation as
-                select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,
+                select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, (select moyenne_admission from moyenne_admission order by id_moyenne_admission desc limit 1) as moyenne_passage, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,
                 CASE
                     WHEN date_annulation_inscription is not null AND statut = 'passant' and a_passe_examen = FALSE
                     THEN 'passant'::VARCHAR
@@ -45,7 +45,7 @@ return new class extends Migration
                      WHERE id_niveau = a_id_niveau;
 
                      IF a_statut = 'exclus'
-                         THEN RETURN NULL;
+                        THEN RETURN NULL;
                      ELSEIF a_statut = 'redoublant' or a_statut = 'triplant'
                          THEN RETURN a_id_niveau;
                      ELSEIF a_statut = 'passant'
@@ -53,12 +53,12 @@ return new class extends Migration
                              SELECT *
                              INTO niveau_suivant
                              FROM niveau
-                             WHERE rang = niveau_v + 1;
+                             WHERE rang = niveau_v.rang + 1;
 
                              IF niveau_suivant IS NOT NULL
-                                 THEN RETURN niveau_suivant.id_niveau;
+                                THEN RETURN niveau_suivant.id_niveau;
                              ELSE
-                                 THEN RETURN NULL;
+                                RETURN NULL;
                              END IF;
                      END IF;
 
@@ -68,8 +68,7 @@ return new class extends Migration
 
         DB::statement('
             create or replace view v_niveau_suivant_avant_deliberation as
-                select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, stotal, total_coefficient, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,statut_au_suivante, get_niveau_suivant(statut, id_niveau)
-
+                select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, moyenne_passage, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,statut_au_suivante, get_niveau_suivant(statut, id_niveau) as niveau_suivant
                 from v_statut_avant_deliberation;
 
         ');

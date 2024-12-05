@@ -145,7 +145,8 @@ class Etudiant extends Model
                 'id_agent_inscription'=>$id_user,
                 'id_etudiant'=>$etu->id_etudiants,
                 'id_au'=>$au->id_au,
-                'id_niveau'=>$niveau_inscription->id_niveau
+                'id_niveau'=>$niveau_inscription->id_niveau,
+                'statut'=>'passant'
             ]);
 
         });
@@ -215,7 +216,8 @@ class Etudiant extends Model
                 'id_agent_inscription'=>$id_user,
                 'id_etudiant'=>$etu->id_etudiants,
                 'id_au'=>$au->id_au,
-                'id_niveau'=>$l1[0]->id_niveau
+                'id_niveau'=>$l1[0]->id_niveau,
+                'statut'=>'passant'
             ]);
 
             // bloquer la possibilité de s'inscrire à nouveau pour cette personne

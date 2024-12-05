@@ -144,7 +144,8 @@ class Operation_sur_examen
             select se.id_session_examen, nom_session_examen, type_session, id_examen_par_au, id_au
             from examen_par_au as epa
             join session_examen as se on epa.id_session_examen = se.id_session_examen
-        ');
+            where id_examen_par_au = ?
+        ', [$id_examen_par_au]);
         return $session[0];
     }
         //anomalies dans les saisies

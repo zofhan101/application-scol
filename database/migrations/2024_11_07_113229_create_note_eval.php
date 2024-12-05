@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('note_eval', function (Blueprint $table) {
             $table->id('id_note_eval');
+            
             $table->BigInteger('id_au')->foreign()->references('id_au')->on('au');
             $table->BigInteger('id_parcours');
             $table->foreign('id_parcours')->references('id_parcours')->on('parcours');

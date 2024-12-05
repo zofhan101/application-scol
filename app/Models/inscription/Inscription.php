@@ -23,7 +23,8 @@ class Inscription extends Model
         'id_agent_annulation',
         'id_etudiant',
         'id_niveau',
-        'id_au'
+        'id_au',
+        'statut'
     ];
 
     protected $casts=[

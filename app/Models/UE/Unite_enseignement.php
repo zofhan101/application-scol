@@ -114,8 +114,10 @@ class Unite_enseignement extends Model
                 $id_niveau = $ue_ec->id_niveau;
                 $id_ue = $ue_ec->id_unite_enseignement;
 
+                 //changement d'examen
+                 if($id_session_examen != $id_session_examen_prec){
 
-                if($id_ue != $id_ue_prec){
+
                     $ue->ecs = $ecs;
                     $ues[] = $ue;
 
@@ -123,9 +125,8 @@ class Unite_enseignement extends Model
                     $ue->id_ue = $id_ue;
                     $ue->nom_ue = $ue_ec->nom_unite_enseignement;
                     $ecs  = [];
-                }
 
-                if($id_niveau != $id_niveau_prec){
+
                     $niveau->ues = $ues;
                     $niveaux[] = $niveau;
 
@@ -133,9 +134,7 @@ class Unite_enseignement extends Model
                     $niveau->id_niveau = $id_niveau;
                     $niveau->nom_niveau = $ue_ec->nom_niveau;
                     $ues = [];
-                }
 
-                if($id_parcours != $id_parcours_prec){
                     $parcour->niveaux = $niveaux;
                     $parcours[] = $parcour ;
 
@@ -143,9 +142,7 @@ class Unite_enseignement extends Model
                     $parcour->id_parcours = $id_parcours;
                     $parcour->nom_parcours = $ue_ec->nom_parcours;
                     $niveaux = [];
-                }
 
-                if($id_mention != $id_mention_prec){
                     $mention->parcours = $parcours;
                     $mentions[] = $mention;
 
@@ -153,9 +150,8 @@ class Unite_enseignement extends Model
                     $mention->id_mention = $id_mention;
                     $mention->nom_mention = $ue_ec->nom_mention;
                     $parcours = [];
-                }
 
-                if($id_session_examen != $id_session_examen_prec){
+
                     $evaluation->mentions = $mentions;
                     $res[] = $evaluation;
 
@@ -167,6 +163,107 @@ class Unite_enseignement extends Model
 
                 }
 
+                 //changement de mention
+                 if($id_mention != $id_mention_prec){
+
+                    $ue->ecs = $ecs;
+                    $ues[] = $ue;
+
+                    $ue = new stdClass();
+                    $ue->id_ue = $id_ue;
+                    $ue->nom_ue = $ue_ec->nom_unite_enseignement;
+                    $ecs  = [];
+
+
+                    $niveau->ues = $ues;
+                    $niveaux[] = $niveau;
+
+                    $niveau = new stdClass();
+                    $niveau->id_niveau = $id_niveau;
+                    $niveau->nom_niveau = $ue_ec->nom_niveau;
+                    $ues = [];
+
+                    $parcour->niveaux = $niveaux;
+                    $parcours[] = $parcour ;
+
+                    $parcour = new stdClass();
+                    $parcour->id_parcours = $id_parcours;
+                    $parcour->nom_parcours = $ue_ec->nom_parcours;
+                    $niveaux = [];
+
+                    $mention->parcours = $parcours;
+                    $mentions[] = $mention;
+
+                    $mention = new stdClass();
+                    $mention->id_mention = $id_mention;
+                    $mention->nom_mention = $ue_ec->nom_mention;
+                    $parcours = [];
+                }
+
+                 //changement de parcours
+
+                 if($id_parcours != $id_parcours_prec){
+
+                    $ue->ecs = $ecs;
+                    $ues[] = $ue;
+
+                    $ue = new stdClass();
+                    $ue->id_ue = $id_ue;
+                    $ue->nom_ue = $ue_ec->nom_unite_enseignement;
+                    $ecs  = [];
+
+
+                    $niveau->ues = $ues;
+                    $niveaux[] = $niveau;
+
+                    $niveau = new stdClass();
+                    $niveau->id_niveau = $id_niveau;
+                    $niveau->nom_niveau = $ue_ec->nom_niveau;
+                    $ues = [];
+
+                    $parcour->niveaux = $niveaux;
+                    $parcours[] = $parcour ;
+
+                    $parcour = new stdClass();
+                    $parcour->id_parcours = $id_parcours;
+                    $parcour->nom_parcours = $ue_ec->nom_parcours;
+                    $niveaux = [];
+                }
+
+                 //changement de niveau
+                 if($id_niveau != $id_niveau_prec){
+
+                    $ue->ecs = $ecs;
+                    $ues[] = $ue;
+
+                    $ue = new stdClass();
+                    $ue->id_ue = $id_ue;
+                    $ue->nom_ue = $ue_ec->nom_unite_enseignement;
+                    $ecs  = [];
+
+
+                    $niveau->ues = $ues;
+                    $niveaux[] = $niveau;
+
+                    $niveau = new stdClass();
+                    $niveau->id_niveau = $id_niveau;
+                    $niveau->nom_niveau = $ue_ec->nom_niveau;
+                    $ues = [];
+                }
+
+
+
+                //changement d'UE
+                if($id_ue != $id_ue_prec){
+                    $ue->ecs = $ecs;
+                    $ues[] = $ue;
+
+                    $ue = new stdClass();
+                    $ue->id_ue = $id_ue;
+                    $ue->nom_ue = $ue_ec->nom_unite_enseignement;
+                    $ecs  = [];
+                }
+
                 $ec = new stdClass();
                 $ec->id_ec = $ue_ec->id_element_constitutif;
                 $ec->id_ue_ec = $ue_ec->id_ue_ec;
@@ -175,10 +272,6 @@ class Unite_enseignement extends Model
                 $ecs[] = $ec;
 
 
-
-                /*for($i=1; $i<=$ue_ec->nbr_inscrits+$en_plus; $i++){
-                    $ue_ec_assoc->barcodes[] = DNS1D::getBarcodeSVG( $ue_ec->id_ue_ec.'-'.$i, 'CODABAR',2.5,35,'black', true);
-                }*/
                 $res_assoc[strval($ue_ec->id_ue_ec)] = $ue_ec;
 
                 $id_ue_prec = $id_ue;

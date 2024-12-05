@@ -34,7 +34,7 @@
             @endphp
             Codes-barre pour le codage des copies d'examen - {{ $ue_ec->nom_session_examen }} - Année universitaire {{ $ue_ec->intitule }} {{ $mention }} - {{ $ue_ec->nom_niveau }} - {{ $ue_ec->nom_unite_enseignement }} - {{ $ue_ec->nom_element_constitutif }} ({{ $ue_ec->id_ue_ec }})
         </h1>
-        @for($i = 1; $i<= $ue_ec->nbr_inscrits+$en_plus; $i++)
+        @for($i = 1; $i<= $ue_ec->nbr_inscrits; $i++)
             <div class="row">
                 <div class="col-6">
                     @php

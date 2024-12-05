@@ -13,11 +13,11 @@ return new class extends Migration
     {
         DB::statement('
             create or replace view v_resultats as
-                select m.id_au, m.id_parcours, m.id_niveau, m.id_etudiants, m.im, total, total_coefficient, moyenne, nombre_ue,  nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire
+                select m.id_au, m.id_parcours, m.id_niveau, m.id_etudiants, m.im, total, total_coefficient, moyenne, nombre_ue,  nombre_ue_validees, nombre_ue_a_valider, nombre_note_eliminatoire
                 from v_moyennes as m
-                join v_taux_ue_validees as v on (m.id_au = v.id_au and m.id_parcours = v.id_parcours and m.id_niveau = v.id_niveau and m.id_etudiants = v.id_etudiants) or (m.id_au = v.id_au and m.id_parcours = v.id_parcours and m.id_niveau = v.id_niveau and m.id_etudiants is null and  v.id_etudiants is null )
-                join v_nombre_note_eliminatoire as e on (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants = e.id_etudiants) or (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants is null and e.id_etudiants is null);
-
+                join v_nombre_ue_a_valider as v on (m.id_au = v.id_au and m.id_parcours = v.id_parcours and m.id_niveau = v.id_niveau )
+                join v_nombre_note_eliminatoire as e on (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants = e.id_etudiants) or (m.id_au = e.id_au and m.id_parcours = e.id_parcours and m.id_niveau = e.id_niveau and m.id_etudiants is null and e.id_etudiants is null)
+                join v_nombre_ue_validees_complet as c on (m.id_au = c.id_au and m.id_parcours = c.id_parcours and m.id_niveau = c.id_niveau and m.id_etudiants = c.id_etudiants) or (m.id_au = c.id_au and m.id_parcours = c.id_parcours and m.id_niveau = c.id_niveau and m.id_etudiants is null and c.id_etudiants is null);
         ');
     }
 

@@ -8,6 +8,367 @@ use stdClass;
 
 class Operation_sur_au
 {
+    // résultats avant délibération
+    public static function get_resultats_avant_deliberation($id_au, $id_parcours, $id_niveau){
+        $resultats_base = DB::select('
+            select DENSE_RANK() OVER (ORDER BY moyenne desc) AS rank , * from v_resultats_avant_deliberation
+            where id_au = ? and id_parcours = ? and id_niveau = ?
+            order by rank asc, id_session_examen asc, id_unite_enseignement asc , id_element_constitutif asc
+        ', [$id_au, $id_parcours, $id_niveau]);
+
+        if(empty($resultats_base))
+            throw new Exception('Résultats indisponibles');
+
+        $ligne1 = $resultats_base[0];
+
+        $etudiants = [];
+        $etu = new stdClass();
+        $etu->rank = $ligne1->rank;
+        $etu->id_etudiant = $ligne1->id_etudiants;
+        $etu->im = $ligne1->im;
+        $etu->nom = $ligne1->nom;
+        $etu->prenoms = $ligne1->prenoms;
+        $etu->date_annulation = $ligne1->date_annulation_inscription;
+        $etu->intitule = $ligne1->intitule;
+        $etu->parcours = $ligne1->nom_parcours;
+        $etu->niveau = $ligne1->nom_niveau;
+        $etu->total = $ligne1->total;
+        $etu->total_coefficient = $ligne1->total_coefficient;
+        $etu->moyenne_passage = $ligne1->moyenne_passage;
+        $etu->moyenne = $ligne1->moyenne;
+        $etu->nombre_ue = $ligne1->nombre_ue;
+        $etu->nombre_ue_validees = $ligne1->nombre_ue_validees;
+        $etu->nombre_ue_a_valider = $ligne1->nombre_ue_a_valider;
+        $etu->nombre_note_eliminatoire = $ligne1->nombre_note_eliminatoire;
+        $etu->decision = $ligne1->decision;
+        $etu->statut = $ligne1->statut;
+        $etu->a_passe_examen = $ligne1->a_passe_examen;
+        $etu->statut_au_suivante = $ligne1->statut_au_suivante;
+        $etu->id_niveau_suivant = $ligne1->id_niveau_suivant;
+        $etu->nom_niveau_suivant = $ligne1->nom_niveau_suivant;
+
+
+
+
+        $id_etudiant;
+        $id_etudiant_prec = $ligne1->id_etudiants;
+
+        $evals = [];
+        $eval = new stdClass();
+        $eval->id_examen_par_au = $ligne1->id_examen_par_au;
+        $eval->nom_session_examen = $ligne1->nom_session_examen;
+        $eval->type_session_retenue =  $ligne1->type_session_retenue;
+
+        $id_examen_par_au;
+        $id_examen_par_au_prec = $ligne1->id_examen_par_au;
+
+        $ues = [];
+        $ue = new stdClass();
+        $ue->id_ue = $ligne1->id_unite_enseignement;
+        $ue->nom_ue = $ligne1->nom_unite_enseignement;
+        $ue->note_ue = $ligne1->note_ue;
+        $ue->coefficient = $ligne1->coefficient;
+        $ue->validation = $ligne1->valide;
+        $id_ue;
+        $id_ue_prec = $ligne1->id_unite_enseignement;
+
+        $ecs = [];
+        $ec;
+        foreach($resultats_base as $resultat){
+            $id_etudiant = $resultat->id_etudiants;
+            $id_ue = $resultat->id_unite_enseignement;
+            $id_examen_par_au = $resultat->id_examen_par_au;
+
+
+            if($id_etudiant != $id_etudiant_prec){
+                $ue->ecs = $ecs;
+                $ues[] = $ue;
+
+                $ue = new stdClass();
+                $ue->id_ue = $id_ue;
+                $ue->nom_ue = $resultat->nom_unite_enseignement;
+                $ue->note_ue = $resultat->note_ue;
+                $ue->coefficient = $resultat->coefficient;
+                $ue->validation = $resultat->valide;
+                $ecs  = [];
+
+                $eval->ues = $ues;
+                $evals[] = $eval;
+
+                $eval = new stdClass();
+                $eval->id_examen_par_au = $resultat->id_examen_par_au;
+                $eval->nom_session_examen = $resultat->nom_session_examen;
+                $ues = [];
+
+                $etu->evals = $evals;
+                $etudiants[] = $etu;
+
+                $etu = new stdClass();
+                $etu->rang = $resultat->rang;
+                $etu->id_etudiant = $resultat->id_etudiants;
+                $etu->im = $resultat->im;
+                $etu->nom = $resultat->nom;
+                $etu->prenoms = $resultat->prenoms;
+                $etu->date_annulation = $resultat->date_annulation_inscription;
+                $etu->intitule = $ligne1->intitule;
+                $etu->parcours = $resultat->nom_parcours;
+                $etu->niveau = $resultat->id_niveau;
+                $etu->total = $resultat->total;
+                $etu->total_coefficient = $resultat->total_coefficient;
+                $etu->moyenne = $resultat->moyenne;
+                $etu->nombre_ue = $resultat->nombre_ue;
+                $etu->nombre_ue_validees = $resultat->nombre_ue_validees;
+                $etu->nombre_ue_a_valider = $resultat->nombre_ue_a_valider;
+                $etu->nombre_note_eliminatoire = $resultat->nombre_note_eliminatoire;
+                $etu->decision = $resultat->decision;
+                $evals = [];
+            }
+            else if($id_examen_par_au != $id_examen_par_au_prec){
+                $ue->ecs = $ecs;
+                $ues[] = $ue;
+
+                $ue = new stdClass();
+                $ue->id_ue = $id_ue;
+                $ue->nom_ue = $resultat->nom_unite_enseignement;
+                $ue->note_ue = $resultat->note_ue;
+                $ue->coefficient = $resultat->coefficient;
+                $ue->validation = $resultat->valide;
+                $ecs  = [];
+
+                $eval->ues = $ues;
+                $evals[] = $eval;
+
+                $eval = new stdClass();
+                $eval->id_examen_par_au = $resultat->id_examen_par_au;
+                $eval->nom_session_examen = $resultat->nom_session_examen;
+                $ues = [];
+            }
+            else if($id_ue != $id_ue_prec){
+
+
+                $ue->ecs = $ecs;
+                $ues[] = $ue;
+
+                $ue = new stdClass();
+                $ue->id_ue = $id_ue;
+                $ue->nom_ue = $resultat->nom_unite_enseignement;
+                $ue->note_ue = $resultat->note_ue;
+                $ue->coefficient = $resultat->coefficient;
+                $ue->validation = $resultat->valide;
+                $ecs  = [];
+            }
+
+            $ec = new stdClass();
+            $ec->id_ec = $resultat->id_element_constitutif;
+            $ec->id_ue_ec = $resultat->id_ue_ec;
+            $ec->nom_ec = $resultat->nom_element_constitutif;
+            $ec->note_ec = $resultat->note_ec;
+            $ecs[] = $ec;
+
+            $id_etudiant_prec = $id_etudiant;
+            $id_ue_prec = $id_ue;
+            $id_examen_par_au_prec = $id_examen_par_au;
+        }
+
+        $ue->ecs = $ecs;
+        $ues[] = $ue;
+        $eval->ues = $ues;
+        $evals[] = $eval;
+        $etu->evals = $evals;
+        $etudiants[] = $etu;
+
+        return $etudiants;
+
+
+    }
+
+    public static function verrouiller_resultats_avant_deliberation($id_au, $id_user){
+        try {
+                DB::update('
+                update operation_par_au set date_resultats_avant_deliberation = ? , id_user_date_resultats_avant_deliberation = ?
+                ', [date('Y-m-d'), $id_user]);
+
+            } catch (\Exception $th) {
+                throw $th;
+            }
+        }
+
+    public static function generer_resultats_avant_deliberation($id_au){
+
+        DB::transaction( function() use($id_au){
+            try {
+                DB::statement('
+                INSERT INTO resultats_avant_deliberation (
+                        id_au,
+                        id_parcours,
+                        id_niveau,
+                        id_etudiants,
+                        id_examen_par_au,
+                        id_session_examen,
+                        nom_session_examen,
+                        type_session_retenue,
+                        coefficient,
+                        id_unite_enseignement,
+                        id_element_constitutif,
+                        im,
+                        note_ue,
+                        note_ec,
+                        statut,
+                        a_passe_examen,
+                        date_annulation_inscription,
+                        total,
+                        total_coefficient,
+                        moyenne_passage,
+                        moyenne,
+                        nombre_ue,
+                        nombre_ue_a_valider,
+                        nombre_ue_validees,
+                        nombre_note_eliminatoire,
+                        statut_au_suivante,
+                        id_niveau_suivant
+                    )
+                    SELECT
+                        id_au,
+                        id_parcours,
+                        id_niveau,
+                        id_etudiants,
+                        id_examen_par_au,
+                        id_session_examen,
+                        nom_session_examen,
+                        type_session_retenue,
+                        coefficient,
+                        id_unite_enseignement,
+                        id_element_constitutif,
+                        im,
+                        note_ue,
+                        note_ec,
+                        statut,
+                        a_passe_examen,
+                        date_annulation_inscription,
+                        total,
+                        total_coefficient,
+                        moyenne_passage,
+                        moyenne,
+                        nombre_ue,
+                        nombre_ue_a_valider,
+                        nombre_ue_validees,
+                        nombre_note_eliminatoire,
+                        statut_au_suivante,
+                        niveau_suivant
+                    FROM
+                        v_calcul_resultats_avant_deliberation
+                    WHERE
+                        id_au = ?;
+
+            ', [$id_au]);
+
+            DB::statement('
+                refresh materialized view v_resultats_avant_deliberation;
+            ');
+
+            DB::statement('
+                INSERT INTO resultats_definitifs (
+                    id_au,
+                    id_parcours,
+                    id_niveau,
+                    cycle,
+                    nom_niveau,
+                    rang,
+                    nom_niveau_long,
+                    id_examen_par_au,
+                    id_session_examen,
+                    nom_session_examen,
+                    type_session_retenue,
+                    id_etudiants,
+                    im,
+                    date_annulation_inscription,
+                    statut,
+                    id_ue,
+                    coef,
+                    id_ec,
+                    note_ue,
+                    note_ec,
+                    total,
+                    total_coefficient,
+                    moyenne,
+                    moyenne_passage,
+                    nombre_ue,
+                    nombre_ue_a_valider,
+                    nombre_ue_validees,
+                    nombre_note_elim,
+                    statut_au_suivante,
+                    id_niveau_suivant,
+                    intitule,
+                    nom_parcours,
+                    nom_niveau_suivant,
+                    rang_suivant,
+                    cycle_suivant,
+                    nom_etudiant,
+                    prenoms,
+                    date_naissance,
+                    lieu_naissance,
+                    nom_unite_enseignement,
+                    nom_element_constitutif,
+                    a_passe_examen
+                )
+                SELECT
+                    id_au,
+                    id_parcours,
+                    id_niveau,
+                    cycle,
+                    nom_niveau,
+                    rang,
+                    nom_niveau_long,
+                    id_examen_par_au,
+                    id_session_examen,
+                    nom_session_examen,
+                    type_session_retenue,
+                    id_etudiants,
+                    im,
+                    date_annulation_inscription,
+                    statut,
+                    id_unite_enseignement AS id_ue,
+                    coefficient AS coef,
+                    id_element_constitutif AS id_ec,
+                    note_ue,
+                    note_ec,
+                    total,
+                    total_coefficient,
+                    moyenne,
+                    moyenne_passage,
+                    nombre_ue,
+                    nombre_ue_a_valider,
+                    nombre_ue_validees,
+                    nombre_note_eliminatoire AS nombre_note_elim,
+                    statut_au_suivante,
+                    id_niveau_suivant,
+                    intitule_au,
+                    nom_parcours,
+                    nom_niveau_suivant,
+                    rang_suivant,
+                    cycle_suivant,
+                    nom_etudiant,
+                    prenoms,
+                    date_naissance,
+                    lieu_naissance,
+                    nom_unite_enseignement,
+                    nom_element_constitutif,
+                    a_passe_examen
+                FROM
+                    v_resultats_avant_deliberation
+                WHERE id_au = ?;
+            ', [$id_au]);
+
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        });
+
+
+
+
+
+    }
     //liste d'appel au repechage
     public static function get_liste_appel($id_au){
         $liste_globale = DB::select("
@@ -118,7 +479,7 @@ class Operation_sur_au
         $etu->moyenne = $ligne1->moyenne;
         $etu->nombre_ue = $ligne1->nombre_ue;
         $etu->nombre_ue_validees = $ligne1->nombre_ue_validees;
-        $etu->pourcentage_validation = $ligne1->pourcentage_validation;
+        $etu->nombre_ue_a_valider = $ligne1->nombre_ue_a_valider;
         $etu->nombre_note_eliminatoire = $ligne1->nombre_note_eliminatoire;
         $etu->decision = $ligne1->decision;
 
@@ -189,7 +550,7 @@ class Operation_sur_au
                 $etu->moyenne = $resultat->moyenne;
                 $etu->nombre_ue = $resultat->nombre_ue;
                 $etu->nombre_ue_validees = $resultat->nombre_ue_validees;
-                $etu->pourcentage_validation = $resultat->pourcentage_validation;
+                $etu->nombre_ue_a_valider = $resultat->nombre_ue_a_valider;
                 $etu->nombre_note_eliminatoire = $resultat->nombre_note_eliminatoire;
                 $etu->decision = $resultat->decision;
                 $evals = [];
@@ -263,9 +624,9 @@ class Operation_sur_au
     public static function generer_resultats_au($id_au){
         // calculer la vue des resultats et insérer le résultat filtré dans la table des résultats
         DB::statement('
-            INSERT INTO  resultats_avant_repechage(id_note_eval, id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, id_unite_enseignement, id_ue_ec, id_element_constitutif, im, id_etudiants, note_ec, note_ue, valide, total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire, decision)
+            INSERT INTO  resultats_avant_repechage(id_note_eval, id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, id_unite_enseignement, id_ue_ec, id_element_constitutif, im, id_etudiants, note_ec, note_ue, valide, total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, nombre_ue_a_valider, nombre_note_eliminatoire, decision)
 
-            SELECT  id_note_eval, id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, id_unite_enseignement, id_ue_ec, id_element_constitutif, im, id_etudiants, note_ec, note_ue, valide, total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, pourcentage_validation, nombre_note_eliminatoire, decision
+            SELECT  id_note_eval, id_au, id_parcours, id_niveau, id_examen_par_au, id_session_examen, nom_session_examen, type_session, date_annulation_inscription, coefficient, id_unite_enseignement, id_ue_ec, id_element_constitutif, im, id_etudiants, note_ec, note_ue, valide, total, total_coefficient, moyenne, nombre_ue, nombre_ue_validees, nombre_ue_a_valider, nombre_note_eliminatoire, decision
 
             FROM v_resultats_avec_notes
             WHERE id_au = ?;
