@@ -29,7 +29,54 @@ use App\Exports\ListeAppelAllExport;
 
 
 class NoteController extends Controller
-{
+{   //Consultation des résultats avant délibération
+    public function get_resultats_avant_deliberation(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+        $id_au = $request->input('id_au');
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $au_courant = AU::get_au_en_cours();
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($au_courant->id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: récupération des résultats annuels avant délibération impossible car aucune opération de génération des résultats annuels n'a été trouvée ");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_avant_deliberation != null){
+                //récupérer les résultats
+                try {
+                    $resultats = Operation_sur_au::get_resultats_avant_deliberation($id_au, $id_parcours, $id_niveau);
+                    //passer les résultats à la vue
+                    return view('notes/resultats_avant_deliberation',[
+                        "resultats" => $resultats,
+                    ]);
+                } catch (\Exception $th) {
+                    return redirect()->back()->with("error", $th);
+
+                }
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: récupération des résultats annuels avant delibération impossible car ils n'ont pas encore été générés ");
+            }
+        }
+    }
+
+    public function get_resultats_avant_deliberation_form(){
+        $au = AU::all();
+        $parcours = Parcours::all();
+        return view('notes/get_resultats_avant_deliberation_form',[
+            "aus" => $au,
+            "parcours" => $parcours
+        ]);
+
+    }
+
     // téléchargement des lites d'appel
     public function down_liste_appel(Request $request){
         $request->validate([

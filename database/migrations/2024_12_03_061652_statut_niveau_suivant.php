@@ -32,43 +32,46 @@ return new class extends Migration
 
         DB::statement("
 
-            create or replace function get_niveau_suivant(a_statut VARCHAR, a_id_niveau BIGINT)
-                 RETURNS BIGINT AS
-                 $$
-                 DECLARE
-                     niveau_v RECORD;
-                     niveau_suivant RECORD;
-                 BEGIN
-                     SELECT *
-                     INTO niveau_v
-                     FROM niveau
-                     WHERE id_niveau = a_id_niveau;
+            create or replace function get_niveau_suivant(a_statut VARCHAR, a_id_niveau BIGINT, date_annulation DATE)
+                    RETURNS BIGINT AS
+                    $$
+                    DECLARE
+                        niveau_v RECORD;
+                        niveau_suivant RECORD;
+                    BEGIN
+                        SELECT *
+                        INTO niveau_v
+                        FROM niveau
+                        WHERE id_niveau = a_id_niveau;
 
-                     IF a_statut = 'exclus'
-                        THEN RETURN NULL;
-                     ELSEIF a_statut = 'redoublant' or a_statut = 'triplant'
-                         THEN RETURN a_id_niveau;
-                     ELSEIF a_statut = 'passant'
-                         THEN
-                             SELECT *
-                             INTO niveau_suivant
-                             FROM niveau
-                             WHERE rang = niveau_v.rang + 1;
+                        IF a_statut = 'exclu'
+                            THEN RETURN NULL;
+                        ELSEIF date_annulation IS NOT NULL
+                            THEN RETURN a_id_niveau;
+                        ELSEIF a_statut = 'redoublant' or a_statut = 'triplant'
+                            THEN RETURN a_id_niveau;
+                        ELSEIF a_statut = 'passant'
+                            THEN
+                                SELECT *
+                                INTO niveau_suivant
+                                FROM niveau
+                                WHERE rang = niveau_v.rang + 1;
 
-                             IF niveau_suivant IS NOT NULL
-                                THEN RETURN niveau_suivant.id_niveau;
-                             ELSE
-                                RETURN NULL;
-                             END IF;
-                     END IF;
+                                IF niveau_suivant IS NOT NULL
+                                    THEN RETURN niveau_suivant.id_niveau;
+                                ELSE
+                                    RETURN NULL;
+                                END IF;
+                        END IF;
 
-                 END;
+                    END;
             $$ LANGUAGE plpgsql;
+
         ");
 
         DB::statement('
             create or replace view v_niveau_suivant_avant_deliberation as
-                select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, moyenne_passage, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,statut_au_suivante, get_niveau_suivant(statut, id_niveau) as niveau_suivant
+                select id_au, id_parcours, id_niveau, im, id_etudiants, date_annulation_inscription, statut, a_passe_examen, total, total_coefficient, moyenne_passage, moyenne,  nombre_ue, nombre_ue_a_valider, nombre_ue_validees, nombre_note_eliminatoire,statut_au_suivante, get_niveau_suivant(statut_au_suivante, id_niveau, date_annulation_inscription) as niveau_suivant
                 from v_statut_avant_deliberation;
 
         ');

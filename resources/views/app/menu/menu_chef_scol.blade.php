@@ -166,6 +166,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.get_resultats_avant_deliberation.form') }}">
+              <i class="bi bi-circle"></i><span>Consulter les résultats avant délibération</span>
+            </a>
+          </li>
+
 
 
         </ul>

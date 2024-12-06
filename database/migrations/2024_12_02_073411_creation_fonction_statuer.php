@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement("
-                create or replace function statuer(a_id_etudiant bigint, a_id_niveau bigint)
+            create or replace function statuer(a_id_etudiant bigint, a_id_niveau bigint)
                     RETURNS VARCHAR AS
                     $$
                     DECLARE
@@ -25,51 +25,57 @@ return new class extends Migration
                         INTO niveau_v
                         FROM niveau
                         WHERE id_niveau = a_id_niveau;
+
                         -- récuperer les triplements
                         CREATE TEMP TABLE triplements AS
-                            SELECT DISTINCT ON(id_au, id_etudiants) id_etudiants, statut_au_suivante
+                            SELECT DISTINCT ON(id_au, id_etudiants) id_au,  id_etudiants, statut_au_suivante
                             FROM resultats_definitifs
                             WHERE id_etudiants = a_id_etudiant
                             AND cycle = niveau_v.cycle
                             AND statut_au_suivante = 'triplant'
-                            ORDER BY id_au, id_etudiants, id_ue asc;
+                            ORDER BY id_au asc, id_etudiants asc , id_ue asc;
 
                         SELECT COUNT(*) INTO nb_triplements FROM triplements;
                         IF nb_triplements > 0
                             THEN
                                 DROP TABLE triplements;
-                                RETURN 'exclus'::VARCHAR;
+                                RETURN 'exclu'::VARCHAR;
                         END IF;
                         DROP TABLE triplements;
 
                         -- cas des redoublements
                         CREATE TEMP TABLE redoublements AS
-                            SELECT DISTINCT ON(id_au, id_etudiants) id_etudiants, id_niveau, rang, statut_au_suivante
+                            SELECT DISTINCT ON(id_au, id_etudiants) id_au, id_etudiants, id_niveau, rang, statut_au_suivante
                             FROM resultats_definitifs
                             WHERE id_etudiants = a_id_etudiant
                             AND cycle = niveau_v.cycle
                             AND statut_au_suivante = 'redoublant'
-                            ORDER BY id_au, id_etudiants, id_ue asc;
+                            ORDER BY id_au asc, id_etudiants asc, id_ue asc;
 
                         SELECT COUNT(*) INTO nb_redoublements FROM redoublements;
                         IF nb_redoublements >= 2
                             THEN
                                 DROP TABLE redoublements;
-                                return 'exclus'::VARCHAR;
+                                return 'exclu'::VARCHAR;
                         ELSEIF nb_redoublements = 1
                             THEN
                                 SELECT *
                                 INTO dernier_redoublement
                                 FROM redoublements;
 
+                                -- cas des niveaux consécutifs
                                 IF ABS(niveau_v.rang - dernier_redoublement.rang) = 1
                                     THEN
                                         DROP TABLE redoublements;
-                                        RETURN 'exclus'::VARCHAR;
+                                        RETURN 'exclu'::VARCHAR;
+
+                                -- cas de niveaux non consécutifs
                                 ELSEIF ABS(niveau_v.rang - dernier_redoublement.rang) > 1
                                     THEN
                                         DROP TABLE redoublements;
                                         RETURN 'redoublant'::VARCHAR;
+
+                                -- cas d'un même niveaus
                                 ELSEIF ABS(niveau_v.rang - dernier_redoublement.rang) = 0
                                     THEN
                                         DROP TABLE redoublements;
@@ -80,8 +86,9 @@ return new class extends Migration
                                 DROP TABLE redoublements;
                                 RETURN 'redoublant'::VARCHAR;
                         END IF;
-                END;
-                $$ LANGUAGE plpgsql;
+            END;
+            $$ LANGUAGE plpgsql;
+
             ");
     }
 

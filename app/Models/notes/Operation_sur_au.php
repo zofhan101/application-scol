@@ -40,7 +40,7 @@ class Operation_sur_au
         $etu->nombre_ue_validees = $ligne1->nombre_ue_validees;
         $etu->nombre_ue_a_valider = $ligne1->nombre_ue_a_valider;
         $etu->nombre_note_eliminatoire = $ligne1->nombre_note_eliminatoire;
-        $etu->decision = $ligne1->decision;
+        //$etu->decision = $ligne1->decision;
         $etu->statut = $ligne1->statut;
         $etu->a_passe_examen = $ligne1->a_passe_examen;
         $etu->statut_au_suivante = $ligne1->statut_au_suivante;
@@ -98,29 +98,36 @@ class Operation_sur_au
                 $eval = new stdClass();
                 $eval->id_examen_par_au = $resultat->id_examen_par_au;
                 $eval->nom_session_examen = $resultat->nom_session_examen;
+                $eval->type_session_retenue =  $resultat->type_session_retenue;
                 $ues = [];
 
                 $etu->evals = $evals;
                 $etudiants[] = $etu;
 
                 $etu = new stdClass();
-                $etu->rang = $resultat->rang;
+                $etu->rank = $resultat->rank;
                 $etu->id_etudiant = $resultat->id_etudiants;
                 $etu->im = $resultat->im;
                 $etu->nom = $resultat->nom;
                 $etu->prenoms = $resultat->prenoms;
                 $etu->date_annulation = $resultat->date_annulation_inscription;
-                $etu->intitule = $ligne1->intitule;
+                $etu->intitule = $resultat->intitule;
                 $etu->parcours = $resultat->nom_parcours;
-                $etu->niveau = $resultat->id_niveau;
+                $etu->niveau = $resultat->nom_niveau;
                 $etu->total = $resultat->total;
                 $etu->total_coefficient = $resultat->total_coefficient;
+                $etu->moyenne_passage = $resultat->moyenne_passage;
                 $etu->moyenne = $resultat->moyenne;
                 $etu->nombre_ue = $resultat->nombre_ue;
                 $etu->nombre_ue_validees = $resultat->nombre_ue_validees;
                 $etu->nombre_ue_a_valider = $resultat->nombre_ue_a_valider;
                 $etu->nombre_note_eliminatoire = $resultat->nombre_note_eliminatoire;
-                $etu->decision = $resultat->decision;
+                //$etu->decision = $resultat->decision;
+                $etu->statut = $resultat->statut;
+                $etu->a_passe_examen = $resultat->a_passe_examen;
+                $etu->statut_au_suivante = $resultat->statut_au_suivante;
+                $etu->id_niveau_suivant = $resultat->id_niveau_suivant;
+                $etu->nom_niveau_suivant = $resultat->nom_niveau_suivant;
                 $evals = [];
             }
             else if($id_examen_par_au != $id_examen_par_au_prec){
@@ -141,6 +148,7 @@ class Operation_sur_au
                 $eval = new stdClass();
                 $eval->id_examen_par_au = $resultat->id_examen_par_au;
                 $eval->nom_session_examen = $resultat->nom_session_examen;
+                $eval->type_session_retenue =  $resultat->type_session_retenue;
                 $ues = [];
             }
             else if($id_ue != $id_ue_prec){
@@ -160,7 +168,7 @@ class Operation_sur_au
 
             $ec = new stdClass();
             $ec->id_ec = $resultat->id_element_constitutif;
-            $ec->id_ue_ec = $resultat->id_ue_ec;
+            //$ec->id_ue_ec = $resultat->id_ue_ec;
             $ec->nom_ec = $resultat->nom_element_constitutif;
             $ec->note_ec = $resultat->note_ec;
             $ecs[] = $ec;
@@ -213,6 +221,7 @@ class Operation_sur_au
                         im,
                         note_ue,
                         note_ec,
+                        valide,
                         statut,
                         a_passe_examen,
                         date_annulation_inscription,
@@ -242,6 +251,7 @@ class Operation_sur_au
                         im,
                         note_ue,
                         note_ec,
+                        valide,
                         statut,
                         a_passe_examen,
                         date_annulation_inscription,
@@ -288,6 +298,7 @@ class Operation_sur_au
                     id_ec,
                     note_ue,
                     note_ec,
+                    valide,
                     total,
                     total_coefficient,
                     moyenne,
@@ -332,6 +343,7 @@ class Operation_sur_au
                     id_element_constitutif AS id_ec,
                     note_ue,
                     note_ec,
+                    valide,
                     total,
                     total_coefficient,
                     moyenne,
@@ -342,12 +354,12 @@ class Operation_sur_au
                     nombre_note_eliminatoire AS nombre_note_elim,
                     statut_au_suivante,
                     id_niveau_suivant,
-                    intitule_au,
+                    intitule,
                     nom_parcours,
                     nom_niveau_suivant,
                     rang_suivant,
                     cycle_suivant,
-                    nom_etudiant,
+                    nom,
                     prenoms,
                     date_naissance,
                     lieu_naissance,

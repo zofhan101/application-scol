@@ -198,6 +198,10 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //consultation des résultats avant délibération
+            Route::post('notes/get_resultats_avant_deliberation',[NoteController::class,'get_resultats_avant_deliberation'])->name('notes.get_resultats_avant_deliberation');
+            Route::get('notes/get_resultats_avant_deliberation.form',[NoteController::class,'get_resultats_avant_deliberation_form'])->name('notes.get_resultats_avant_deliberation.form');
+
             //liste d'appel au repêchage
             Route::post('notes/down_liste_appel',[NoteController::class,'down_liste_appel'])->name('notes.down_liste_appel');
             Route::get('notes/down_liste_appel',[NoteController::class,'down_liste_appel_form'])->name('notes.down_liste_appel.form');
