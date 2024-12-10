@@ -169,6 +169,21 @@
 
         </ul>
       </li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#res_def" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-book-half"></i><span>Résultats définitifs</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="res_def" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('notes.resultats_definitifs_form') }}">
+              <i class="bi bi-circle"></i><span>Consulter les résultats_définitifs</span>
+            </a>
+          </li>
+
+
+        </ul>
+      </li>
     </ul>
 
   </aside>

@@ -80,6 +80,10 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
+            // résultats définitifs
+            Route::post('notes/resultats_definitifs',[NoteController::class,'get_resultats_definitifs'])->name('notes.resultats_definitifs');
+            Route::get('notes/resultats_definitifs',[NoteController::class,'get_resultats_definitifs_form'])->name('notes.resultats_definitifs_form');
+
             //liste d'examens pour une au donnée
             Route::post('au/liste_examen_par_au',[AUcontroller::class,'get_liste_examen'])->name('au.get_liste_examen');
 

@@ -31,6 +31,56 @@ use App\Exports\ListeAppelAllExport;
 class NoteController extends Controller
 {
 
+    //Consultation des résultats définitifs
+    public function get_resultats_definitifs(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+        $id_au = $request->input('id_au');
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $au_courant = AU::get_au_en_cours();
+
+        $operations_par_deliberation = Operation_sur_au::get_operation_par_deliberation($id_au, $id_parcours, $id_niveau);
+        if(empty($operations_par_deliberation)){
+            return redirect()->back()->with("error", "ERREUR: récupération des résultats annuels définitifs impossible car aucune opération de délibération n'a été trouvée pour les A.U., parcours et niveaux demandés ");
+        }
+        else{
+            $operation = $operations_par_deliberation[0];
+            if($operation->date_cloture_deliberation != null){
+                //récupérer les résultats
+                try {
+                    $resultats = Operation_sur_au::get_resultats_definitifs($id_au, $id_parcours, $id_niveau);
+                    //passer les résultats à la vue
+                    return view('notes/resultats_definitifs',[
+                        "resultats" => $resultats,
+                    ]);
+                } catch (\Exception $th) {
+                    return redirect()->back()->with("error", $th);
+
+                }
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: récupération des résultats annuels définitifs impossible car la délibération n'est pas encore cloturée pour les A.U., parcours et niveau selectionnés ");
+            }
+        }
+    }
+
+    public function get_resultats_definitifs_form(){
+        $au = AU::all();
+        $parcours = Parcours::all();
+        return view('notes/resultats_definitifs_form',
+        [
+            "aus" => $au,
+            "parcours" => $parcours
+        ]);
+
+    }
+
+
     // délibération
 
     public function admettre_etudiant(Request $request){
