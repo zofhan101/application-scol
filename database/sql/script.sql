@@ -877,10 +877,28 @@ $$ LANGUAGE plpgsql;
 
 
 
+    -- CREATION DE LA TABLE RESULTATS DEFINITIFS
 
+-- ******** ---
 
+    -- GESTION DES NOTES
+    -- RESULTATS SUR L'A.U.
+    -- DELIBERATION
 
+-- ******** ---
+    --  étudiants non admis aux examens
+    CREATE OR REPLACE VIEW v_non_admis as
+        SELECT *
+        FROM resultats_definitifs
+        WHERE statut_au_suivante != 'passant' AND id_etudiants IS NOT NULL AND date_annulation_inscription is NULL;
 
+    -- historique de redoublement et de triplement
+    -- historique de redoublement et de triplement
+    CREATE OR REPLACE VIEW v_historique_redoublement_triplement AS
+        SELECT DISTINCT ON(id_etudiants, id_au) id_au, intitule, id_parcours, nom_parcours, id_niveau, nom_niveau, id_etudiants, im, nom_etudiant, prenoms, statut_au_suivante
+        FROM resultats_definitifs
+        WHERE (statut_au_suivante = 'redoublant' or statut_au_suivante = 'triplant')  AND date_annulation_inscription is NULL
+        ORDER BY id_etudiants, id_au, id_ue;
 
 
 

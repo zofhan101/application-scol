@@ -146,6 +146,29 @@
 
         </ul>
       </li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#deliberation" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-book-half"></i><span>Délibération</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="deliberation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ route('notes.deliberation.controle') }}">
+              <i class="bi bi-circle"></i><span>Controle des délibérations</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('notes.interface_deliberation.form') }}">
+              <i class="bi bi-circle"></i><span>Interface de délibération</span>
+            </a>
+          </li>
+
+
+
+
+        </ul>
+      </li>
     </ul>
 
   </aside>

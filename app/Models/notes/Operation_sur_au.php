@@ -8,7 +8,342 @@ use stdClass;
 
 class Operation_sur_au
 {
-    // résultats avant délibération
+
+    // consultation des résultats définitifs
+
+
+    //délibération
+
+    public static function admettre_etudiant($id_au, $id_etudiant, $rang_niveau){
+        //récupération du niveau suivant
+        $niveaux = DB::select('
+            SELECT *
+            FROM niveau
+            WHERE rang = ?::INTEGER + 1
+        ', [$rang_niveau]);
+        $niveau_suivant = empty($niveaux) == false ? $niveaux[0]:null;
+
+        //mise à jour de la table
+        DB::update('
+            UPDATE resultats_definitifs
+            SET
+                a_ete_delibere = ?,
+                statut_au_suivante = ?,
+                id_niveau_suivant = ?,
+                nom_niveau_suivant = ?,
+                rang_suivant = ?,
+                cycle_suivant = ?
+            WHERE
+                id_au = ?
+            AND
+                id_etudiants = ?
+        ', [
+            'true',
+            'passant',
+            $niveau_suivant->id_niveau ?? 'null',
+            $niveau_suivant->nom_niveau ?? 'null',
+            $niveau_suivant->rang ?? 'null',
+            $niveau_suivant->cycle ?? 'null',
+            $id_au,
+            $id_etudiant
+        ]);
+    }
+
+    public static function cloturer_deliberation($id_au, $id_parcours, $id_niveau, $id_user){
+        $operations = Operation_sur_au::get_operation_par_deliberation($id_au, $id_parcours, $id_niveau);
+
+        if(empty($operation)){
+            throw new Exception('ERREUR: aucune opération d\'ouverture de délibération n\'a été trouvée pour les parcours et niveau selectionné');
+        }else{
+            $operation = $operations[0];
+            if($operation->date_ouverture_deliberation != null){
+                DB::update('
+                    UPDATE operation_par_deliberation
+                    SET
+                        date_cloture_deliberation = ?,
+                        id_user_date_cloture_deliberation = ?
+                    WHERE id_au = ?
+                    AND id_parcours = ?
+                    AND id_niveau = ?
+                ', [date('Y-md'), $id_user, $id_au, $id_parcours, $id_niveau]);
+            }
+            else{
+                throw new Exception('ERREUR: délibération non encore ouverte pour les parcours et niveau sélectionnés');
+
+            }
+        }
+
+    }
+
+    public static function ouvrir_deliberation($id_au, $id_parcours, $id_niveau, $id_user){
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            throw new Exception('ERREUR: ouverture de la délibération impossible car aucune opération de traitement des résultats d\'examen n\'a été trouvée');
+        }
+        else{
+            $operation_par_au = $operations_par_au[0];
+            if($operation_par_au->date_resultats_avant_deliberation != null){
+                $operations = Operation_sur_au::get_operation_par_deliberation($id_au, $id_parcours, $id_niveau);
+                if(empty($operation)){
+                    DB::insert('
+                        insert into operation_par_deliberation(id_au, id_parcours, id_niveau, date_ouverture_deliberation, id_user_date_ouverture_deliberation)
+                        VALUES (?,?,?,?,?)
+                    ', [$id_au, $id_parcours, $id_niveau, date('Y-m-d'), $id_user]);
+                }else{
+                    throw new Exception('ERREUR: la délibération a déjà été ouverte pour les parcours et niveau sélectionné');
+                }
+            }
+            else{
+                throw new Exception('ERREUR: ouverture de la délibération impossible car les résultats avant la délibération n\'ont par encore été générés');
+            }
+        }
+
+    }
+
+    public static function get_operation_par_deliberation($id_au, $id_parcours, $id_niveau){
+        $operation = DB::select('
+            select * from operation_par_deliberation
+            WHERE id_au = ?
+            AND id_parcours = ?
+            AND id_niveau = ?
+        ', [$id_au, $id_parcours, $id_niveau]);
+
+        return $operation;
+    }
+
+    public static function get_data_deliberation($id_au, $id_parcours, $id_niveau){
+        $resultats_base = DB::select('
+            SELECT *
+            FROM v_non_admis
+            WHERE id_au = ?
+            AND id_parcours = ?
+            AND id_niveau = ?
+            ORDER BY im ASC, id_session_examen ASC, id_ue ASC , id_ec ASC;
+        ', [$id_au, $id_parcours, $id_niveau]);
+
+        $historique_base = DB::select('
+            SELECT *
+            FROM v_historique_redoublement_triplement
+            WHERE id_etudiants IN (
+                SELECT id_etudiants
+                FROM v_non_admis
+                WHERE id_au = ?
+                AND id_parcours = ?
+                AND id_niveau = ?
+            )
+            AND id_au != ?
+            ORDER BY im asc, id_au asc;
+        ', [$id_au, $id_parcours, $id_niveau, $id_au]);
+        // on considère que la délibération ne se fait que durant l'A.U. courante
+
+        if(empty($resultats_base))
+            throw new Exception('Résultats indisponibles');
+
+        // traitement des résultats
+            $ligne1 = $resultats_base[0];
+
+            $etudiants = [];
+            $etu = new stdClass();
+            //$etu->rank = $ligne1->rank;
+            $etu->id_etudiant = $ligne1->id_etudiants;
+            $etu->im = $ligne1->im;
+            $etu->nom = $ligne1->nom_etudiant;
+            $etu->prenoms = $ligne1->prenoms;
+            $etu->date_annulation = $ligne1->date_annulation_inscription;
+            $etu->intitule = $ligne1->intitule;
+            $etu->parcours = $ligne1->nom_parcours;
+            $etu->id_parcours = $ligne1->id_parcours;
+            $etu->niveau = $ligne1->nom_niveau;
+            $etu->id_niveau =  $ligne1->id_niveau;
+            $etu->rang_niveau =  $ligne1->rang;
+            $etu->total = $ligne1->total;
+            $etu->total_coefficient = $ligne1->total_coefficient;
+            $etu->moyenne_passage = $ligne1->moyenne_passage;
+            $etu->moyenne = $ligne1->moyenne;
+            $etu->nombre_ue = $ligne1->nombre_ue;
+            $etu->nombre_ue_validees = $ligne1->nombre_ue_validees;
+            $etu->nombre_ue_a_valider = $ligne1->nombre_ue_a_valider;
+            $etu->nombre_note_eliminatoire = $ligne1->nombre_note_elim;
+            //$etu->decision = $ligne1->decision;
+            $etu->statut = $ligne1->statut;
+            $etu->a_passe_examen = $ligne1->a_passe_examen;
+            $etu->statut_au_suivante = $ligne1->statut_au_suivante;
+            $etu->id_niveau_suivant = $ligne1->id_niveau_suivant;
+            $etu->nom_niveau_suivant = $ligne1->nom_niveau_suivant;
+
+
+
+
+            $id_etudiant;
+            $id_etudiant_prec = $ligne1->id_etudiants;
+
+            $evals = [];
+            $eval = new stdClass();
+            $eval->id_examen_par_au = $ligne1->id_examen_par_au;
+            $eval->nom_session_examen = $ligne1->nom_session_examen;
+            $eval->type_session_retenue =  $ligne1->type_session_retenue;
+
+            $id_examen_par_au;
+            $id_examen_par_au_prec = $ligne1->id_examen_par_au;
+
+            $ues = [];
+            $ue = new stdClass();
+            $ue->id_ue = $ligne1->id_ue;
+            $ue->nom_ue = $ligne1->nom_unite_enseignement;
+            $ue->note_ue = $ligne1->note_ue;
+            $ue->coefficient = $ligne1->coef;
+            $ue->validation = $ligne1->valide;
+            $id_ue;
+            $id_ue_prec = $ligne1->id_ue;
+
+            $ecs = [];
+            $ec;
+            foreach($resultats_base as $resultat){
+                $id_etudiant = $resultat->id_etudiants;
+                $id_ue = $resultat->id_ue;
+                $id_examen_par_au = $resultat->id_examen_par_au;
+
+
+                if($id_etudiant != $id_etudiant_prec){
+                    $ue->ecs = $ecs;
+                    $ues[] = $ue;
+
+                    $ue = new stdClass();
+                    $ue->id_ue = $id_ue;
+                    $ue->nom_ue = $resultat->nom_unite_enseignement;
+                    $ue->note_ue = $resultat->note_ue;
+                    $ue->coefficient = $resultat->coef;
+                    $ue->validation = $resultat->valide;
+                    $ecs  = [];
+
+                    $eval->ues = $ues;
+                    $evals[] = $eval;
+
+                    $eval = new stdClass();
+                    $eval->id_examen_par_au = $resultat->id_examen_par_au;
+                    $eval->nom_session_examen = $resultat->nom_session_examen;
+                    $eval->type_session_retenue =  $resultat->type_session_retenue;
+                    $ues = [];
+
+                    $etu->evals = $evals;
+                    $etudiants[] = $etu;
+
+                    $etu = new stdClass();
+                    //$etu->rank = $resultat->rank;
+                    $etu->id_etudiant = $resultat->id_etudiants;
+                    $etu->im = $resultat->im;
+                    $etu->nom = $resultat->nom_etudiant;
+                    $etu->prenoms = $resultat->prenoms;
+                    $etu->date_annulation = $resultat->date_annulation_inscription;
+                    $etu->intitule = $resultat->intitule;
+                    $etu->parcours = $resultat->nom_parcours;
+                    $etu->id_parcours = $resultat->id_parcours;
+                    $etu->niveau = $resultat->nom_niveau;
+                    $etu->id_niveau =  $resultat->id_niveau;
+                    $etu->rang_niveau =  $resultat->rang;
+                    $etu->total = $resultat->total;
+                    $etu->total_coefficient = $resultat->total_coefficient;
+                    $etu->moyenne_passage = $resultat->moyenne_passage;
+                    $etu->moyenne = $resultat->moyenne;
+                    $etu->nombre_ue = $resultat->nombre_ue;
+                    $etu->nombre_ue_validees = $resultat->nombre_ue_validees;
+                    $etu->nombre_ue_a_valider = $resultat->nombre_ue_a_valider;
+                    $etu->nombre_note_eliminatoire = $resultat->nombre_note_elim;
+                    //$etu->decision = $resultat->decision;
+                    $etu->statut = $resultat->statut;
+                    $etu->a_passe_examen = $resultat->a_passe_examen;
+                    $etu->statut_au_suivante = $resultat->statut_au_suivante;
+                    $etu->id_niveau_suivant = $resultat->id_niveau_suivant;
+                    $etu->nom_niveau_suivant = $resultat->nom_niveau_suivant;
+                    $evals = [];
+                }
+                else if($id_examen_par_au != $id_examen_par_au_prec){
+                    $ue->ecs = $ecs;
+                    $ues[] = $ue;
+
+                    $ue = new stdClass();
+                    $ue->id_ue = $id_ue;
+                    $ue->nom_ue = $resultat->nom_unite_enseignement;
+                    $ue->note_ue = $resultat->note_ue;
+                    $ue->coefficient = $resultat->coef;
+                    $ue->validation = $resultat->valide;
+                    $ecs  = [];
+
+                    $eval->ues = $ues;
+                    $evals[] = $eval;
+
+                    $eval = new stdClass();
+                    $eval->id_examen_par_au = $resultat->id_examen_par_au;
+                    $eval->nom_session_examen = $resultat->nom_session_examen;
+                    $eval->type_session_retenue =  $resultat->type_session_retenue;
+                    $ues = [];
+                }
+                else if($id_ue != $id_ue_prec){
+
+
+                    $ue->ecs = $ecs;
+                    $ues[] = $ue;
+
+                    $ue = new stdClass();
+                    $ue->id_ue = $id_ue;
+                    $ue->nom_ue = $resultat->nom_unite_enseignement;
+                    $ue->note_ue = $resultat->note_ue;
+                    $ue->coefficient = $resultat->coef;
+                    $ue->validation = $resultat->valide;
+                    $ecs  = [];
+                }
+
+                $ec = new stdClass();
+                $ec->id_ec = $resultat->id_ec;
+                //$ec->id_ue_ec = $resultat->id_ue_ec;
+                $ec->nom_ec = $resultat->nom_element_constitutif;
+                $ec->note_ec = $resultat->note_ec;
+                $ecs[] = $ec;
+
+                $id_etudiant_prec = $id_etudiant;
+                $id_ue_prec = $id_ue;
+                $id_examen_par_au_prec = $id_examen_par_au;
+            }
+
+            $ue->ecs = $ecs;
+            $ues[] = $ue;
+            $eval->ues = $ues;
+            $evals[] = $eval;
+            $etu->evals = $evals;
+            $etudiants[] = $etu;
+
+
+
+        // traitement de l'historique
+            $table = [];
+            $historique = [];
+            if(empty($historique_base) == false){
+                $id_etudiants;
+                $id_etudiants_prec = $historique_base[0]->id_etudiants;
+
+                foreach($historique_base as $ligne){
+                    $id_etudiants = $ligne->id_etudiants;
+                    if($id_etudiants != $id_etudiants_prec){
+                        $historique[(string)$id_etudiants_prec] =  $table;
+                        $table = [];
+                    }
+                    $table[] = $ligne;
+
+                    $id_etudiants_prec = $id_etudiant;
+                }
+
+                $historique[(string)$id_etudiants_prec] =  $table;
+
+            }
+
+            return[$etudiants, $historique];
+
+        }
+
+
+
+        // résultats avant délibération
+
     public static function get_resultats_avant_deliberation($id_au, $id_parcours, $id_niveau){
         $resultats_base = DB::select('
             select DENSE_RANK() OVER (ORDER BY moyenne desc) AS rank , * from v_resultats_avant_deliberation

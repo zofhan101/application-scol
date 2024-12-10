@@ -259,6 +259,14 @@ Route::middleware('auth')->group(function(){
         Route::middleware(EnsureIsSP::class)->group(function () {
 
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                // délibération
+                Route::post('notes/admettre_etudiant',[NoteController::class,'admettre_etudiant'])->name('notes.admettre_etudiant');
+                Route::post('notes/cloture_deliberation',[NoteController::class,'cloturer_deliberation'])->name('notes.cloturer_deliberation');
+                Route::post('notes/ouverture_deliberation',[NoteController::class,'ouvrir_deliberation'])->name('notes.ouvrir_deliberation');
+                Route::get('notes/deliberation.controle',[NoteController::class,'controle_deliberation'])->name('notes.deliberation.controle');
+                Route::post('notes/interface_deliberation',[NoteController::class,'interface_deliberation'])->name('notes.interface_deliberation');
+                Route::get('notes/interface_deliberation',[NoteController::class,'interface_deliberation_form'])->name('notes.interface_deliberation.form');
+
                 // résultats généraux sur l'AU
                 Route::post('notes/generer_resultats_au',[NoteController::class,'generer_resultats_au'])->name('notes.generer_resultats_au');
                 Route::get('notes/generer_resultats_au',[NoteController::class,'generer_resultats_au_page'])->name('notes.generer_resultats_au.page');

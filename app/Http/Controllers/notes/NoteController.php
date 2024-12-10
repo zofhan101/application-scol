@@ -29,7 +29,157 @@ use App\Exports\ListeAppelAllExport;
 
 
 class NoteController extends Controller
-{   //Consultation des résultats avant délibération
+{
+
+    // délibération
+
+    public function admettre_etudiant(Request $request){
+        $request->validate([
+            'id_etudiant' => ['required','numeric', 'exists:etudiants,id_etudiants'],
+            'rang_niveau' => ['required','numeric', 'exists:niveau,rang'],
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+
+        $id_etudiant = $request->input('id_etudiant');
+        $rang_niveau = $request->input('rang_niveau');
+
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $au_courant = AU::get_au_en_cours();
+        $id_au = $au_courant->id_au;
+
+        //vérifier l'ouverture de la délibération
+        $operations = Operation_sur_au::get_operation_par_deliberation($id_au, $id_parcours, $id_niveau);
+        if(empty($operations)){
+            return response()->json(["errors"=>"ERREUR: aucune operation de délibération n' a été trouvée pour les pacours et niveau selectionnés"]);
+        }
+        else{
+            $operation = $operations[0];
+            if($operation->date_ouverture_deliberation != null){
+                //délibération ouverte: admission
+                Operation_sur_au::admettre_etudiant($id_au, $id_etudiant, $rang_niveau);
+                return response()->json(["message"=>"Admssion effectuée"]);
+            }
+            else{
+                return response()->json(["errors"=>"ERREUR: délibération non encore ouverte pour les AU, pacours et niveau selectionnés"]);
+            }
+        }
+
+
+    }
+
+    public function interface_deliberation_form(){
+        $parcours = Parcours::all();
+        return view('notes/interface_deliberation_form',
+        ['parcours'=>$parcours]);
+    }
+
+    public function cloturer_deliberation(Request $request){
+        $request->validate([
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $au_courant = AU::get_au_en_cours();
+        $user = Auth::user();
+        $parcours = Parcours::all();
+
+
+
+        try {
+            Operation_sur_au::cloturer_deliberation($au_courant->id_au, $id_parcours, $id_niveau, $user->id_user);
+            return view('notes/controle_deliberation',
+                ['success'=>"MESSAGE: cloture de la délibération effectuée",
+                'parcours'=>$parcours
+            ]);
+        } catch (\Exception $th) {
+            return view('notes/controle_deliberation',
+                ['error'=>"ERREUR: ".$th->getMessage(),
+                'parcours'=>$parcours
+
+            ]);
+        }
+
+    }
+
+    public function ouvrir_deliberation(Request $request){
+        $request->validate([
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $au_courant = AU::get_au_en_cours();
+        $user = Auth::user();
+        $parcours = Parcours::all();
+
+        try {
+            Operation_sur_au::ouvrir_deliberation($au_courant->id_au, $id_parcours, $id_niveau, $user->id);
+            return view('notes/controle_deliberation',
+                ['success'=>"MESSAGE: ouverture de la délibération effectuée",
+                 'parcours'=>$parcours
+            ]);
+        } catch (\Exception $th) {
+            return view('notes/controle_deliberation',
+                ['error'=>"ERREUR: ".$th->getMessage(),
+                'parcours'=>$parcours
+            ]);
+        }
+
+
+    }
+
+    public function controle_deliberation(){
+        $parcours = Parcours::all();
+        return view('notes/controle_deliberation',
+        ['parcours'=>$parcours]);
+    }
+
+    public function interface_deliberation(Request $request){
+
+        $request->validate([
+            'id_parcours' => ['required','numeric', 'exists:parcours,id_parcours'],
+            'id_niveau' => ['required','numeric', 'exists:niveau,id_niveau'],
+        ]);
+
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $au_courant = AU::get_au_en_cours();
+        $id_au = $au_courant->id_au;
+
+        try {
+            // vérifier l'ouverture de la délibération
+            $operations = Operation_sur_au::get_operation_par_deliberation($id_au, $id_parcours, $id_niveau);
+            if(empty($operations)){
+                return redirect()->back()->with("error", "ACCES REFUSE: aucune operation de délibération n' a été trouvée pour les pacours et niveau selectionnés");
+            }
+            else{
+                $operation = $operations[0];
+                if($operation->date_ouverture_deliberation != null){
+                    //délibération ouverte: chargement et transfert des données
+                    $data = Operation_sur_au::get_data_deliberation($id_au, $id_parcours, $id_niveau);
+                    return view('notes/interface_deliberation',[
+                        "datas" => $data,
+                    ]);
+                }
+                else{
+                    return redirect()->back()->with("error", "ACCES REFUSE: délibération non encore ouverte pour les AU, pacours et niveau selectionnés");
+                }
+
+            }
+        } catch (\Exception $th) {
+            return redirect()->back()->with("error", $th);
+        }
+
+    }
+
+    //Consultation des résultats avant délibération
     public function get_resultats_avant_deliberation(Request $request){
         $request->validate([
             'id_au' => ['required','numeric', 'exists:au,id_au'],
