@@ -8,6 +8,124 @@ use stdClass;
 
 class Operation_sur_au
 {
+    //préparation des résultats définitifs
+    public static function preparer_resultats_definitifs($id_au, $id_user){
+        DB::update('
+            UPDATE operation_par_au
+            SET
+                date_resultats_definitifs = ?,
+                id_user_date_resultats_definitifs = ?
+            WHERE id_au = ?
+        ', [ date('Y-m-d'), $id_user, $id_au ]);
+    }
+
+    //listes d'admission
+    public static function get_listes_admission($id_au){
+        //par parcours et par niveau
+        $resultats_base = DB::select("
+            SELECT
+            DISTINCT ON(id_au, id_etudiants)
+            ROW_NUMBER() OVER(
+                PARTITION BY id_parcours, id_niveau
+                ORDER BY im asc
+            ) as num,
+
+
+                 intitule,
+                 id_parcours,
+                 nom_parcours,
+                 id_niveau,
+                 nom_niveau,
+                 im,
+                 nom_etudiant,
+                 prenoms
+            FROM resultats_definitifs
+            WHERE statut_au_suivante = 'passant'
+            AND id_au = ?
+            ORDER BY id_au, id_etudiants;
+        ", [$id_au]);
+
+        if(empty($resultats_base))
+            throw new Exception('Aucun étudiant admis pour cette A.U.');
+
+        $ligne1 = $resultats_base[0];
+
+        $parcours = [];
+        $parcour = new stdClass();
+        $parcour->id_parcours = $ligne1->id_parcours;
+        $parcour->nom_parcours = $ligne1->nom_parcours;
+
+        $id_parcours;
+        $id_parcours_prec = $ligne1->id_parcours;
+
+        $niveaux = [];
+        $niveau = new stdClass();
+        $niveau->id_niveau = $ligne1->id_niveau;
+        $niveau->nom_niveau = $ligne1->nom_niveau;
+        $niveau->intitule = $ligne1->intitule;
+        $niveau->nom_parcours = $ligne1->nom_parcours;
+
+        $id_niveau;
+        $id_niveau_prec = $ligne1->id_niveau;
+
+        $liste_etu = [];
+        $etu;
+
+        foreach($resultats_base as $resultat){
+            $id_parcours = $resultat->id_parcours;
+            $id_niveau = $resultat->id_niveau;
+
+            if($id_parcours != $id_parcours_prec){
+                $niveau->liste_etu = $liste_etu;
+                $niveaux[] = $niveau;
+                $niveau = new stdClass();
+                $niveau->id_niveau = $id_id_niveau;
+                $niveau->nom_niveau = $resultat->nom_niveau;
+                $liste_etu  = [];
+
+                $parcour->niveaux = $niveaux;
+                $parcours[] = $parcour;
+                $parcour = new stdClass();
+                $parcour->id_parcours = $resultat->id_parcours;
+                $parcour->nom_parcours = $resultat->nom_parcours;
+
+
+            }
+            else if($id_niveau != $id_niveau_prec){
+                $niveau->liste_etu = $liste_etu;
+                $niveaux[] = $niveau;
+                $niveau = new stdClass();
+                $niveau->id_niveau = $id_id_niveau;
+                $niveau->nom_niveau = $resultat->nom_niveau;
+                $niveau->intitule = $resultat->intitule;
+                $niveau->nom_parcours = $resultat->nom_parcours;
+
+
+                $liste_etu  = [];
+
+            }
+
+            $etu = new stdClass();
+            $etu->N° = $resultat->num;
+            $etu->IM = $resultat->im;
+            $etu->nom = $resultat->nom_etudiant;
+            $etu->prenoms = $resultat->prenoms;
+
+            $liste_etu[] = $etu;
+
+            $id_parcours_prec = $id_parcours;
+            $id_niveau_prec = $id_niveau;
+        }
+        $niveau->liste_etu = $liste_etu;
+        $niveaux[] = $niveau;
+        $parcour->niveaux = $niveaux;
+        $parcours[] = $parcour;
+
+        return $parcours;
+
+
+
+    }
 
     // consultation des résultats définitifs
     public static function get_resultats_definitifs($id_au, $id_parcours, $id_niveau){

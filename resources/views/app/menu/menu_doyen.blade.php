@@ -175,11 +175,24 @@
           <i class="bi bi-book-half"></i><span>Résultats définitifs</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="res_def" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+                <a href="{{ route('notes.preparer_resultats_definitifs.form') }}">
+                  <i class="bi bi-circle"></i><span>Préparer les résultats_définitifs</span>
+                </a>
+            </li>
+
           <li>
             <a href="{{ route('notes.resultats_definitifs_form') }}">
               <i class="bi bi-circle"></i><span>Consulter les résultats_définitifs</span>
             </a>
           </li>
+
+          <li>
+            <a href="{{ route('notes.get_liste_admis.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger la liste des admis</span>
+            </a>
+          </li>
+
 
 
         </ul>

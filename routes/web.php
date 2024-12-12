@@ -202,6 +202,12 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+
+            //liste des admis
+            Route::post('notes/get_liste_admis',[NoteController::class,'down_listes_admission'])->name('notes.get_liste_admis');
+            Route::get('notes/get_liste_admis',[NoteController::class,'down_listes_admissio_form'])->name('notes.get_liste_admis.form');
+
+
             //consultation des résultats avant délibération
             Route::post('notes/get_resultats_avant_deliberation',[NoteController::class,'get_resultats_avant_deliberation'])->name('notes.get_resultats_avant_deliberation');
             Route::get('notes/get_resultats_avant_deliberation.form',[NoteController::class,'get_resultats_avant_deliberation_form'])->name('notes.get_resultats_avant_deliberation.form');
@@ -263,6 +269,11 @@ Route::middleware('auth')->group(function(){
         Route::middleware(EnsureIsSP::class)->group(function () {
 
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //résultats définitifs
+                Route::post('notes/preparer_resultats_definitifs', [NoteController::class, 'preparer_resultats_definitifs'] )->name('notes.preparer_resultats_definitifs');
+                Route::get('notes/preparer_resultats_definitifs',function(){ return view('notes/controle_resultats_definitifs'); })->name('notes.preparer_resultats_definitifs.form');
+
+
                 // délibération
                 Route::post('notes/admettre_etudiant',[NoteController::class,'admettre_etudiant'])->name('notes.admettre_etudiant');
                 Route::post('notes/cloture_deliberation',[NoteController::class,'cloturer_deliberation'])->name('notes.cloturer_deliberation');

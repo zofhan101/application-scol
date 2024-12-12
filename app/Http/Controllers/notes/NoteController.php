@@ -24,12 +24,83 @@ use App\Exports\ResultatsEvalExport;
 use App\Exports\AllResultsExport;
 use App\Exports\ListeRepechageAllExport;
 use App\Exports\ListeAppelAllExport;
+use App\Exports\ListeAdmissionAllExport;
 
 
 
 
 class NoteController extends Controller
 {
+
+    //préparation des résultats définitifs
+    public function preparer_resultats_definitifs(){
+        $au_courant = AU::get_au_en_cours();
+        $user = Auth::user();
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($au_courant->id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: préparation des résultats définitifs impossible car aucune opération de génération des résultats annuels n'a été trouvée ");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_avant_deliberation != null && $operation->date_resultats_definitifs == null ){
+                //récupérer les résultats
+                try {
+                    Operation_sur_au::preparer_resultats_definitifs($au_courant->id_au, $user->id);
+                    return redirect()->back()->with("success", "Préparation des résultats définitifs effectuée");
+
+                } catch (\Exception $th) {
+                    return redirect()->back()->with("error", $th);
+
+                }
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: résultats avant délibération non générés ou resultats définitifs déjà préparés ");
+            }
+        }
+    }
+
+    // téléchargement des liste des admis
+     public function down_listes_admission(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+
+        $id_au = $request->input('id_au');
+
+        $au = AU::find($id_au);
+
+        $titre = "Listes_admission"."_".$au->intitule;
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: téléchargement des listes des admis impossible car aucune opération de génération des résultats n'a été trouvée pour l'A.U  sélectionnée");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_definitifs != null){
+                //télécharger le listes
+                $listes = Operation_sur_au::get_listes_admission($id_au);
+
+                return Excel::download(new ListeAdmissionAllExport($listes), $titre.'.xlsx');
+
+
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: téléchargement des listes des admis impossible car les résultats définitifs n'ont pas encore été préparés  pour l'A.U. sélectionné");
+            }
+        }
+
+
+
+    }
+
+    public function down_listes_admissio_form(){
+        $au = AU::all();
+        return view('notes/down_liste_admis_form',[
+            "aus" => $au
+        ]);
+    }
 
     //Consultation des résultats définitifs
     public function get_resultats_definitifs(Request $request){

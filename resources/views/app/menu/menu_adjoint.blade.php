@@ -188,6 +188,13 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.get_liste_admis.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger la liste des admis</span>
+            </a>
+          </li>
+
+
 
         </ul>
       </li>
