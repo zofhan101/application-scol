@@ -194,6 +194,26 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.get_listes_redoublants.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger la liste des redoublants</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('notes.get_listes_triplants.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger la liste des triplants</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('notes.get_listes_exclus.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger la liste des exclus</span>
+            </a>
+          </li>
+
+
+
 
 
         </ul>

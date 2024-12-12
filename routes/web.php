@@ -202,6 +202,19 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //liste des exclus
+            Route::post('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus'])->name('notes.get_listes_exclus');
+            Route::get('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus_form'])->name('notes.get_listes_exclus.form');
+
+
+            //liste des triplants
+            Route::post('notes/get_liste_triplants',[NoteController::class,'down_listes_triplants'])->name('notes.get_listes_triplants');
+            Route::get('notes/get_liste_triplants',[NoteController::class,'down_listes_triplants_form'])->name('notes.get_listes_triplants.form');
+
+
+            //liste des redoublants
+            Route::post('notes/get_liste_redoublants',[NoteController::class,'down_listes_redoublants'])->name('notes.get_listes_redoublants');
+            Route::get('notes/get_liste_redoublants',[NoteController::class,'down_listes_redoublants_form'])->name('notes.get_listes_redoublants.form');
 
             //liste des admis
             Route::post('notes/get_liste_admis',[NoteController::class,'down_listes_admission'])->name('notes.get_liste_admis');

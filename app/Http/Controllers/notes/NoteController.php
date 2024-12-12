@@ -25,12 +25,157 @@ use App\Exports\AllResultsExport;
 use App\Exports\ListeRepechageAllExport;
 use App\Exports\ListeAppelAllExport;
 use App\Exports\ListeAdmissionAllExport;
+use App\Exports\ListesRedoublantsAllExport;
+use App\Exports\ListeTriplantsAllExport;
 
 
 
 
 class NoteController extends Controller
 {
+    // téléchargement des liste des exclus
+    public function down_listes_exclus_form(){
+        $au = AU::all();
+        return view('notes/down_listes_exclus_form',[
+            "aus" => $au
+        ]);
+    }
+
+    public function down_listes_exclus(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+
+        $id_au = $request->input('id_au');
+
+        $au = AU::find($id_au);
+
+        $titre = "Listes_exclus"."_".$au->intitule;
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: téléchargement des listes des exclus impossible car aucune opération de génération des résultats n'a été trouvée pour l'A.U  sélectionnée");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_definitifs != null){
+                //télécharger le listes
+
+                try {
+                    $listes = Operation_sur_au::get_listes_exclus($id_au);
+                    return Excel::download(new ListeExclusAllExport($listes), $titre.'.xlsx');
+
+                } catch (\Throwable $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+                }
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: téléchargement des listes des exclus impossible car les résultats définitifs n'ont pas encore été préparés  pour l'A.U. sélectionnée");
+            }
+        }
+
+
+
+    }
+
+
+    // téléchargement des liste des triplants
+    public function down_listes_triplants_form(){
+        $au = AU::all();
+        return view('notes/down_listes_triplants_form',[
+            "aus" => $au
+        ]);
+    }
+
+    public function down_listes_triplants(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+
+        $id_au = $request->input('id_au');
+
+        $au = AU::find($id_au);
+
+        $titre = "Listes_triplants"."_".$au->intitule;
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: téléchargement des listes des triplants impossible car aucune opération de génération des résultats n'a été trouvée pour l'A.U  sélectionnée");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_definitifs != null){
+                //télécharger le listes
+
+                try {
+                    $listes = Operation_sur_au::get_listes_triplants($id_au);
+                    return Excel::download(new ListeTriplantsAllExport($listes), $titre.'.xlsx');
+
+                } catch (\Throwable $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+                }
+
+
+
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: téléchargement des listes des triplants impossible car les résultats définitifs n'ont pas encore été préparés  pour l'A.U. sélectionnée");
+            }
+        }
+
+
+
+    }
+
+
+    // téléchargement des liste des redoublants
+    public function down_listes_redoublants_form(){
+        $au = AU::all();
+        return view('notes/down_listes_redoublants_form',[
+            "aus" => $au
+        ]);
+    }
+
+    public function down_listes_redoublants(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+
+        $id_au = $request->input('id_au');
+
+        $au = AU::find($id_au);
+
+        $titre = "Listes_redoublants"."_".$au->intitule;
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: téléchargement des listes des redoublants impossible car aucune opération de génération des résultats n'a été trouvée pour l'A.U  sélectionnée");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_definitifs != null){
+                //télécharger le listes
+
+                try {
+                    $listes = Operation_sur_au::get_listes_redoublants($id_au);
+                    return Excel::download(new ListesRedoublantsAllExport($listes), $titre.'.xlsx');
+
+                } catch (\Throwable $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+                }
+
+
+
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: téléchargement des listes des redoublants impossible car les résultats définitifs n'ont pas encore été préparés  pour l'A.U. sélectionné");
+            }
+        }
+
+
+
+    }
+
 
     //préparation des résultats définitifs
     public function preparer_resultats_definitifs(){
@@ -80,9 +225,15 @@ class NoteController extends Controller
             $operation = $operations_par_au[0];
             if($operation->date_resultats_definitifs != null){
                 //télécharger le listes
-                $listes = Operation_sur_au::get_listes_admission($id_au);
 
-                return Excel::download(new ListeAdmissionAllExport($listes), $titre.'.xlsx');
+                try {
+                    $listes = Operation_sur_au::get_listes_admission($id_au);
+                    return Excel::download(new ListeAdmissionAllExport($listes), $titre.'.xlsx');
+
+                } catch (\Throwable $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+                }
+
 
 
             }
