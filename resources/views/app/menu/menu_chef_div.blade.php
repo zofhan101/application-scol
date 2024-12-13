@@ -19,12 +19,19 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('get_prochaine_inscription.form') }}">
+              <i class="bi bi-circle"></i><span>Réinscription</span>
+            </a>
+          </li>
+
+
         </ul>
       </li><!-- End Components Nav -->
 
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#Etudiants" data-bs-toggle="collapse" href="#">
+        <a class="nav-link collapsed" data-bs-target="#etudiants" data-bs-toggle="collapse" href="#">
           <i class="bi bi-people-fill"></i><span>Etudiants</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="etudiants" class="nav-content collapse " data-bs-parent="#sidebar-nav">

@@ -27,6 +27,51 @@ use PDF;
 
 class Inscription_controller extends Controller
 {
+    //réinscription
+
+    public function reinscrire_etudiant(Request $request){
+        $request->validate([
+            'im' => ['required','string', 'exists:etudiants,im'],
+        ]);
+        $im = $request->input('im');
+        $au_courant = AU::get_au_en_cours();
+        $user = Auth::user();
+
+       try {
+            $prochaine_inscription = Inscription::get_prochaine_inscription($im);
+            $id_niveau = $prochaine_inscription->id_niveau_suivant;
+            $id_etudiant = $prochaine_inscription->id_etudiants;
+            $statut = $prochaine_inscription->statut_au_suivante;
+
+            //vérification si l'étudiant a déjà été inscrit
+            Inscription::verifier_inscription($au_courant->id_au, $id_etudiant);
+            Inscription::reinscrire($id_etudiant, $au_courant->id_au, $id_niveau, $statut, $user->id);
+
+            return redirect()->route('get_prochaine_inscription.form')->With('success', "MESSAGE: réinscription effectuée. Vous pouvez mettre à jour les informations de l'étudiant");
+       } catch (\Exception $ex) {
+
+            return redirect()->route('get_prochaine_inscription.form')->With('error', $ex->getMessage());
+       }
+
+    }
+
+    public function get_prochaine_inscription(Request $request){
+        $request->validate([
+            'matricule' => ['required','numeric', 'exists:etudiants,im'],
+
+        ]);
+        $im = $request->input('matricule');
+        try {
+            $prochaine_inscription = Inscription::get_prochaine_inscription($im);
+            return view('inscriptions/reinscrire_etudiant',[
+                'prochaine_inscription'=>$prochaine_inscription
+            ]);
+        } catch (\Exception $ex) {
+            return redirect()->back()->With('error', $ex->getMessage());
+        }
+
+    }
+
     //liste des inscrits
     public function get_liste_inscrits(Request $request){
         $request->validate([

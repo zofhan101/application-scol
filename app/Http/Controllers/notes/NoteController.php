@@ -53,7 +53,7 @@ class NoteController extends Controller
                 'page-size'=>'A4'
             ];
             $pdf = PDF::loadview('notes/releve_notes', ['resultats'=>$resultats, 'mention'=>$mention])->setOptions($options);
-            return $pdf->stream('notes-'.$im.'.pdf');
+            return $pdf->download('notes-'.$im.'.pdf');
 
         } catch (\Exception $th) {
             return redirect()->back()->with("error", "ERREUR: ".$th);

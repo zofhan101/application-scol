@@ -118,6 +118,13 @@ Route::middleware('auth')->group(function(){
 
             // NECESSITANT AUTHENTIFICATION ET A.U. OUVERTE
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //réinscriptions
+                Route::post('inscriptions/reinscription', [Inscription_controller::class,'reinscrire_etudiant'] )->name('reinscription');
+                Route::post('inscriptions/get_prochaine_inscription', [Inscription_controller::class,'get_prochaine_inscription'] )->name('get_prochaine_inscription');
+                Route::get('inscriptions/reinscription', function(){ return view('inscriptions/reinscrire_etudiant_form'); })->name('get_prochaine_inscription.form');
+
+
+
                 //statistiques sur les vérification des en-têtes
                 Route::post('notes/get_stats_verification_entete',[NoteController::class,'get_stats_verification_entete'])->name('get_stats_verification_entete');
 

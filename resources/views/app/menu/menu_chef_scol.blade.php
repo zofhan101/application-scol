@@ -38,6 +38,13 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('get_prochaine_inscription.form') }}">
+              <i class="bi bi-circle"></i><span>Réinscription</span>
+            </a>
+          </li>
+
+
 
         </ul>
       </li><!-- End Components Nav -->
