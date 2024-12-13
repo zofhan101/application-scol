@@ -212,6 +212,12 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.get_releve_notes.form') }}">
+              <i class="bi bi-circle"></i><span>Obtenir des relevés de notes</span>
+            </a>
+          </li>
+
 
 
 

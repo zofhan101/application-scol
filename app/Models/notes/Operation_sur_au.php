@@ -8,6 +8,68 @@ use stdClass;
 
 class Operation_sur_au
 {
+    //relevé de notes
+    public static function get_resultats_by_im($im){
+        $resultats_base = DB::select("
+            SELECT
+            DISTINCT ON(
+                id_au,
+                id_examen_par_au,
+                im,
+                id_ue
+            )
+                *,
+                (SELECT  note_max from note_max order by id_note_max desc limit 1) AS note_max,
+                (SELECT  note_max from note_max order by id_note_max desc limit 1) * total_coefficient as total_max,
+                CASE
+                    WHEN
+                        statut_au_suivante = 'redoublant'
+                        OR statut_au_suivante =  'triplant'
+                        OR statut_au_suivante = 'passant' AND id_niveau_suivant = id_niveau_suivant
+                        THEN 'AJOURNE'::VARCHAR
+                    WHEN statut_au_suivante = 'exclu'
+                        THEN 'exclu'::VARCHAR
+                    WHEN
+                        statut_au_suivante = 'passant'
+                        AND (
+                            id_niveau_suivant != id_niveau
+                            OR id_niveau_suivant IS NULL
+                        )
+                        THEN 'ADMIS'::VARCHAR
+
+                END AS decision
+
+            FROM resultats_definitifs
+            WHERE  im = ?
+            ORDER BY
+                id_au,
+                id_examen_par_au,
+                im,
+                id_ue
+        ", [$im]);
+
+        //traitement des résultats
+        if(empty($resultats_base))
+            throw new Exception("Aucun résultat d'examen n'est encore disponible pour l'étudiant sélectionné");
+
+        $res = [];
+        $element = [];
+        $id_au_prec = $resultats_base[0]->id_au;
+        $id_au;
+        foreach($resultats_base as $resultat){
+            $id_au = $resultat->id_au;
+            if($id_au != $id_au_prec){
+                $res[] =  $element;
+                $element = [];
+            }
+            $element[] = $resultat;
+
+            $id_au_prec = $id_au;
+        }
+        $res[] = $element;
+        return $res;
+
+    }
 
     //liste des exclus
     public static function get_listes_exclus($id_au){

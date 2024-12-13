@@ -80,6 +80,11 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
+            //récupération relevés de notes
+            Route::post('notes/releve_notes',[NoteController::class,'down_releve_notes'])->name('notes.get_releve_notes');
+            Route::get('notes/releve_notes',function(){ return view('notes/get_releve_notes_form'); })->name('notes.get_releve_notes.form');
+
+
             // résultats définitifs
             Route::post('notes/resultats_definitifs',[NoteController::class,'get_resultats_definitifs'])->name('notes.resultats_definitifs');
             Route::get('notes/resultats_definitifs',[NoteController::class,'get_resultats_definitifs_form'])->name('notes.resultats_definitifs_form');

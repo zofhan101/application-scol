@@ -27,12 +27,39 @@ use App\Exports\ListeAppelAllExport;
 use App\Exports\ListeAdmissionAllExport;
 use App\Exports\ListesRedoublantsAllExport;
 use App\Exports\ListeTriplantsAllExport;
+use PDF;
+
 
 
 
 
 class NoteController extends Controller
 {
+    //téléchargement des releves de note d'un étudiant
+    public function down_releve_notes(Request $request){
+        $request->validate([
+            'im' => ['required','numeric', 'exists:etudiants,im'],
+        ]);
+        $im = $request->input('im');
+        try {
+            $resultats = Operation_sur_au::get_resultats_by_im($im);
+            $id_parcours = $resultats[0][0]->id_parcours;
+            $mention = Parcours::get_mention_by_id_parcours($id_parcours);
+
+            $options = [
+                'enable-local-file-access' => true,
+                'disable-smart-shrinking' => true,
+                'print-media-type' => true,
+                'page-size'=>'A4'
+            ];
+            $pdf = PDF::loadview('notes/releve_notes', ['resultats'=>$resultats, 'mention'=>$mention])->setOptions($options);
+            return $pdf->stream('notes-'.$im.'.pdf');
+
+        } catch (\Exception $th) {
+            return redirect()->back()->with("error", "ERREUR: ".$th);
+        }
+    }
+
     // téléchargement des liste des exclus
     public function down_listes_exclus_form(){
         $au = AU::all();
