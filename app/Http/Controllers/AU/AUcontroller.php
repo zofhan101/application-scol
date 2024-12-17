@@ -16,6 +16,15 @@ class AUcontroller extends Controller
         $this->au_service = $au_service;
     }
 
+    public function get_liste_examen(Request $request){
+        $request->validate([
+            'id_au' => ['required', 'numeric', 'exists:au,id_au']
+        ]);
+        $id_au = $request->input('id_au');
+        $examens = AU::get_liste_examen_by_id_au($id_au);
+        return response()->json(["examens"=>$examens], 200);
+    }
+
     public function create_exam(Request $request){
         $request->validate([
             'sessions_examen' => ['required'],

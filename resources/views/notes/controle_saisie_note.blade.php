@@ -46,7 +46,7 @@
                               <!-- General Form Elements -->
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                    <button type="button" class="btn btn-danger" onClick="soumettre()">Confirmer</button>
+                                    <button type="button" class="btn btn-danger" onClick="verrouiller_saisie()">Confirmer</button>
                                 </div>
 
                             </div>
@@ -94,6 +94,42 @@
 
     get_status();
 
+    async function verrouiller_saisie(){
+        let examen_par_au = examen.value.split("##--##");
+        let id_examen_par_au =  examen_par_au[0];
+        let formdata = new FormData();
+        formdata.append("id_examen_par_au", id_examen_par_au);
+        //console.log(formdata);
+
+        let url= "{{ route('verrouiller_saisie_note') }}";
+            try {
+                let response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cookie': document.cookie,
+                    },
+                    credentials: 'include',
+                    body: formdata
+                });
+                let data = await response.json();
+
+                if(response.ok){
+                    get_status();
+                    //alert(data.message);
+                }
+                else {
+                    console.error('Erreur lors du verrouillage de la saisie des notes: ', data);
+                    alert('Erreur lors du verrouillage de la saisie des notes');
+
+                }
+            } catch (error) {
+                console.error('Erreur lors du verrouillage de la saisie des notes: ',error);
+                alert('Erreur lors du verrouillage de la saisie des notes');
+            }
+
+    }
+
     async function ouvrir_saisie(){
         let examen_par_au = examen.value.split("##--##");
         let id_examen_par_au =  examen_par_au[0];
@@ -116,7 +152,7 @@
 
                 if(response.ok){
                     get_status();
-                    alert(data.message);
+                    //alert(data.message);
                 }
                 else {
                     console.error('Erreur lors de l\'ouverture de la saisie des notes: ', data);
@@ -155,17 +191,24 @@
                 if(response.ok){
                     let boutons = document.getElementById('buttons');
                     let liste_boutons = boutons.querySelectorAll('button');
+                    //aucune opération n'a encore été lancée
                     if(data.operation.length == 0){
                         liste_boutons[0].disabled = false;
                         liste_boutons[1].disabled = true;
                         let titre_ouverture = document.getElementById('titre_ouverture');
-                        titre_ouverture.textContent += nom_examen_par_au;
+                        titre_ouverture.textContent = "Confirmez-vous l'ouverture de la saisie pour: " + nom_examen_par_au;
                     }
                     else if(data.operation.date_ouverture_saisie_note != null && data.operation.date_cloture_saisie_note == null){
                         console.log('operation ouverte mais non cloturée');
                         let titre_cloture = document.getElementById('titre_cloture');
-                        titre_cloture.textContent += nom_examen_par_au;
+                        titre_cloture.textContent = "Confirmez-vous le verrouillage de la saisie pour: " + nom_examen_par_au;
                         liste_boutons[1].disabled = false;
+                        liste_boutons[0].disabled = true;
+
+                    }
+                    else if(data.operation.date_ouverture_saisie_note != null && data.operation.date_cloture_saisie_note != null){
+                        console.log('operation ouverte et déjà cloturée');
+                        liste_boutons[1].disabled = true;
                         liste_boutons[0].disabled = true;
 
                     }

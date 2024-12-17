@@ -14,8 +14,11 @@ class Eval_seeder extends Seeder
     public function run(): void
     {
         DB::table('session_examen')->insert([
-            ['nom_session_examen'=>'Evaluation 1'],
-            ['nom_session_examen'=>'Evaluation 2']
+            ['nom_session_examen'=>'Evaluation 1', 'type_session'=>'eval'],
+            ['nom_session_examen'=>'Evaluation 2', 'type_session'=>'eval'],
+            ['nom_session_examen'=>'Concours PACES', 'type_session'=>'conc'],
+            ['nom_session_examen'=>'Repechage', 'type_session'=>'repe'],
+
 
         ]);
     }
