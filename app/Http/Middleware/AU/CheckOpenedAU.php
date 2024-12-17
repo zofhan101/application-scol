@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\AU\AU;
 
+
 class CheckOpenedAU
 {
     /**
@@ -19,7 +20,9 @@ class CheckOpenedAU
         try {
             AU::get_au_en_cours();
         } catch (\Exception $th) {
-            return redirect('au_fermee');
+            if($request->expectsJson())
+                return response()->json(['message'=>'au_fermee'], 401);
+            else return redirect(route('au_fermee'));
         }
         return $next($request);
     }

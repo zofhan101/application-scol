@@ -15,15 +15,52 @@ use PDF;
 
 class UEController extends Controller
 {
+    public function get_liste_ec(Request $request){
+        $request->validate([
+            'id_niveau' => ['required', 'numeric', 'exists:niveau,id_niveau'],
+            'id_parcours'=>['required', 'numeric', 'exists:parcours,id_parcours'],
+            'id_ue' => ['required', 'numeric', 'exists:unite_enseignement,id_unite_enseignement']
+        ]);
+
+        $id_niveau = $request->input('id_niveau');
+        $id_parcours = $request->input('id_parcours');
+        $id_ue = $request->input('id_ue');
+
+        try {
+            $au_courant = AU::get_au_en_cours();
+            $liste_ec = Unite_enseignement::get_liste_ec($id_parcours, $id_niveau, $id_ue, $au_courant->id_au);
+            return response()->json(["ecs" => $liste_ec], 200);
+        } catch (\Exception $th) {
+            return response()->json(["errors" =>["autres" => $th->getMessage()] ], 500);
+        }
+
+    }
+
+    public function get_liste_ue(Request $request){
+        $request->validate([
+            'id_niveau' => ['required', 'numeric', 'exists:niveau,id_niveau'],
+            'id_parcours'=>['required', 'numeric', 'exists:parcours,id_parcours']
+        ]);
+        $id_niveau = $request->input('id_niveau');
+        $id_parcours = $request->input('id_parcours');
+
+        try {
+            $au_courant = AU::get_au_en_cours();
+            $liste_ue = Unite_enseignement::get_liste_ue($id_parcours, $id_niveau, $au_courant->id_au);
+            return response()->json(["ues" => $liste_ue], 200);
+        } catch (\Exception $th) {
+            return response()->json(["errors" =>["autres" => $th->getMessage()] ], 500);
+        }
+
+    }
 
     public function down_barcode(Request $request){
         $liste_code_barre = session('liste_code_barre');
         $id_ue_ec = $request->input('id_ue_ec');
         $ue_ec = $liste_code_barre[$id_ue_ec];
-        $en_plus = $liste_code_barre['en_plus'];
         //var_dump($ue_ec);
-        $pdf = PDF::loadview('copies_examen/codes_barres', ['ue_ec'=>$ue_ec, 'en_plus'=>$en_plus]);
-        return $pdf->stream('codes-barre-'.$ue_ec->intitule.'-'.$ue_ec->nom_session_examen.'-'.$ue_ec->nom_parcours.'-'.$ue_ec->nom_niveau.'-'.$ue_ec->nom_unite_enseignement.'-'.$ue_ec->nom_element_constitutif.'.pdf');
+        $pdf = PDF::loadview('copies_examen/codes_barres', ['ue_ec'=>$ue_ec]);
+        return $pdf->download('codes-barre-'.$ue_ec->intitule.'-'.$ue_ec->nom_session_examen.'-'.$ue_ec->nom_parcours.'-'.$ue_ec->nom_niveau.'-'.$ue_ec->nom_unite_enseignement.'-'.$ue_ec->nom_element_constitutif.'.pdf');
     }
 
     public function get_liste_ue_ec_code_barre(){
@@ -71,10 +108,10 @@ class UEController extends Controller
        try {
             Unite_enseignement::ajouter_ue_ec($data);
             return response()->json(
-                ['message'=>'Mise à jour effectuée'],
+                ['message'=>'Enregistrement effectué'],
                 200
             );
-       } catch (\Throwable $th) {
+       } catch (\Exception $th) {
             return response()->json(
                 ['message'=>$th->getMessage(),],
                 500
@@ -110,7 +147,7 @@ class UEController extends Controller
     }
 
     public function liste_ec(){
-        $ecs = Element_constitutif::all();
+        $ecs = Element_constitutif::orderBy('nom_element_constitutif', 'asc')->get();
         return response()->json(
             ['ecs'=>$ecs],
             200
@@ -141,7 +178,7 @@ class UEController extends Controller
     }
 
     public function liste_ue(){
-        $ues = Unite_enseignement::all();
+        $ues = Unite_enseignement::orderBy('nom_unite_enseignement', 'asc')->get();
         return response()->json(
             ['ues'=>$ues],
             200
@@ -180,8 +217,8 @@ class UEController extends Controller
         $niveaux =  Niveau::get_niveaux_parcours($id_parcour_1);
 
         //récupération de tous les EC et UE préexistantes
-        $UE = Unite_enseignement::all();
-        $EC = Element_constitutif::all();
+        $UE = Unite_enseignement::orderBy('nom_unite_enseignement', 'asc')->get();
+        $EC = Element_constitutif::orderBy('nom_element_constitutif', 'asc')->get();
 
         //récupération des sessions d'examen
         $exams;

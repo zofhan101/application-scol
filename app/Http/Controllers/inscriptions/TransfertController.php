@@ -110,7 +110,8 @@ class TransfertController extends Controller
             'email'=>['nullable','email'],
             'date_delivrance'=>['nullable','date'],
             'lieu_delivrance'=>['nullable','max:255'],
-            'type_pi'=>['nullable',Rule::in(['cin','pass'])]
+            'type_pi'=>['nullable',Rule::in(['cin','pass'])],
+            'photo'=>['required', 'file','mimes:jpg,png,jpeg', 'max:2048']
         ]);
 
         // enregistrer ces informations dans la session
@@ -124,6 +125,11 @@ class TransfertController extends Controller
         $etu->adresse = $request->input('adresse');
         $etu->telephone = $request->input('contact');
         $etu->email = $request->input('email');
+
+        $photo = $request->file('photo');
+        $photoContent = file_get_contents($photo->getRealPath());
+        $etu->photoContent = $photoContent;
+        $etu->photoExtension = $photo->getClientOriginalExtension();
 
         return redirect(route('form_bacc_f'));
     }

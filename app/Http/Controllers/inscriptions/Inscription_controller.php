@@ -27,6 +27,51 @@ use PDF;
 
 class Inscription_controller extends Controller
 {
+    //réinscription
+
+    public function reinscrire_etudiant(Request $request){
+        $request->validate([
+            'im' => ['required','string', 'exists:etudiants,im'],
+        ]);
+        $im = $request->input('im');
+        $au_courant = AU::get_au_en_cours();
+        $user = Auth::user();
+
+       try {
+            $prochaine_inscription = Inscription::get_prochaine_inscription($im);
+            $id_niveau = $prochaine_inscription->id_niveau_suivant;
+            $id_etudiant = $prochaine_inscription->id_etudiants;
+            $statut = $prochaine_inscription->statut_au_suivante;
+
+            //vérification si l'étudiant a déjà été inscrit
+            Inscription::verifier_inscription($au_courant->id_au, $id_etudiant);
+            Inscription::reinscrire($id_etudiant, $au_courant->id_au, $id_niveau, $statut, $user->id);
+
+            return redirect()->route('get_prochaine_inscription.form')->With('success', "MESSAGE: réinscription effectuée. Vous pouvez mettre à jour les informations de l'étudiant");
+       } catch (\Exception $ex) {
+
+            return redirect()->route('get_prochaine_inscription.form')->With('error', $ex->getMessage());
+       }
+
+    }
+
+    public function get_prochaine_inscription(Request $request){
+        $request->validate([
+            'matricule' => ['required','numeric', 'exists:etudiants,im'],
+
+        ]);
+        $im = $request->input('matricule');
+        try {
+            $prochaine_inscription = Inscription::get_prochaine_inscription($im);
+            return view('inscriptions/reinscrire_etudiant',[
+                'prochaine_inscription'=>$prochaine_inscription
+            ]);
+        } catch (\Exception $ex) {
+            return redirect()->back()->With('error', $ex->getMessage());
+        }
+
+    }
+
     //liste des inscrits
     public function get_liste_inscrits(Request $request){
         $request->validate([
@@ -69,8 +114,13 @@ class Inscription_controller extends Controller
         ]);
 
         $id_parcours = $request->input('id_parcours');
-        $niveaux = Niveau::get_niveaux_parcours($id_parcours);
-        return response()->json($niveaux);
+        try {
+            $niveaux = Niveau::get_niveaux_parcours($id_parcours);
+            return response()->json($niveaux, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['errors' => ["autres" => $th->getMessage()]], 500);
+        }
+
     }
 
 
@@ -277,7 +327,9 @@ class Inscription_controller extends Controller
             'contact'=> ['required', 'numeric','digits:10'],
             'date_delivrance'=>['nullable','date'],
             'lieu_delivrance'=>['nullable','max:255'],
-            'type_pi'=>['nullable',Rule::in(['cin','pass'])]
+            'type_pi'=>['nullable',Rule::in(['cin','pass'])],
+            'email'=>['nullable', 'email'],
+            'photo'=>['required', 'file','mimes:jpg,png,jpeg', 'max:2048']
         ]);
 
         // enregistrer ces informations dans la session
@@ -290,6 +342,12 @@ class Inscription_controller extends Controller
         $new_etu->lieu_delivrance = $request->input('lieu_delivrance');
         $new_etu->adresse = $request->input('adresse');
         $new_etu->contact = $request->input('contact');
+        $new_etu->email = $request->input('email');
+
+        $photo = $request->file('photo');
+        $photoContent = file_get_contents($photo->getRealPath());
+        $new_etu->photoContent = $photoContent;
+        $new_etu->photoExtension = $photo->getClientOriginalExtension();
 
         return redirect('inscription/form_bacc');
     }

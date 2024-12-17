@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\inscription\Nationalite;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use stdClass;
 
 class EtudiantController extends Controller
 {   //informations sur les parents
@@ -43,8 +44,19 @@ class EtudiantController extends Controller
 
         $user = Auth::user();
         $etu->id_agent = $user->id;
+
+        $info_photo = Session::get('info_photo');
+        if($info_photo != null){
+            $nom_fichier = "photo_".$etu->im.".".$info_photo->photoExtension;
+            $chemin = storage_path('photo_etudiants/' . $nom_fichier);
+            file_put_contents($chemin, $info_photo->photoContent);
+            $etu->photo = $chemin;
+        }
+
+
         $etu->save();
         session()->forget('etu_modif');
+        session()->forget('info_photo');
 
         return redirect(route('maj_etu_search_form'))->with('success', 'Mise à jour effectuée');
 
@@ -65,7 +77,7 @@ class EtudiantController extends Controller
         $etu->id_province = $request->input('province');
         $etu->annee_bacc = $request->input('annee_bacc');
 
-        return view('etudiants/form_parents');
+        return redirect(route('etudiant.form_parents'));
 
     }
 
@@ -78,7 +90,8 @@ class EtudiantController extends Controller
             'email'=>['nullable','email'],
             'date_delivrance'=>['nullable','date'],
             'lieu_delivrance'=>['nullable','max:255'],
-            'type_pi'=>['nullable',Rule::in(['cin','pass'])]
+            'type_pi'=>['nullable',Rule::in(['cin','pass'])],
+            'photo'=>['nullable', 'file','mimes:jpg,png,jpeg', 'max:2048']
         ]);
 
         // enregistrer ces informations dans la session
@@ -93,10 +106,19 @@ class EtudiantController extends Controller
         $etu->telephone = $request->input('contact');
         $etu->email = $request->input('email');
 
-        $series = Serie::all();
-        $provinces =  Province::all();
+        $photo = $request->file('photo');
+        if($photo != null){
+            $photoContent = file_get_contents($photo->getRealPath());
+            $info_photo = new stdClass();
+            $info_photo->photoContent = $photoContent;
+            $info_photo->photoExtension = $photo->getClientOriginalExtension();
+            Session::put('info_photo', $info_photo);
 
-        return view('etudiants/form_bacc',['series'=>$series, 'provinces'=>$provinces]);
+        }
+
+        return redirect(route('etudiant.form_bacc'));
+
+
     }
 
     //informations sur l'étudiant
@@ -120,10 +142,7 @@ class EtudiantController extends Controller
         $etu->lieu_naissance = $request->input('ldn');
         $etu->est_officier = $request->input('est_officier');
 
-        $nationalites = Nationalite::all();
-
-        //rediriger vers le formualaire identite
-        return view('etudiants/form_identite',['nationalites' =>$nationalites]);
+        return redirect(route('form_identite_modif_form'));
 
     }
 
@@ -138,6 +157,7 @@ class EtudiantController extends Controller
         $etudiant = Etudiant::where('im',$matricule)->first();
         session(['etu_modif'=>$etudiant]);
         //var_dump($etudiant);
-        return view('etudiants/form_etudiant');
+
+        return redirect(route('form_etudiant_modif_form'));
     }
 }
