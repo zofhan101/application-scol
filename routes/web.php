@@ -15,8 +15,14 @@ use App\Http\Middleware\EnsureIsSP;
 use App\Http\Middleware\EnsureIsChefDivScol;
 use App\Http\Middleware\AU\CheckOpenedAU;
 use App\Http\Middleware\notes\CheckOuvertureSaisieNote;
+use App\Http\Middleware\notes\CheckOuvertureSaisieEntete;
 use App\Http\Controllers\UE\UEController;
 use App\Http\Controllers\notes\NoteController;
+use App\Models\inscription\Nationalite;
+use App\Models\inscription\Serie;
+use App\Models\inscription\Province;
+use App\Models\mention_parcours\Parcours;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -31,40 +37,145 @@ use App\Http\Controllers\notes\NoteController;
 
 //routes nécessitant authentification
 Route::middleware('auth')->group(function(){
-    //PROFILE
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::get('acces_refuse', function(){ return view('acces_refuse');})->name('acces_refuse');
+
+        //PROFILE
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 
-    Route::get('au_fermee',function(){
-        return view('AU/au_fermee');
-    });
+        Route::get('au_fermee',function(){
+            return view('AU/au_fermee');
+        })->name('au_fermee');
 
-    Route::get('accueil',function(){
-        return view('app/welcome');
-    })->name('accueil');
+        Route::get('accueil',function(){
+            return view('app/welcome');
+        })->name('accueil');
 
-        //saisie des notes d'examen
-        Route::middleware(CheckOuvertureSaisieNote::class)->group(function () {
-            Route::post('notes/enregistrer_note',[NoteController::class,'enregistrer_note'])->name('enregistrer_note');
-            Route::get('notes/interface_saisie_notes',function(){ return view('notes/interface_saisie_notes');})->name('interface_saisie_notes');
+        //authentification contradictoire
+
+        Route::post('auth/authentification_contradictoire.controller',[AdminAuthController::class,'authentification_contradictoire'])->name('authentification_contradictoire.controller');
+        Route::get('auth/authentification_contradictoire.form',function(){ return view('auth/authentification_contradictoire/login2'); })->name('authentification_contradictoire.form');
+
+        //accèes à l'interface saisie des en-tetes
+        Route::middleware(CheckOpenedAU::class, CheckOuvertureSaisieEntete::class)->group(function () {
+            Route::get('notes/interface_saisie_entete',function(){
+                $parcours = Parcours::all();
+                return view('notes/interface_saisie_entete', ['parcours' => $parcours]);
+            })->name('interface_saisie_entete');
 
         });
 
+        //accèes à l'interface saisie des notes d'examen
+        Route::middleware(CheckOpenedAU::class, CheckOuvertureSaisieNote::class)->group(function () {
+            Route::get('notes/interface_saisie_notes',function(){
+                $parcours = Parcours::all();
+                return view('notes/interface_saisie_notes', ['parcours' => $parcours]);
+            })->name('interface_saisie_notes');
+
+        });
+
+
+
         //ACCES A PARTIR DE CHEF DE DIVISION
         Route::middleware(EnsureIsChefDiv::class)->group(function () {
+            //récupération relevés de notes
+            Route::post('notes/releve_notes',[NoteController::class,'down_releve_notes'])->name('notes.get_releve_notes');
+            Route::get('notes/releve_notes',function(){ return view('notes/get_releve_notes_form'); })->name('notes.get_releve_notes.form');
+
+
+            // résultats définitifs
+            Route::post('notes/resultats_definitifs',[NoteController::class,'get_resultats_definitifs'])->name('notes.resultats_definitifs');
+            Route::get('notes/resultats_definitifs',[NoteController::class,'get_resultats_definitifs_form'])->name('notes.resultats_definitifs_form');
+
+            //liste d'examens pour une au donnée
+            Route::post('au/liste_examen_par_au',[AUcontroller::class,'get_liste_examen'])->name('au.get_liste_examen');
+
+            //niveaux appartenant à un parours
+            Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_parcours'])->name('get_niveaux_parcours');
 
             //Mise à jour des données étudiant
             Route::post('etudiant/form_parents',[EtudiantController::class,'form_parents'])->name('form_parents_modif');
+            Route::get('etudiant/form_parents',function(){ return view('etudiants/form_parents'); })->name('etudiant.form_parents');
             Route::post('etudiant/form_bacc',[EtudiantController::class,'form_bacc'])->name('form_bacc_modif');
+            Route::get('etudiant/form_bacc',function(){
+                $series = Serie::all();
+                $provinces =  Province::all();
+                return view('etudiants/form_bacc',['series'=>$series, 'provinces'=>$provinces]);
+
+            })->name('etudiant.form_bacc');
+
             Route::post('etudiant/form_identite',[EtudiantController::class,'form_identite'])->name('form_identite_modif');
+            Route::get('etudiant/form_identite',function(){
+                $nationalites = Nationalite::all();
+                return view('etudiants/form_identite',['nationalites' =>$nationalites]);
+            })->name('form_identite_modif_form');
             Route::post('etudiant/form_etudiant',[EtudiantController::class,'form_etudiant'])->name('form_etudiant_modif');
+            Route::get('etudiant/form_etudiant',function(){ return view('etudiants/form_etudiant'); })->name('form_etudiant_modif_form');
             Route::post('etudiant/search_matricule',[EtudiantController::class,'search_etudiant'])->name('maj_etu_search');
             Route::get('etudiant/search_matricule',function(){ return view('etudiants/check_etudiant');})->name('maj_etu_search_form');
 
             // NECESSITANT AUTHENTIFICATION ET A.U. OUVERTE
             Route::middleware(CheckOpenedAU::class)->group(function(){
+                //réinscriptions
+                Route::post('inscriptions/reinscription', [Inscription_controller::class,'reinscrire_etudiant'] )->name('reinscription');
+                Route::post('inscriptions/get_prochaine_inscription', [Inscription_controller::class,'get_prochaine_inscription'] )->name('get_prochaine_inscription');
+                Route::get('inscriptions/reinscription', function(){ return view('inscriptions/reinscrire_etudiant_form'); })->name('get_prochaine_inscription.form');
+
+
+
+                //statistiques sur les vérification des en-têtes
+                Route::post('notes/get_stats_verification_entete',[NoteController::class,'get_stats_verification_entete'])->name('get_stats_verification_entete');
+
+                //statistiques sur les vérifications des notes
+                Route::post('notes/get_stats_verification_note',[NoteController::class,'get_stats_verification_note'])->name('get_stats_verification_note');
+
+                //statistiques sur les saisies des entêtes
+                Route::post('notes/get_stats_saisie_entete',[NoteController::class,'get_stats_saisie_entete'])->name('get_stats_saisie_entete');
+
+
+                //statistiques sur les saisies des notes get_stats_saisie_note
+                Route::post('notes/get_stats_saisie_note',[NoteController::class,'get_stats_saisie_note'])->name('get_stats_saisie_note');
+
+                //EC correspondant à un parcorus, niveau et ue donnés
+                Route::post('ue/get_liste_ec',[UEController::class,'get_liste_ec'])->name('get_liste_ec');
+
+                // UE correspondants à un parcours et à un niveau donnés
+                Route::post('ue/get_liste_ue',[UEController::class,'get_liste_ue'])->name('get_liste_ue');
+
+
+                //modification matricule
+                Route::post('notes/modifier_matricule',[NoteController::class,'modifier_matricule'])->name('modifier_matricule');
+
+                //vérification matricule
+                Route::post('notes/get_matricule',[NoteController::class,'get_matricule'])->name('get_matricule');
+
+
+                //saisie des entetes
+                Route::post('entetes/enregistrer_entete',[NoteController::class,'enregistrer_entete'])->name('enregistrer_entete');
+
+                //vérification des entetes
+                Route::get('entetes/interface_verification_entete',function(){
+                    $parcours = Parcours::all();
+                    return view('notes/interface_verification_entete', ["parcours" => $parcours]);
+                })->name('interface_verification_entete');
+
+                //modification note
+                Route::post('notes/modifier_note',[NoteController::class,'modifier_note'])->name('modifier_note');
+
+
+                //saisie des notes
+                Route::post('notes/enregistrer_note',[NoteController::class,'enregistrer_note'])->name('enregistrer_note');
+
+
+                //vérification des notes
+                Route::post('notes/get_note',[NoteController::class,'get_note'])->name('get_note');
+                Route::get('notes/interface_verification_notes',function(){
+                    $parcours = Parcours::all();
+                    return view('notes/interface_verification_notes', ["parcours" => $parcours]);
+                })->name('interface_verification_notes');
+
                 //transfert d'étudiant
                 Route::post('transfert/autres_inscriptions',[TransfertController::class,'inscription'])->name('autres_inscriptions_transfert');
                 Route::get('transfert/autres_inscriptions',function(){ return view('transfert/form_autres_inscriptions'); })->name('autres_inscriptions_f');
@@ -102,7 +213,51 @@ Route::middleware('auth')->group(function(){
         });
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
-        Route::middleware(EnsureIsChefDiv::class)->group(function () {
+        Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //liste des exclus
+            Route::post('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus'])->name('notes.get_listes_exclus');
+            Route::get('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus_form'])->name('notes.get_listes_exclus.form');
+
+
+            //liste des triplants
+            Route::post('notes/get_liste_triplants',[NoteController::class,'down_listes_triplants'])->name('notes.get_listes_triplants');
+            Route::get('notes/get_liste_triplants',[NoteController::class,'down_listes_triplants_form'])->name('notes.get_listes_triplants.form');
+
+
+            //liste des redoublants
+            Route::post('notes/get_liste_redoublants',[NoteController::class,'down_listes_redoublants'])->name('notes.get_listes_redoublants');
+            Route::get('notes/get_liste_redoublants',[NoteController::class,'down_listes_redoublants_form'])->name('notes.get_listes_redoublants.form');
+
+            //liste des admis
+            Route::post('notes/get_liste_admis',[NoteController::class,'down_listes_admission'])->name('notes.get_liste_admis');
+            Route::get('notes/get_liste_admis',[NoteController::class,'down_listes_admissio_form'])->name('notes.get_liste_admis.form');
+
+
+            //consultation des résultats avant délibération
+            Route::post('notes/get_resultats_avant_deliberation',[NoteController::class,'get_resultats_avant_deliberation'])->name('notes.get_resultats_avant_deliberation');
+            Route::get('notes/get_resultats_avant_deliberation.form',[NoteController::class,'get_resultats_avant_deliberation_form'])->name('notes.get_resultats_avant_deliberation.form');
+
+            //liste d'appel au repêchage
+            Route::post('notes/down_liste_appel',[NoteController::class,'down_liste_appel'])->name('notes.down_liste_appel');
+            Route::get('notes/down_liste_appel',[NoteController::class,'down_liste_appel_form'])->name('notes.down_liste_appel.form');
+
+            // liste de repechage
+            Route::post('notes/down_liste_repechage',[NoteController::class,'down_liste_repechage'])->name('notes.down_liste_repechage');
+            Route::get('notes/down_liste_repechage',[NoteController::class,'down_liste_repechage_form'])->name('notes.down_liste_repechage.form');
+            Route::post('notes/get_liste_repechage',[NoteController::class,'get_liste_repechage'])->name('notes.get_liste_repechage');
+            Route::get('notes/get_liste_repechage.page',[NoteController::class,'get_liste_repechage_page'])->name('notes.get_liste_repechage.page');
+
+            //résultats annuels avant repechage
+            Route::post('notes/get_resultats_avant_repechage',[NoteController::class,'get_resultats_avant_repechage'])->name('notes.get_resultats_avant_repechage');
+            Route::get('notes/get_resultats_avant_repechage.page',[NoteController::class,'get_resultats_avant_repechage_page'])->name('notes.get_resultats_avant_repechage.page');
+
+            // résultats d'examen
+            Route::post('notes/down_resultats',[NoteController::class,'down_resultats_all'])->name('notes.down_resultats');
+            Route::post('notes/down_resultats_specifique',[NoteController::class,'down_resultats_specifique'])->name('notes.down_resultats_specifique');
+            Route::get('notes/down_resultats_specifique.page',[NoteController::class,'down_resultats_page'])->name('notes.down_resultats_specifique.page');
+            Route::post('notes/get_resultats',[NoteController::class,'get_resultats_eval'])->name('notes.get_resultats.eval');
+            Route::get('notes/get_resultats.page',[NoteController::class,'get_resultats_page'])->name('notes.get_resultats.page');
+
             //liste des inscrits
             Route::post('inscription/liste_inscrits',[Inscription_controller::class,'get_liste_inscrits'])->name('liste_inscrits');
             Route::get('inscription/liste_inscrits',[Inscription_controller::class,'form_au_niveau_parcours'])->name('liste_inscrits_form');
@@ -137,12 +292,51 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE SECRETAIRE PRINCIPAL
         Route::middleware(EnsureIsSP::class)->group(function () {
-            //saisie des notes d'examen
-            Route::post('notes/ouvrir_saisie_note',[NoteController::class,'ouvrir_saisie_note'])->name('ouvrir_saisie_note');
-            Route::get('notes/controle_saisie_note',[NoteController::class,'controle_saisie_note'])->name('controle_saisie_note');
-            Route::post('notes/get_operation_par_examen',[NoteController::class,'get_operation_par_examen'])->name('get_operation_par_examen');
+
+            Route::middleware(CheckOpenedAU::class)->group(function(){
+                //résultats définitifs
+                Route::post('notes/preparer_resultats_definitifs', [NoteController::class, 'preparer_resultats_definitifs'] )->name('notes.preparer_resultats_definitifs');
+                Route::get('notes/preparer_resultats_definitifs',function(){ return view('notes/controle_resultats_definitifs'); })->name('notes.preparer_resultats_definitifs.form');
 
 
+                // délibération
+                Route::post('notes/admettre_etudiant',[NoteController::class,'admettre_etudiant'])->name('notes.admettre_etudiant');
+                Route::post('notes/cloture_deliberation',[NoteController::class,'cloturer_deliberation'])->name('notes.cloturer_deliberation');
+                Route::post('notes/ouverture_deliberation',[NoteController::class,'ouvrir_deliberation'])->name('notes.ouvrir_deliberation');
+                Route::get('notes/deliberation.controle',[NoteController::class,'controle_deliberation'])->name('notes.deliberation.controle');
+                Route::post('notes/interface_deliberation',[NoteController::class,'interface_deliberation'])->name('notes.interface_deliberation');
+                Route::get('notes/interface_deliberation',[NoteController::class,'interface_deliberation_form'])->name('notes.interface_deliberation.form');
+
+                // résultats généraux sur l'AU
+                Route::post('notes/generer_resultats_au',[NoteController::class,'generer_resultats_au'])->name('notes.generer_resultats_au');
+                Route::get('notes/generer_resultats_au',[NoteController::class,'generer_resultats_au_page'])->name('notes.generer_resultats_au.page');
+
+                //génération des résultats d'examen
+                Route::post('notes/generer_resultats',[NoteController::class,'generer_resultats'])->name('notes.generer_resultats');
+                Route::get('notes/generer_resultats',[NoteController::class,'controle_resultats'])->name('notes.generer_resultats.page');
+
+                //ouverture et cloture des vérification des en-têtes
+                Route::post('entetes/verrouiller_verification_entete',[NoteController::class,'verrouiller_verification_entete'])->name('verrouiller_verification_entete');
+                Route::post('entetes/ouvrir_verification_entete',[NoteController::class,'ouvrir_verification_entete'])->name('ouvrir_verification_entete');
+                Route::get('entetes/controle_verification_entete',[NoteController::class,'controle_verification_entete'])->name('controle_verification_entete');
+
+                // ouverture et cloture de saisie d' en-tetes des feuilles de copie
+                Route::post('entetes/verrouiller_saisie_entete',[NoteController::class,'verrouiller_saisie_entete'])->name('verrouiller_saisie_entete');
+                Route::post('entetes/ouvrir_saisie_entete',[NoteController::class,'ouvrir_saisie_entete'])->name('ouvrir_saisie_entete');
+                Route::get('entetes/controle_saisie_entete',[NoteController::class,'controle_saisie_entete'])->name('controle_saisie_entete');
+
+
+                //ouverture et cloture des vérification des notes saisies
+                Route::post('notes/verrouiller_verification_note',[NoteController::class,'verrouiller_verification_note'])->name('verrouiller_verification_note');
+                Route::post('notes/ouvrir_verification_note',[NoteController::class,'ouvrir_verification_note'])->name('ouvrir_verification_note');
+                Route::get('notes/controle_verification_note',[NoteController::class,'controle_verification_note'])->name('controle_verification_note');
+
+                //ouverture et cloture des saisie des notes d'examen
+                Route::post('notes/verrouiller_saisie_note',[NoteController::class,'verrouiller_saisie_note'])->name('verrouiller_saisie_note');
+                Route::post('notes/ouvrir_saisie_note',[NoteController::class,'ouvrir_saisie_note'])->name('ouvrir_saisie_note');
+                Route::get('notes/controle_saisie_note',[NoteController::class,'controle_saisie_note'])->name('controle_saisie_note');
+                Route::post('notes/get_operation_par_examen',[NoteController::class,'get_operation_par_examen'])->name('get_operation_par_examen');
+            });
         });
 
         // ACCES ADMIN AUTHENTIFICATION ET ADMIN
@@ -179,33 +373,18 @@ Route::middleware('auth')->group(function(){
             Route::get('listeUsers', [UserController::class, 'getAllUsers'])->name('listeUsers');
         });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 });
 
 
 
 
-Route::post('niveaux_par_parcours',[Inscription_controller::class,'get_niveaux_parcours'])->name('get_niveaux_parcours');
 
 Route::post('authAdmin',[AdminAuthController::class,'login'])->name('authAdmin');
 
 Route::get('/', function () {
-    return view('auth/login2');
+    if(Auth::user() == null)
+        return view('auth/login2');
+    else return redirect(route('accueil'));
 });
 
 require __DIR__.'/auth.php';

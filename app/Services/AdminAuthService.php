@@ -13,7 +13,7 @@ class AdminAuthService
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            throw new \Exception('Invalid credentials.');
+            throw new \Exception('Données d\'authentification erronées');
         }
 
         return $user;
@@ -21,6 +21,6 @@ class AdminAuthService
 
     public function isAdmin(User $user)
     {
-        return $user->role->nom_role === 'admin';
+        return $user->role->rang_role === 70;
     }
 }

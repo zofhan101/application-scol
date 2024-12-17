@@ -24,7 +24,7 @@
             <div class="card">
               <div class="card-body">
                 <!-- Vertical Form -->
-                <form class="row g-3" action="{{ route('form_identite_modif') }}" method="POST" >
+                <form class="row g-3" action="{{ route('form_identite_modif') }}" method="POST" enctype="multipart/form-data" >
                     @csrf
 
                     <div class="col-12">
@@ -114,6 +114,17 @@
                             </div>
                         @enderror
                     <input type="text" class="form-control" id="inputAddress" name="email" value="{{ $etu->email }}">
+                  </div>
+
+                  <div class="col-12">
+                    <label for="inputAddress" class="form-label">Photo d'identité (2Mo max)</label>
+                        @error('photo')
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ $message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @enderror
+                    <input type="file" class="form-control" name="photo" value="{{ old('photo') }}">
                   </div>
 
 

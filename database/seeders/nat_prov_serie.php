@@ -20,7 +20,8 @@ class nat_prov_serie extends Seeder
             ['nom_province'=>'Toamasina'],
             ['nom_province'=>'Toliara'],
             ['nom_province'=>'Fianarantsoa'],
-            ['nom_province'=>'Mahajanga']
+            ['nom_province'=>'Mahajanga'],
+            ['nom_province'=>'Etranger']
         ]);
 
         DB::table('serie')->insert([
