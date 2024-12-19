@@ -28,13 +28,51 @@ use App\Exports\ListeAdmissionAllExport;
 use App\Exports\ListesRedoublantsAllExport;
 use App\Exports\ListeTriplantsAllExport;
 use PDF;
-
+use App\Models\inscription\Etudiant;
 
 
 
 
 class NoteController extends Controller
 {
+    // affichage du dossier complet d'un étudiant
+    public function get_infos_etudiant(Request $request){
+        $request->validate([
+            'im' => ['required','numeric', 'exists:etudiants,im'],
+        ]);
+        $im = $request->input('im');
+
+        try {
+            $resultats = Operation_sur_au::get_resultats_by_im($im);
+            $etudiant = Etudiant::where('im', $im)->first();
+
+            if($etudiant != null){
+                $id_parcours = $etudiant->id_parcours;
+                $parcours = Parcours::find($id_parcours);
+                $mention = Parcours::get_mention_by_id_parcours($id_parcours);
+
+                return view('notes/infos_etudiant', [
+                    'resultats'=> $resultats,
+                    'etudiant'=> $etudiant,
+                    'mention'=> $mention,
+                    'parcours'=>$parcours
+                ]);
+            }
+            else{
+                return view('notes/infos_etudiant', [
+                    'error'=> 'ERREUR: Etudiant inexistant'
+                ]);
+            }
+
+
+        } catch (\Exception $th) {
+            return view('notes/infos_etudiant', [
+                'error'=> $th->getMessage()
+            ]);
+        }
+
+    }
+
     //téléchargement des releves de note d'un étudiant
     public function down_releve_notes(Request $request){
         $request->validate([
