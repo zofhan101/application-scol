@@ -218,6 +218,10 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //export ent des résultats
+            Route::post('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent'])->name('notes.down_resultats_ent');
+            Route::get('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent_form'])->name('notes.down_resultats_ent.form');
+
             //liste des exclus
             Route::post('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus'])->name('notes.get_listes_exclus');
             Route::get('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus_form'])->name('notes.get_listes_exclus.form');

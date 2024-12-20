@@ -27,6 +27,7 @@ use App\Exports\ListeAppelAllExport;
 use App\Exports\ListeAdmissionAllExport;
 use App\Exports\ListesRedoublantsAllExport;
 use App\Exports\ListeTriplantsAllExport;
+use App\Exports\EntExport;
 use PDF;
 use App\Models\inscription\Etudiant;
 
@@ -35,6 +36,44 @@ use App\Models\inscription\Etudiant;
 
 class NoteController extends Controller
 {
+    //export ENT des résultats
+    public function down_resultats_ent_form(){
+        $aus = AU::all();
+        return view('notes/down_resultats_ent_form', ['aus'=>$aus]);
+    }
+
+    public function down_resultats_ent(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+        $id_au = $request->input('id_au');
+        $au = AU::find($id_au);
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: exportation ENT des résultats impossible car aucune opération de génération des résultats n'a été trouvée pour l'A.U  sélectionnée");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_definitifs != null){
+                //télécharger le listes
+                $titre = "résultats_ent_".$au->intitule;
+                try {
+                    $resultats = Operation_sur_au::get_data_export_ent($id_au);
+                    return Excel::download(new EntExport($resultats), $titre.'.csv');
+
+                } catch (\Throwable $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+                }
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: téléchargement des listes des exclus impossible car les résultats définitifs n'ont pas encore été préparés  pour l'A.U. sélectionnée");
+            }
+        }
+
+
+    }
+
     // affichage du dossier complet d'un étudiant
     public function get_infos_etudiant(Request $request){
         $request->validate([
