@@ -10,12 +10,19 @@
 <section class="section" id="crud_ue_section">
     {{-- boutons pour sélectionner des U.E. --}}
     <form>
-        <select id="eval" name="eval" id="">
+        <select id="type_ue" name="type_ue">
+            <option value="cours">cours</option>
+            <option value="stage">stage</option>
+        </select>
+    </form>
+    <form>
+        <select id="eval" name="eval">
             @foreach ($exams as $exam)
                 <option value="{{ $exam->id_examen_par_au }}##**##{{ $exam->nom_session_examen }}">{{ $exam->nom_session_examen }}</option>
             @endforeach
         </select>
     </form>
+
 
     <form id="coef" >
         Coef
@@ -362,6 +369,7 @@
             ue_selectionne.nom_session_examen = eval_selectionne.nom_session_examen;
             ue_selectionne.coef = coef;
 
+            let type = document.getElementById('type_ue').value ;
 
             let url= "{{ route('ajouter_ue_ec') }}";
             try {
@@ -377,7 +385,8 @@
                         'ue': ue_selectionne,
                         'ecs': ec_selectionnes,
                         'id_parcours': id_parcours,
-                        'id_niveau': id_niveau
+                        'id_niveau': id_niveau,
+                        'type_ue' : type
                     })
                 });
                 let data = await response.json();
