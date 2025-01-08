@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function(){
 
 
         //ACCES A PARTIR DE CHEF DE DIVISION
+
         Route::middleware(EnsureIsChefDiv::class)->group(function() {
             // route pour avoir la liste de ueuecSession
             Route::post('notes/ueEcSession',[NoteController::class,'getUeEcSession'])->name('notes.get_ueEcSession');
@@ -86,6 +87,12 @@ Route::middleware('auth')->group(function(){
             Route::get('notes/enregistrement',[NoteController::class,'liste_Parcours'])->name('notes.enregistrement_stage');
             //  ROUTE POUR LES ENREGISTREMENTS DES NOTES DE STAGE
             Route::post('notes/enregistrement',[NoteController::class,'save_notes'])->name('notes.enregistrement');
+
+        Route::middleware(EnsureIsChefDiv::class)->group(function () {
+            //recherche d'un etudiant par IM
+            Route::get('notes/recherche_etudiant',[NoteController::class,'get_infos_etudiant'])->name('notes.get_infos_etudiant');
+
+
 
             //récupération relevés de notes
             Route::post('notes/releve_notes',[NoteController::class,'down_releve_notes'])->name('notes.get_releve_notes');
@@ -221,6 +228,10 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //export ent des résultats
+            Route::post('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent'])->name('notes.down_resultats_ent');
+            Route::get('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent_form'])->name('notes.down_resultats_ent.form');
+
             //liste des exclus
             Route::post('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus'])->name('notes.get_listes_exclus');
             Route::get('notes/get_liste_exclus',[NoteController::class,'down_listes_exclus_form'])->name('notes.get_listes_exclus.form');

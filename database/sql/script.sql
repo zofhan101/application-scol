@@ -903,8 +903,47 @@ $$ LANGUAGE plpgsql;
 
 -- ******** ---
 
+
     -- GESTION DES NOTES
     -- NOTES DE STAGE
+
+-- ******** ---
+
+    -- GESTION DES NOTES
+    -- RESULTATS SUR L'A.U.
+    -- EXPORTS VERS ENT
+
+-- ******** ---
+
+    --export vers ENT
+    CREATE OR REPLACE VIEW v_export_ent AS
+    SELECT
+        DISTINCT ON (id_au, im)
+        id_au,
+        id_mention_ent AS idmention,
+        COALESCE(id_parcours_ent, 0) AS idparcours,
+        0 as rang,
+        CASE
+            WHEN nombre_ue_validees < nombre_ue_a_valider OR nombre_note_elim > 0
+                THEN 'NE'::VARCHAR
+            ELSE (round(moyenne::NUMERIC, 2))::VARCHAR
+        END AS noteFin,
+        id_niveau as idNiveau,
+        im
+    FROM resultats_definitifs as res
+    JOIN
+        parcours as p on res.id_parcours =  p.id_parcours
+    JOIN
+        mention as m on p.id_mention = m.id_mention
+    LEFT JOIN
+        correspondance_parcours_ent as cp on p.id_parcours = cp.id_parcours
+    JOIN
+        correspondance_mention_ent as cm on m.id_mention = cm.id_mention
+    ORDER BY id_au, im;
+
+
+
+
 
 -- ******** ---
 
