@@ -136,6 +136,23 @@ h6 {
     z-index: 1;
 }
 
+#type_ue{
+  border: none;
+  width:80px;
+  height:80px;
+  position: absolute;
+  top: 35%;
+  right: 29%;
+
+  background-color: #EB2A5C;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1;
+}
+
+
 
 
 

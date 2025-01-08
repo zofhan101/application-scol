@@ -113,7 +113,7 @@ class UEController extends Controller
             );
        } catch (\Exception $th) {
             return response()->json(
-                ['message'=>$th->getMessage(),],
+                ['message'=>$th],
                 500
             );
        }

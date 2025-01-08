@@ -21,7 +21,12 @@ class Unite_enseignement extends Model
     protected $fillable=[
         'nom_unite_enseignement'
     ];
-
+    
+    public static function get_ue_ec_session($id_parcours , $id_niveau){
+        $liste = DB::select('
+        select distinct id_ue_ec, id_element_constitutif, nom_element_constitutif from  v_liste_ue_ec where id_au = ? and id_parcours = ? and id_niveau = ? and id_unite_enseignement = ?
+    ', [$id_au, $id_parcours, $id_niveau, $id_ue]);
+    }
     public static function get_liste_ec($id_parcours, $id_niveau, $id_ue, $id_au){
         try {
             $liste_ec = DB::select('
@@ -320,10 +325,11 @@ class Unite_enseignement extends Model
         $id_niveau;
         $id_examen_par_au;
         $coefficient;
+        $type;
 
         $au = AU::get_au_en_cours();
         $id_au = $au->id_au;
-
+        $type = $ajout['type_ue'];
         $id_ue = $ajout['ue']['id_ue'];
         $id_parcours = $ajout['id_parcours'];
         $id_niveau = $ajout ['id_niveau'];
@@ -332,10 +338,10 @@ class Unite_enseignement extends Model
         foreach($ajout['ecs'] as $ec){
             $id_ec = $ec['id_ec'];
             rescue(
-                function() use($id_ue, $id_parcours, $id_niveau, $id_examen_par_au, $coefficient, $id_ec, $id_au){
+                function() use($id_ue, $id_parcours, $id_niveau, $id_examen_par_au, $coefficient, $id_ec, $id_au, $type){
                     DB::insert('
-                        insert into ue_ec_parcours_niveau_au(id_unite_enseignement, id_parcours, id_niveau, id_examen_par_au, coefficient, id_element_constitutif, id_au) values(?,?,?,?,?,?,?);
-                        ',  [$id_ue, $id_parcours, $id_niveau, $id_examen_par_au, $coefficient, $id_ec, $id_au]
+                        insert into ue_ec_parcours_niveau_au(id_unite_enseignement, id_parcours, id_niveau, id_examen_par_au, coefficient, id_element_constitutif, id_au,type_ue) values(?,?,?,?,?,?,?,?);
+                        ',  [$id_ue, $id_parcours, $id_niveau, $id_examen_par_au, $coefficient, $id_ec, $id_au, $type]
                     );
                 },
                 function(Exception $ex){

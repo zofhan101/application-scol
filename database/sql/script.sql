@@ -901,8 +901,61 @@ $$ LANGUAGE plpgsql;
         ORDER BY id_etudiants, id_au, id_ue;
 
 
+-- ******** ---
+
+
+    -- GESTION DES NOTES
+    -- NOTES DE STAGE
+
+-- ******** ---
+
+    -- GESTION DES NOTES
+    -- RESULTATS SUR L'A.U.
+    -- EXPORTS VERS ENT
+
+-- ******** ---
+
+    --export vers ENT
+    CREATE OR REPLACE VIEW v_export_ent AS
+    SELECT
+        DISTINCT ON (id_au, im)
+        id_au,
+        id_mention_ent AS idmention,
+        COALESCE(id_parcours_ent, 0) AS idparcours,
+        0 as rang,
+        CASE
+            WHEN nombre_ue_validees < nombre_ue_a_valider OR nombre_note_elim > 0
+                THEN 'NE'::VARCHAR
+            ELSE (round(moyenne::NUMERIC, 2))::VARCHAR
+        END AS noteFin,
+        id_niveau as idNiveau,
+        im
+    FROM resultats_definitifs as res
+    JOIN
+        parcours as p on res.id_parcours =  p.id_parcours
+    JOIN
+        mention as m on p.id_mention = m.id_mention
+    LEFT JOIN
+        correspondance_parcours_ent as cp on p.id_parcours = cp.id_parcours
+    JOIN
+        correspondance_mention_ent as cm on m.id_mention = cm.id_mention
+    ORDER BY id_au, im;
 
 
 
 
 
+-- ******** ---
+
+create or replace view v_liste_ue_ec2 as
+select ue.id_unite_enseignement, ue.nom_unite_enseignement, ec.id_element_constitutif, ec.nom_element_constitutif, c.coefficient, c.id_ue_ec, epa.id_examen_par_au, se.id_session_examen, se.nom_session_examen, p.id_parcours, p.nom_parcours, n.id_niveau, n.nom_niveau, au.id_au, au.intitule, c.type_ue
+from ue_ec_parcours_niveau_au as c
+join unite_enseignement as ue on c.id_unite_enseignement = ue.id_unite_enseignement
+join element_constitutif as ec on c.id_element_constitutif = ec.id_element_constitutif
+join examen_par_au as epa on c.id_examen_par_au = epa.id_examen_par_au
+join session_examen as se on epa.id_session_examen = se.id_session_examen
+join parcours as p on c.id_parcours = p.id_parcours
+join niveau as n on c.id_niveau = n.id_niveau
+join au on c.id_au = au.id_au;
+
+    
