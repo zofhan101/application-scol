@@ -101,6 +101,11 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.enregistrement_stage') }}">
+              <i class="bi bi-circle"></i><span>Saisie des notes de stage</span>
+            </a>
+          </li>
         </ul>
       </li>
 

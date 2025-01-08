@@ -79,7 +79,14 @@ Route::middleware('auth')->group(function(){
 
 
         //ACCES A PARTIR DE CHEF DE DIVISION
-        Route::middleware(EnsureIsChefDiv::class)->group(function () {
+        Route::middleware(EnsureIsChefDiv::class)->group(function() {
+            // route pour avoir la liste de ueuecSession
+            Route::post('notes/ueEcSession',[NoteController::class,'getUeEcSession'])->name('notes.get_ueEcSession');
+            //ROUTE LA LISTE DES PARCOURS
+            Route::get('notes/enregistrement',[NoteController::class,'liste_Parcours'])->name('notes.enregistrement_stage');
+            //  ROUTE POUR LES ENREGISTREMENTS DES NOTES DE STAGE
+            Route::post('notes/enregistrement',[NoteController::class,'save_notes'])->name('notes.enregistrement');
+
             //récupération relevés de notes
             Route::post('notes/releve_notes',[NoteController::class,'down_releve_notes'])->name('notes.get_releve_notes');
             Route::get('notes/releve_notes',function(){ return view('notes/get_releve_notes_form'); })->name('notes.get_releve_notes.form');

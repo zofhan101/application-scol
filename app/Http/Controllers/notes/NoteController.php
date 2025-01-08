@@ -35,6 +35,53 @@ use PDF;
 
 class NoteController extends Controller
 {
+
+    public function getUeEcSession(Request $request){
+        $au = AU::get_au_en_cours();
+        $id_au = $au->id_au;
+        $request->validate([
+            'id_parcours' =>['required','numeric','exists:parcours,id_parcours'],
+            'id_niveau' =>['required','numeric','exists:niveau,id_niveau']
+        ]);
+
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        try{
+            $ueEcSession = Operation_sur_examen::getUeEcSession($id_parcours,$id_niveau,$id_au);
+          
+            return response()->json($ueEcSession , 200);
+        
+            
+        }
+        catch(\Throwable $th){
+            return response()->json(['errors' => ["message" => $th]], 500);
+        }
+        
+    
+    }
+    public function liste_Parcours(){
+        $results = Parcours::all();
+
+        return view('notes/enregistrer_notes_stage',[ "parcours" => $results] );
+    }
+
+    //enregistrement des notes de stages et TP
+    public function save_notes(Request $request){
+        $request->validate([
+            'im' => ['required','numeric','exists:etudiants,im'],
+            'note' => ['required','numeric',new IsNoteValide],
+            'id_ue_ec' => ['required','exists:ue_ec_parcours_niveau_au']
+        ]);
+        $im = $request->input('im');
+        $note = $request->input('note');
+        $id_ue_ec = $request->input('id_ue_ec');
+
+        Operation_sur_examen::enregistrer_note_stage($id_ue_ec ,$im ,$note);
+
+        return response()->json(['message' =>"note enregistrée"], 200);
+    }
+    
     //téléchargement des releves de note d'un étudiant
     public function down_releve_notes(Request $request){
         $request->validate([
