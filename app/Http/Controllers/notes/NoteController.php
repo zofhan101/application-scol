@@ -27,14 +27,141 @@ use App\Exports\ListeAppelAllExport;
 use App\Exports\ListeAdmissionAllExport;
 use App\Exports\ListesRedoublantsAllExport;
 use App\Exports\ListeTriplantsAllExport;
+use App\Exports\EntExport;
 use PDF;
-
+use App\Models\inscription\Etudiant;
 
 
 
 
 class NoteController extends Controller
 {
+
+
+    public function getUeEcSession(Request $request){
+        $au = AU::get_au_en_cours();
+        $id_au = $au->id_au;
+        $request->validate([
+            'id_parcours' =>['required','numeric','exists:parcours,id_parcours'],
+            'id_niveau' =>['required','numeric','exists:niveau,id_niveau']
+        ]);
+
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        try{
+            $ueEcSession = Operation_sur_examen::getUeEcSession($id_parcours,$id_niveau,$id_au);
+          
+            return response()->json($ueEcSession , 200);
+        
+            
+        }
+        catch(\Throwable $th){
+            return response()->json(['errors' => ["message" => $th]], 500);
+        }
+        
+    
+    }
+    public function liste_Parcours(){
+        $results = Parcours::all();
+
+        return view('notes/enregistrer_notes_stage',[ "parcours" => $results] );
+    }
+
+    //enregistrement des notes de stages et TP
+    public function save_notes(Request $request){
+        $request->validate([
+            'im' => ['required','numeric','exists:etudiants,im'],
+            'note' => ['required','numeric',new IsNoteValide],
+            'id_ue_ec' => ['required','exists:ue_ec_parcours_niveau_au']
+        ]);
+        $im = $request->input('im');
+        $note = $request->input('note');
+        $id_ue_ec = $request->input('id_ue_ec');
+
+        Operation_sur_examen::enregistrer_note_stage($id_ue_ec ,$im ,$note);
+
+        return response()->json(['message' =>"note enregistrée"], 200);
+    }
+    
+
+    //export ENT des résultats
+    public function down_resultats_ent_form(){
+        $aus = AU::all();
+        return view('notes/down_resultats_ent_form', ['aus'=>$aus]);
+    }
+
+    public function down_resultats_ent(Request $request){
+        $request->validate([
+            'id_au' => ['required','numeric', 'exists:au,id_au'],
+        ]);
+        $id_au = $request->input('id_au');
+        $au = AU::find($id_au);
+
+        $operations_par_au = Operation_sur_au::get_operation_by_id_au($id_au);
+        if(empty($operations_par_au)){
+            return redirect()->back()->with("error", "ERREUR: exportation ENT des résultats impossible car aucune opération de génération des résultats n'a été trouvée pour l'A.U  sélectionnée");
+        }
+        else{
+            $operation = $operations_par_au[0];
+            if($operation->date_resultats_definitifs != null){
+                //télécharger le listes
+                $titre = "résultats_ent_".$au->intitule;
+                try {
+                    $resultats = Operation_sur_au::get_data_export_ent($id_au);
+                    return Excel::download(new EntExport($resultats), $titre.'.csv');
+
+                } catch (\Throwable $th) {
+                    return redirect()->back()->with("error", $th->getMessage());
+                }
+            }
+            else{
+                return redirect()->back()->with("error", "ERREUR: téléchargement des listes des exclus impossible car les résultats définitifs n'ont pas encore été préparés  pour l'A.U. sélectionnée");
+            }
+        }
+
+
+    }
+
+    // affichage du dossier complet d'un étudiant
+    public function get_infos_etudiant(Request $request){
+        $request->validate([
+            'im' => ['required','numeric', 'exists:etudiants,im'],
+        ]);
+        $im = $request->input('im');
+
+        try {
+            $resultats = Operation_sur_au::get_resultats_by_im($im);
+            $etudiant = Etudiant::where('im', $im)->first();
+
+            if($etudiant != null){
+                $id_parcours = $etudiant->id_parcours;
+                $parcours = Parcours::find($id_parcours);
+                $mention = Parcours::get_mention_by_id_parcours($id_parcours);
+
+                return view('notes/infos_etudiant', [
+                    'resultats'=> $resultats,
+                    'etudiant'=> $etudiant,
+                    'mention'=> $mention,
+                    'parcours'=>$parcours
+                ]);
+            }
+            else{
+                return view('notes/infos_etudiant', [
+                    'error'=> 'ERREUR: Etudiant inexistant'
+                ]);
+            }
+
+
+        } catch (\Exception $th) {
+            return view('notes/infos_etudiant', [
+                'error'=> $th->getMessage()
+            ]);
+        }
+
+    }
+
+
     //téléchargement des releves de note d'un étudiant
     public function down_releve_notes(Request $request){
         $request->validate([

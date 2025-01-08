@@ -44,11 +44,19 @@
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
 
-    <div class="search-bar">
-      <form class="search-form d-flex align-items-center" method="POST" action="#">
-        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+    <div class="search-bar d-flex">
+      <form class="search-form d-flex align-items-center" method="GET" action="{{ route('notes.get_infos_etudiant') }}">
+        @csrf
+        <input type="text" name="im" placeholder="Rechercher un étudiant par IM" title="Enter search keyword">
+        <button type="submit" title="Rechercher"><i class="bi bi-search"></i></button>
+
       </form>
+      @error('im')
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ $message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @enderror
     </div><!-- End Search Bar -->
 
     <nav class="header-nav ms-auto">

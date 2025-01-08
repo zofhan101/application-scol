@@ -100,6 +100,11 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.enregistrement_stage') }}">
+              <i class="bi bi-circle"></i><span>Saisie des notes de stage</span>
+            </a>
+          </li>
         </ul>
       </li>
 
@@ -224,6 +229,13 @@
               <i class="bi bi-circle"></i><span>Obtenir des relevés de notes</span>
             </a>
           </li>
+
+          <li>
+            <a href="{{ route('notes.down_resultats_ent.form') }}">
+              <i class="bi bi-circle"></i><span>Télécharger le CSV pour l'export vers ENT</span>
+            </a>
+          </li>
+
 
 
 
