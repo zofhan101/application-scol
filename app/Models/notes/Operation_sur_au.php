@@ -8,6 +8,26 @@ use stdClass;
 
 class Operation_sur_au
 {
+    //export des résultats pour ENT
+    public static function get_data_export_ent($id_au){
+        $resultats = DB::select('
+            SELECT
+                idmention,
+                idparcours,
+                rang,
+                noteFin,
+                idNiveau,
+                im
+            FROM v_export_ent
+            WHERE id_au = ?
+        ', [$id_au]);
+
+        if(empty($resultats))
+            throw new Exception('Aucun résultat à exporter n\'a été trouvé pour cette A.U. sélectionnée');
+        return $resultats;
+    }
+
+
     //relevé de notes
     public static function get_resultats_by_im($im){
         $resultats_base = DB::select("
