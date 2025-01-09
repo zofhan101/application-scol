@@ -19,6 +19,19 @@ class AU extends Model
        'intitule'
     ];
 
+    public static function get_concours_paces($id_au){
+        $examens = DB::select("
+            select epa.id_examen_par_au, se.id_session_examen, se.nom_session_examen, se.type_session
+            from examen_par_au as epa
+            join session_examen as se on epa.id_session_examen = se.id_session_examen
+            where epa.id_au = ? and se.type_session = 'conc'
+        ",[$id_au]);
+
+        if(empty($examens))
+            throw new Exception("Aucune session de concours n'a encore été programmée pour cette AU");
+        return $examens[0];
+    }
+
     public static function get_liste_evaluations($id_au){
         $examens = DB::select("
             select epa.id_examen_par_au, se.id_session_examen, se.nom_session_examen, se.type_session

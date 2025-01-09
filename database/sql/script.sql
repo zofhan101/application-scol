@@ -151,7 +151,7 @@ full join barcode_matricule as m on n.id_ue_ec = m.id_ue_ec and n.numero = m.num
 join ue_ec_parcours_niveau_au as ue_ec on n.id_ue_ec = ue_ec.id_ue_ec or m.id_ue_ec = ue_ec.id_ue_ec;
 
 -- 6-11-24 14:10
--- vue allégée des inscriptions (rafraichissement à la cloture des inscriptions)
+-- vue allégée des inscriptions (VM rafraichie à la cloture des inscriptions)
 create materialized view v_inscrits2 as
 select i.id_au, e.id_parcours, i.id_niveau, i.id_inscription, e.id_etudiants, e.im, i.date_annulation, statut, a_passe_examen
 from inscription as i
@@ -957,5 +957,60 @@ join session_examen as se on epa.id_session_examen = se.id_session_examen
 join parcours as p on c.id_parcours = p.id_parcours
 join niveau as n on c.id_niveau = n.id_niveau
 join au on c.id_au = au.id_au;
+
+
+
+
+
+
+-- comptage des etudiants ayant validé ou pas les ue
+select nom_unite_enseignement, count(valide) as nombre_elim from 
+    (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,valide 
+    from resultats_definitifs 
+    where id_au = 5
+    and id_parcours = 4
+    and id_niveau = 2
+    and id_ue = 14
+    and valide = 'V' 
+    order by id_au , id_parcours , id_niveau , id_ue, im, valide) as srq
+group by nom_unite_enseignement;
+
+-- comptage des etudiants ayant validé ou pas leur année
+
+
+     select id_au ,intitule ,nom_parcours, count(statut_au_suivante) as nombre_statut from 
+                                (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
+                                from resultats_definitifs 
+                                where id_parcours = 4
+                                and id_niveau = 2
+                                and statut_au_suivante = 'exclu'
+
+                                order by id_au , id_parcours , id_niveau , im 
+                                )as srq
+                        
+                                group by id_au,intitule,nom_parcours
+                                
+                                order by id_au desc 
+                                limit 6;
+-- ----------------*******************----------------------
+   select count(statut_au_suivante) as nombre_statut from 
+                                (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
+                                from resultats_definitifs 
+                                where id_parcours = 4
+                                and id_niveau = 2
+                                and id_au = 5
+                                and statut_au_suivante = 'passant'
+
+                                order by id_au , id_parcours , id_niveau , im 
+                                )as srq
+                        
+                                group by id_au,intitule,nom_parcours;
+    
+
+
+
+
+
+
 
     
