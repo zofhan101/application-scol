@@ -3,7 +3,7 @@
 
     <li class="nav-item">
       <a class="nav-link" href="index.html">
-        <i class="bi bi-bar-chart"></i>
+        <i class="bi bi-graph-up"></i>
         <span>Tableau de bord</span>
       </a>
     </li><!-- End Dashboard Nav -->
