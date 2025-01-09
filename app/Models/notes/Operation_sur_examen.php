@@ -94,6 +94,31 @@ class Operation_sur_examen
         return $errors;
     }
 
+
+    // fonction de recuperation de ue_ec_session
+    public static function getUeEcSession($id_parcours,$id_niveau,$au){
+       return $ueEcSession = DB::select("select * from v_liste_ue_ec2 where id_parcours = ? and id_niveau = ? and type_ue = 'stage' and id_au  = ?",[$id_parcours,$id_niveau,$au]);
+    }
+    // fonction pour enregistrement note stage
+    public static function enregistrer_note_stage($id_ue_ec , $im ,$note){
+        $nextval = DB::scalar("SELECT nextval('numero_note_stage')");
+
+        DB::transaction(function () use($nextval,$id_ue_ec,$im,$note){
+            DB::insert("insert into barcode_note(numero,note,id_ue_ec) values(?,?,?)",[
+                $nextval ,
+                $note,
+                $id_ue_ec
+            ]);
+
+            DB::insert("insert into barcode_matricule (numero , matricule , id_ue_ec) values (?,?,?)",[
+                $nextval,
+                $im,
+                $id_ue_ec
+            ]);
+        });
+
+    }
+
     public static function get_operations_sur_eval($id_au){
         $operations = DB::select("
             select ope.*, epa.id_examen_par_au, epa.id_au, se.id_session_examen, se.nom_session_examen, se.type_session

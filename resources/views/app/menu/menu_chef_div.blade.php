@@ -4,7 +4,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#inscriptions" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Inscriptions</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-person-check"></i><span>Inscriptions</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="inscriptions" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -57,6 +57,12 @@
           <li>
             <a href="{{ route('interface_verification_notes') }}">
               <i class="bi bi-circle"></i><span>Interface de vérification des notes</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ route('notes.enregistrement_stage') }}">
+              <i class="bi bi-circle"></i><span>Saisie des notes de stage</span>
             </a>
           </li>
 
