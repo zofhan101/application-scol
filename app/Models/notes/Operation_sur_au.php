@@ -8,6 +8,26 @@ use stdClass;
 
 class Operation_sur_au
 {
+
+    //cloture d'un import
+    public static function enregistrer_import($id_au, $id_parcours, $id_user){
+        DB::insert('
+            INSERT INTO operation_par_import_resultat_paces(date_import, id_user_date_import, id_au, id_parcours)
+            VALUES(?,?,?,?)
+        ', [date('Y-m-d'), $id_user, $id_au, $id_parcours]);
+    }
+
+    //controle d'existence d'un import
+    public static function get_operation_par_import($id_au, $id_parcours){
+        $res = DB::select('
+            select * from operation_par_import_resultat_paces
+            WHERE id_au =  ?
+            AND id_parcours = ?
+        ', [$id_au, $id_parcours]);
+
+        return $res;
+    }
+
     //export des résultats pour ENT
     public static function get_data_export_ent($id_au){
         $resultats = DB::select('

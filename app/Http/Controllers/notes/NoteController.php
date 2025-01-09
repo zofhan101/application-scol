@@ -30,12 +30,134 @@ use App\Exports\ListeTriplantsAllExport;
 use App\Exports\EntExport;
 use PDF;
 use App\Models\inscription\Etudiant;
+use App\Imports\PacesImport;
 
 
 
 
 class NoteController extends Controller
 {
+    //import des résultats du concours PACES
+    public function import_resultats_paces_form(){
+        $parcours = Parcours::all();
+        return view('notes/import_resultats_paces_form', ['parcours'=>$parcours]);
+    }
+
+    public function import_resultats_paces(Request $request){
+        //récupération du parcours dont on importe le résultat et le fichier excel
+        $request->validate([
+            'parcours' => ['required', 'numeric', 'exists:parcours,id_parcours'],
+            'fichier_excel' =>['required','file','mimes:xlsx']
+        ]);
+
+        $id_parcours = $request->input('parcours');
+        $fichier = $request->file('fichier_excel');
+
+        //récupération de l'année universitaire en cours
+        $au = AU::get_au_en_cours();
+        $id_au = $au->id_au;
+
+        //récupération du niveau PACES
+        $paces = Niveau::where('rang', 1)->first();
+        $id_niveau = $paces->id_niveau;
+
+        //récupération du parcours concerné
+        $parcours = Parcours::find($id_parcours);
+
+        // le niveau l2
+        $l2 = Niveau::where('rang', 2)->first();
+
+        //le concours paces
+        $epa = AU::get_concours_paces($id_au);
+
+        //l'utilisateur en cours
+        $user = Auth::user();
+
+        //controle d'existence préalable de cette opération d'importation
+        $operations_par_import = Operation_sur_au::get_operation_par_import($id_au, $id_parcours);
+        if(!empty($operations_par_import)){
+            return redirect()->back()->with("error", "ERREUR: impossible de réaliser l'importation des résultats du concours PACES pour le parcours sélectionné car elle a déjà été faite.");
+        }
+
+        //chargement du fichier en mémoire
+        $fileContent = Excel::toArray(null, $fichier)[0];
+        $ligne1 = $fileContent[0];
+
+        //controle de l'entête du fichier (liste des matières présentes)
+        // Charger les matières depuis la base de données
+        $subjectsInDatabase = Unite_enseignement::get_liste_ue($id_parcours, $id_niveau, $id_au);
+
+        // Filtrer les colonnes entre AF et avant "moyenne": liste des matières présentes dans le fichier
+        $subjectsInFile = $this->getSubjectsBetweenAFAndBeforeMoyenne($ligne1);
+
+        //liste des matières manquantes
+        $orderedSubjects = $this->getMissingSubjectsAndSubjectIndexInFile($subjectsInDatabase, $subjectsInFile);
+        $missingSubjects = $orderedSubjects[0];
+        if(!empty($missingSubjects)){
+            return redirect()->back()
+            ->with("error", "ERREUR: matières manquantes dans le fichier détectées")
+            ->with("manquantes", $missingSubjects);
+        }
+
+        $foundSubjects = $orderedSubjects[1];
+
+        // CONTROLE DU CONTENU DU FICHIER
+        $erreurs_fichier = Operation_sur_examen::controler_fichier(array_slice($fileContent, 1), $foundSubjects, $id_parcours);
+        if(!empty($erreurs_fichier)){
+            return redirect()->back()
+            ->with("error", "ERREUR: anomalies détctées dans le contenu du fichier")
+            ->with("erreurs_fichier", $erreurs_fichier);
+        }
+
+        // IMPORTATION DES DONNEES
+
+        Excel::import(new PacesImport($au, $parcours, $paces, $epa, $l2, $foundSubjects, $user), $fichier);
+
+        return redirect()->back()->with('success', 'Import effectué avec succès');
+
+    }
+
+
+    private function getMissingSubjectsAndSubjectIndexInFile($subjectsInDatabase, $subjectsInFile){
+        $found;
+        $missingSubjects = [];
+        $foundSubjects = [];
+
+        foreach($subjectsInDatabase as $subjectDB){
+            $found = false;
+            foreach($subjectsInFile as $subjectFile){
+                if(strtolower($subjectDB->nom_unite_enseignement) == strtolower($subjectFile[0])){
+                    $found = true;
+                    $foundSubjects[] = [$subjectDB, $subjectFile[1]];
+                }
+            }
+            if($found == false){
+                $missingSubjects[] = $subjectDB;
+            }
+
+
+
+            $found = false;
+        }
+        return [$missingSubjects, $foundSubjects];
+    }
+
+
+    private function getSubjectsBetweenAFAndBeforeMoyenne($headerRow)
+    {
+        $subjects = [];
+        $startAdding = false;
+        $value = '';
+
+        for($i = 32;  strtolower($value) != 'moyenne'; $i=$i+2) {
+            $value = $headerRow[$i];
+            if(strtolower($value) != 'moyenne')
+                $subjects[] = [$value, $i];
+        }
+
+        return $subjects;
+    }
+
     //export ENT des résultats
     public function down_resultats_ent_form(){
         $aus = AU::all();
@@ -74,39 +196,37 @@ class NoteController extends Controller
 
     }
 
-    // affichage du dossier complet d'un étudiant
+    // rehcherche et affichage du dossier complet d'un étudiant
     public function get_infos_etudiant(Request $request){
         $request->validate([
             'im' => ['required','numeric', 'exists:etudiants,im'],
         ]);
         $im = $request->input('im');
 
+        $resultats = [];
+
         try {
             $resultats = Operation_sur_au::get_resultats_by_im($im);
-            $etudiant = Etudiant::where('im', $im)->first();
-
-            if($etudiant != null){
-                $id_parcours = $etudiant->id_parcours;
-                $parcours = Parcours::find($id_parcours);
-                $mention = Parcours::get_mention_by_id_parcours($id_parcours);
-
-                return view('notes/infos_etudiant', [
-                    'resultats'=> $resultats,
-                    'etudiant'=> $etudiant,
-                    'mention'=> $mention,
-                    'parcours'=>$parcours
-                ]);
-            }
-            else{
-                return view('notes/infos_etudiant', [
-                    'error'=> 'ERREUR: Etudiant inexistant'
-                ]);
-            }
-
-
         } catch (\Exception $th) {
+
+        }
+
+        $etudiant = Etudiant::where('im', $im)->first();
+
+        if($etudiant != null){
+            $id_parcours = $etudiant->id_parcours;
+            $parcours = Parcours::find($id_parcours);
+            $mention = Parcours::get_mention_by_id_parcours($id_parcours);
             return view('notes/infos_etudiant', [
-                'error'=> $th->getMessage()
+                'resultats'=> $resultats,
+                'etudiant'=> $etudiant,
+                'mention'=> $mention,
+                'parcours'=>$parcours
+            ]);
+        }
+        else{
+            return view('notes/missing_student', [
+                'error'=> 'ERREUR: Etudiant inexistant'
             ]);
         }
 

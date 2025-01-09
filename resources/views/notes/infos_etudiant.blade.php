@@ -49,26 +49,29 @@
 
                 </table>
 
-                @foreach ($resultats as $resultat)
-                    <h5 class="card-title">Résultats {{ $resultat[0]->nom_niveau }}({{ $resultat[0]->intitule }})</h5>
+                @if(!empty($resultats))
 
-                    <table class="table">
-                        @foreach ($resultat as $ligne)
-                            <tr>
-                                <td>{{ $ligne->nom_unite_enseignement }}</td>
-                                <td>{{ $ligne->note_ue }} / {{ $ligne->note_max }}</td>
-                            </tr>
-                        @endforeach
-                    </table>
+                    @foreach ($resultats as $resultat)
+                        <h5 class="card-title">Résultats {{ $resultat[0]->nom_niveau }}({{ $resultat[0]->intitule }})</h5>
 
-                @endforeach
-                <br>
-                <b >
-                    <div>TOTAL: {{ round($resultat[0]->total, 2) }}  / {{ round($resultat[0]->total_max, 2) }}</div>
-                    <div>TOTAL: {{  round($resultat[0]->moyenne, 2) }} / {{ round($resultat[0]->note_max, 2) }}</div>
-                    <div>DECISION: {{ $resultat[0]->decision }}</div>
+                        <table class="table">
+                            @foreach ($resultat as $ligne)
+                                <tr>
+                                    <td>{{ $ligne->nom_unite_enseignement }}</td>
+                                    <td>{{ $ligne->note_ue }} / {{ $ligne->note_max }}</td>
+                                </tr>
+                            @endforeach
+                        </table>
 
-                </b>
+                    @endforeach
+                    <br>
+                    <b >
+                        <div>TOTAL: {{ round($resultat[0]->total, 2) }}  / {{ round($resultat[0]->total_max, 2) }}</div>
+                        <div>TOTAL: {{  round($resultat[0]->moyenne, 2) }} / {{ round($resultat[0]->note_max, 2) }}</div>
+                        <div>DECISION: {{ $resultat[0]->decision }}</div>
+
+                    </b>
+                @endif
 
 
             </div>

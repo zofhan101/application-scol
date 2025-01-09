@@ -218,6 +218,11 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //import des résultats du concours PACES
+            Route::post('notes/import_resultats_paces',[NoteController::class,'import_resultats_paces'])->name('notes.import_resultats_paces');
+            Route::get('notes/import_resutltats_paces',[NoteController::class,'import_resultats_paces_form'])->name('notes.import_resultats_paces.form');
+
+
             //export ent des résultats
             Route::post('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent'])->name('notes.down_resultats_ent');
             Route::get('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent_form'])->name('notes.down_resultats_ent.form');
