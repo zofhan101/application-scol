@@ -3,7 +3,7 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
       <li class="nav-item">
-        <a class="nav-link " href="index.html">
+        <a class="nav-link " href="{{ route('stats.page') }}">
           <i class="bi bi-grid"></i>
           <span>Tableau de bord</span>
         </a>

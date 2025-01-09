@@ -1,6 +1,14 @@
 <aside id="sidebar" class="sidebar">
 
+
     <ul class="sidebar-nav" id="sidebar-nav">
+      
+    <li class="nav-item">
+        <a class="nav-link " href="{{ route('stats.page') }}">
+          <i class="bi bi-grid"></i>
+          <span>Tableau de bord</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#inscription" data-bs-toggle="collapse" href="#">
