@@ -151,7 +151,7 @@ full join barcode_matricule as m on n.id_ue_ec = m.id_ue_ec and n.numero = m.num
 join ue_ec_parcours_niveau_au as ue_ec on n.id_ue_ec = ue_ec.id_ue_ec or m.id_ue_ec = ue_ec.id_ue_ec;
 
 -- 6-11-24 14:10
--- vue allégée des inscriptions (rafraichissement à la cloture des inscriptions)
+-- vue allégée des inscriptions (VM rafraichie à la cloture des inscriptions)
 create materialized view v_inscrits2 as
 select i.id_au, e.id_parcours, i.id_niveau, i.id_inscription, e.id_etudiants, e.im, i.date_annulation, statut, a_passe_examen
 from inscription as i
