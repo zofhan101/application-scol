@@ -93,7 +93,7 @@ class Inscription_controller extends Controller
             //var_dump($liste);
             $fe = new FastExcel($liste);
 
-            return $fe->download("inscrits_".$niveau->nom_niveau."_".$parcours->nom_parcours."_".$au->intitule.".xslx", function($element){
+            return $fe->download("inscrits_".$niveau->nom_niveau."_".$parcours->nom_parcours."_".$au->intitule.".xlsx", function($element){
                 return[
                 'Matricule'=>$element['im'],
                 'Nom' => $element['nom'],
