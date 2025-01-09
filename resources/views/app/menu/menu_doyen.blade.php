@@ -1,16 +1,18 @@
 <aside id="sidebar" class="sidebar">
 <ul class="sidebar-nav" id="sidebar-nav">
 
+
+
       <li class="nav-item">
         <a class="nav-link " href="{{ route('stats.page') }}">
-          <i class="bi bi-grid"></i>
+          <i class="bi bi-graph-up"></i>
           <span>Tableau de bord</span>
         </a>
       </li><!-- End Dashboard Nav -->
-      
+
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#examens" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Saisie des notes</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-pencil-square"></i><span>Saisie des notes</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="examens" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -42,7 +44,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#entetes" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Sasie des en-têtes</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-justify"></i><span>Sasie des en-têtes</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="entetes" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -74,7 +76,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#resultats" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Résultats des évaluations individuelles</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-bar-chart"></i><span>Résultats des évaluations individuelles</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="resultats" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -103,7 +105,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#resultats_au" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Résultats sur l'année universitaire</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-bar-chart"></i><span>Résultats sur l'année universitaire</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="resultats_au" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -148,7 +150,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#deliberation" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Délibération</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-file-earmark-check"></i><span>Délibération</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="deliberation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -171,7 +173,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#res_def" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Résultats définitifs</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-bar-chart"></i><span>Résultats définitifs</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="res_def" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>

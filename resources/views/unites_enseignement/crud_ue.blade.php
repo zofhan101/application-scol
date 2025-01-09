@@ -7,7 +7,7 @@
     <h1>Définition des unités d'enseignement pour l'année universitaire</h1>
 </div>
 
-<section class="section" id="crud_ue_section">
+<section class="Esection" id="crud_ue_section">
     {{-- boutons pour sélectionner des U.E. --}}
     <form>
         <select id="type_ue" name="type_ue">
@@ -134,7 +134,7 @@
                             <ul class="list-group list-group-flush" id="liste_ec">
                                 @foreach($EC as $ec)
                                     <li class="list-group-item">
-                                      <input class="form-check-input me-1" type="checkbox" value="{{ $ec->nom_element_constitutif }}##**##{{ $ec->id_element_constitutif }}" name="ec">
+                                      <input class="form-check-input me-1 ec-checkbox" type="checkbox" value="{{ $ec->nom_element_constitutif }}##**##{{ $ec->id_element_constitutif }}" name="ec">
                                       {{ $ec->nom_element_constitutif }}
                                     </li>
                                 @endforeach
@@ -246,14 +246,29 @@
     });
 
     //EC selectionnes
-    var ec_selectionnes=[];
-    document.getElementById('elements_constitutifs').addEventListener('change', function(event){
-        let input = event.target;
-        let input_value = input.value;
-        let table_ec_selectionne = input_value.split("##**##");
-        ec_selectionnes.push({'id_ec': table_ec_selectionne[1], 'nom_ec':table_ec_selectionne[0]});
-        console.log("EC selectionnes: ",ec_selectionnes);
+    var ec_selectionnes = [];
+
+    // Gestion des cases à cocher
+    document.querySelectorAll('.ec-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function(event) {
+            let checkbox = event.target;
+            let input_value = checkbox.value;
+            let table_ec_selectionne = input_value.split("##**##");
+            let ec = {
+                'id_ec': table_ec_selectionne[1], 
+                'nom_ec': table_ec_selectionne[0]
+            };
+
+            if (checkbox.checked) {
+                ec_selectionnes.push(ec);
+            } else {
+                ec_selectionnes = ec_selectionnes.filter(item => item.id_ec !== ec.id_ec);
+            }
+
+            console.log("EC sélectionnés: ", ec_selectionnes);
+        });
     });
+
 
     //U.E. sélectionné
     var ue_selectionne = null;

@@ -11,56 +11,56 @@ class Operation_sur_au
     // prise des données pour alimenter le diagramme en baton (nombre d'admis de redoublants de triplants et d'xclus dans une année)
     public static function getAdmis($id_parcours,$id_niveau,$id_au){
 
-        $passant = DB::scalar("select count(statut_au_suivante) as nombre_statut from 
+        $passant = DB::scalar("select count(statut_au_suivante) as nombre_statut from
                                 (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
-                                from resultats_definitifs 
+                                from resultats_definitifs
                                 where id_parcours = ?
                                 and id_niveau = ?
                                 and id_au = ?
                                 and statut_au_suivante = 'passant'
 
-                                order by id_au , id_parcours , id_niveau , im 
+                                order by id_au , id_parcours , id_niveau , im
                                 )as srq
 
                                 group by id_au,intitule,nom_parcours;", [$id_parcours , $id_niveau,$id_au]);
-        
-        $redoublant =DB::scalar("select count(statut_au_suivante) as nombre_statut from 
+
+        $redoublant =DB::scalar("select count(statut_au_suivante) as nombre_statut from
                                 (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
-                                from resultats_definitifs 
+                                from resultats_definitifs
                                 where id_parcours = ?
                                 and id_niveau = ?
                                 and id_au = ?
                                 and statut_au_suivante = 'redoublant'
 
-                                order by id_au , id_parcours , id_niveau , im 
+                                order by id_au , id_parcours , id_niveau , im
                                 )as srq
 
                                 group by id_au,intitule,nom_parcours;", [$id_parcours , $id_niveau,$id_au]);
-        
-        $triplant =DB::scalar("select count(statut_au_suivante) as nombre_statut from 
+
+        $triplant =DB::scalar("select count(statut_au_suivante) as nombre_statut from
                                 (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
-                                from resultats_definitifs 
+                                from resultats_definitifs
                                 where id_parcours = ?
                                 and id_niveau = ?
                                 and id_au = ?
                                 and statut_au_suivante = 'triplant'
 
-                                order by id_au , id_parcours , id_niveau , im 
+                                order by id_au , id_parcours , id_niveau , im
                                 )as srq
 
                                 group by id_au,intitule,nom_parcours;", [$id_parcours , $id_niveau,$id_au]);
-        
-        $exclu =DB::scalar("select count(statut_au_suivante) as nombre_statut from 
+
+        $exclu =DB::scalar("select count(statut_au_suivante) as nombre_statut from
                                 (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
-                                from resultats_definitifs 
+                                from resultats_definitifs
                                 where id_parcours = ?
                                 and id_niveau = ?
                                 and id_au = ?
                                 and statut_au_suivante = 'exclu'
 
-                                order by id_au , id_parcours , id_niveau , im 
+                                order by id_au , id_parcours , id_niveau , im
                                 )as srq
-                        
+
                                 group by id_au,intitule,nom_parcours;", [$id_parcours , $id_niveau,$id_au]);
 
         if($passant == null){
@@ -81,36 +81,36 @@ class Operation_sur_au
     // prise de données pour alimenter le donut(nombre de validé eliminatoire ou non validé dans une matiere)
     public static function getNombreValide($id_au ,$id_parcours,$id_niveau,$id_ue){
         $valide = DB::scalar("
-                            select count(valide) as nombre_elim from 
-                                (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,valide 
-                                from resultats_definitifs 
+                            select count(valide) as nombre_elim from
+                                (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,valide
+                                from resultats_definitifs
                                 where id_au = ?
                                 and id_parcours = ?
                                 and id_niveau = ?
                                 and id_ue = ?
-                                and valide = 'V' 
+                                and valide = 'V'
                                 order by id_au , id_parcours , id_niveau , id_ue, im, valide) as srq
                             group by nom_unite_enseignement;", [$id_au ,$id_parcours,$id_niveau,$id_ue]);
 
-        $nonValide = DB::scalar("select  count(valide) as nombre_elim from 
-                                    (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,        valide 
-                                    from resultats_definitifs 
+        $nonValide = DB::scalar("select  count(valide) as nombre_elim from
+                                    (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,        valide
+                                    from resultats_definitifs
                                     where id_au = ?
                                     and id_parcours = ?
                                     and id_niveau = ?
                                     and id_ue = ?
-                                    and valide = 'N' 
+                                    and valide = 'N'
                                     order by id_au , id_parcours , id_niveau , id_ue, im, valide) as srq
                                 group by nom_unite_enseignement;", [$id_au ,$id_parcours,$id_niveau,$id_ue]);
-        
-        $eliminatoire= DB::scalar("select  count(valide) as nombre_elim from 
-                                    (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,        valide 
-                                    from resultats_definitifs 
+
+        $eliminatoire= DB::scalar("select  count(valide) as nombre_elim from
+                                    (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,        valide
+                                    from resultats_definitifs
                                     where id_au = ?
                                     and id_parcours = ?
                                     and id_niveau = ?
                                     and id_ue = ?
-                                    and valide = 'E' 
+                                    and valide = 'E'
                                     order by id_au , id_parcours , id_niveau , id_ue, im, valide) as srq
                                 group by nom_unite_enseignement;", [$id_au ,$id_parcours,$id_niveau,$id_ue]);
 
@@ -139,6 +139,26 @@ class Operation_sur_au
         return [$nombreInscrits , $moyenne, $matieres];
 
     }
+
+    //cloture d'un import
+    public static function enregistrer_import($id_au, $id_parcours, $id_user){
+        DB::insert('
+            INSERT INTO operation_par_import_resultat_paces(date_import, id_user_date_import, id_au, id_parcours)
+            VALUES(?,?,?,?)
+        ', [date('Y-m-d'), $id_user, $id_au, $id_parcours]);
+    }
+
+    //controle d'existence d'un import
+    public static function get_operation_par_import($id_au, $id_parcours){
+        $res = DB::select('
+            select * from operation_par_import_resultat_paces
+            WHERE id_au =  ?
+            AND id_parcours = ?
+        ', [$id_au, $id_parcours]);
+
+        return $res;
+    }
+
     //export des résultats pour ENT
     public static function get_data_export_ent($id_au){
         $resultats = DB::select('

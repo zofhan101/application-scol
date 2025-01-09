@@ -12,7 +12,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#inscription" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Inscriptions</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-person-check"></i><span>Inscriptions</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="inscription" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -59,7 +59,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#documents" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-people-fill"></i><span>Documents sur l'inscription</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-file-earmark-text"></i><span>Documents sur l'inscription</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="documents" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
@@ -94,7 +94,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#examen" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Saisie des notes</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-pencil-square"></i><span>Saisie des notes</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="examen" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -119,7 +119,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#entetes" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Sasie des en-têtes</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-justify"></i><span>Saisie des en-têtes</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="entetes" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -139,7 +139,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#resultats" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Résultats des examens</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-bar-chart"></i><span>Résultats des examens</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="resultats" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -159,7 +159,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#resultats_au" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Résultats sur l'année universitaire</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-bar-chart"></i><span>Résultats sur l'année universitaire</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="resultats_au" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -199,7 +199,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#res_def" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book-half"></i><span>Résultats définitifs</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-bar-chart"></i><span>Résultats définitifs</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="res_def" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -243,6 +243,13 @@
               <i class="bi bi-circle"></i><span>Télécharger le CSV pour l'export vers ENT</span>
             </a>
           </li>
+
+          <li>
+            <a href="{{ route('notes.import_resultats_paces.form') }}">
+              <i class="bi bi-circle"></i><span>Importer les résultats du concours PACES</span>
+            </a>
+          </li>
+
 
 
 

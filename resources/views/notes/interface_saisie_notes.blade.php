@@ -682,6 +682,7 @@
                 bouton.setAttribute("role", "alert");
                 bouton.setAttribute("data-bs-dismiss", "alert");
                 bouton.setAttribute("aria-label", "Close");
+                div_erreur.textContent = data.message;
                 div_erreur.appendChild(bouton);
                 document.getElementById("pagetitle").appendChild(div_erreur);
             }

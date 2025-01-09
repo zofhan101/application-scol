@@ -9,6 +9,7 @@ use App\Http\Controllers\inscriptions\Inscription_import_controller;
 use App\Http\Controllers\inscriptions\Inscription_controller;
 use App\Http\Controllers\inscriptions\EtudiantController;
 use App\Http\Controllers\inscriptions\TransfertController;
+use App\Http\Controllers\ClotureInscriptionController;
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\EnsureIsChefDiv;
 use App\Http\Middleware\EnsureIsChefScol;
@@ -89,8 +90,8 @@ Route::middleware('auth')->group(function(){
             Route::get('notes/enregistrement',[NoteController::class,'liste_Parcours'])->name('notes.enregistrement_stage');
             //  ROUTE POUR LES ENREGISTREMENTS DES NOTES DE STAGE
             Route::post('notes/enregistrement',[NoteController::class,'save_notes'])->name('notes.enregistrement');
-        
-        
+
+       
             //recherche d'un etudiant par IM
             Route::get('notes/recherche_etudiant',[NoteController::class,'get_infos_etudiant'])->name('notes.get_infos_etudiant');
 
@@ -230,6 +231,11 @@ Route::middleware('auth')->group(function(){
 
         //ACCES A PARTIR DE CHEF DE DIVISION SCOLARITE
         Route::middleware(EnsureIsChefDivScol::class)->group(function () {
+            //import des résultats du concours PACES
+            Route::post('notes/import_resultats_paces',[NoteController::class,'import_resultats_paces'])->name('notes.import_resultats_paces');
+            Route::get('notes/import_resutltats_paces',[NoteController::class,'import_resultats_paces_form'])->name('notes.import_resultats_paces.form');
+
+
             //export ent des résultats
             Route::post('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent'])->name('notes.down_resultats_ent');
             Route::get('notes/down_resultats_ent',[NoteController::class,'down_resultats_ent_form'])->name('notes.down_resultats_ent.form');
@@ -380,11 +386,14 @@ Route::middleware('auth')->group(function(){
         // ACCES ADMIN AUTHENTIFICATION ET ADMIN
         Route::middleware(EnsureIsAdmin::class)->group(function () {
             // Nécessitant AU ouverte
+
             Route::middleware(CheckOpenedAU::class)->group(function () {
                 //codes barres des feuilles de copie
                 Route::post('ue/down_barcode',[UEController::class,'down_barcode'])->name('down_barcode');
                 Route::get('ue/codes_barres',[UEController::class,'get_liste_ue_ec_code_barre'])->name('codes_barres');
 
+                //rafraichissement
+                Route::get('/refresh-views', [ClotureInscriptionController::class, 'refreshViews'])->name('refreshViews');
                 //évaluations
                 Route::post('au/create_exam',[AUcontroller::class,'create_exam'])->name('create_exam');
                 Route::get('au/create_exam',[AUcontroller::class,'create_exam_form'])->name('create_exam_form');

@@ -27,12 +27,13 @@
 
 
 
-                    <div class="credentials">
+						<div class="credentials">
                             <!-- Email Address -->
 					    <div class="form-group credentials-el">
 					    	<input type="text" name="email" placeholder="Votre adresse e-mail" class="form-control">
-							<x-input-error :messages="$errors->get('email')" class="mt-2" />
 					    </div>
+							<x-input-error :messages="$errors->get('email')" class="error-message" />
+
 
                         <!-- Password -->
 					    <div class="form-group credentials-el">
@@ -43,15 +44,12 @@
 
                     </div>
 
+                    <div style="display: flex; " class="boutons">
+					    <button style='display:flex; justify-content:center; align-items:center;'>
+								<a href="{{ route('register') }}">Créer un compte</a>
 
-                    <div style="display: flex" class="boutons">
-					    <button>
-					    	<i class="zmdi zmdi-arrow-right"></i>
-							<a href="{{ route('register') }}">Créer un compte</a>
 					    </button>
-                        <button type="submit">Connexion
-					    	<i class="zmdi zmdi-arrow-right"></i>
-
+								<button style='display:flex; justify-content:center; align-items:center;' type="submit">Connexion
 					    </button>
                     </div>
 				</form>

@@ -32,6 +32,12 @@ class Inscription extends Model
         'date_annulation' => 'date',
     ];
 
+    // vérifier l'inscription d'un étudiant à un parcours à une AU donnée
+    public static function est_inscrit($im, $id_au, $id_parcours){
+        $inscriptions = DB::select('select * from v_inscrits2 where id_au = ? and im = ? and id_parcours = ?',[$id_au, $im, $id_parcours]);
+        return $inscriptions;
+    }
+
     // réinscription
 
     public static function reinscrire($id_etudiant, $id_au, $id_niveau, $statut, $id_user){
