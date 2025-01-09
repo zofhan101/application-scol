@@ -12,6 +12,7 @@ use App\Http\Controllers\inscriptions\TransfertController;
 use App\Http\Controllers\ClotureInscriptionController;
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\EnsureIsChefDiv;
+use App\Http\Middleware\EnsureIsChefScol;
 use App\Http\Middleware\EnsureIsSP;
 use App\Http\Middleware\EnsureIsChefDivScol;
 use App\Http\Middleware\AU\CheckOpenedAU;
@@ -23,6 +24,7 @@ use App\Models\inscription\Nationalite;
 use App\Models\inscription\Serie;
 use App\Models\inscription\Province;
 use App\Models\mention_parcours\Parcours;
+use App\Models\AU\AU;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +91,7 @@ Route::middleware('auth')->group(function(){
             //  ROUTE POUR LES ENREGISTREMENTS DES NOTES DE STAGE
             Route::post('notes/enregistrement',[NoteController::class,'save_notes'])->name('notes.enregistrement');
 
+       
             //recherche d'un etudiant par IM
             Route::get('notes/recherche_etudiant',[NoteController::class,'get_infos_etudiant'])->name('notes.get_infos_etudiant');
 
@@ -313,6 +316,24 @@ Route::middleware('auth')->group(function(){
 
         });
 
+        // ACCES A PARTIR DE CHEF SCOL
+        Route::middleware(EnsureIsChefScol::class)->group(function () {
+            // envoi de données pour recevoir le nombre d'admis redoublants triplants et exclus
+            Route::post('stats/admis' , [noteController::class , 'getNombreAdmis'])->name('stats.admis');
+            // envoi de données pour recevoir le nombre de valide non valide et eliminatoire
+            Route::post('stats/valide' , [noteController::class , 'getNombreValide'])->name('stats.valide');
+            // envoi des données pour recevoir le nombre d'inscrits
+            Route::post('stats/nombre',[NoteController::class , 'getNombreInscrits'])->name('stats.nombreInscrits');
+
+            // acceder au tableau de bord
+            Route::get('stats/page' , function(){
+                $au = AU::all();
+                $parcours = Parcours::all();
+                return view('dashboard', ['parcours' => $parcours ,'au' => $au]);
+            })->name('stats.page');
+        });
+
+
         //ACCES A PARTIR DE SECRETAIRE PRINCIPAL
         Route::middleware(EnsureIsSP::class)->group(function () {
 
@@ -370,7 +391,7 @@ Route::middleware('auth')->group(function(){
                 //codes barres des feuilles de copie
                 Route::post('ue/down_barcode',[UEController::class,'down_barcode'])->name('down_barcode');
                 Route::get('ue/codes_barres',[UEController::class,'get_liste_ue_ec_code_barre'])->name('codes_barres');
-                
+
                 //rafraichissement
                 Route::get('/refresh-views', [ClotureInscriptionController::class, 'refreshViews'])->name('refreshViews');
                 //évaluations

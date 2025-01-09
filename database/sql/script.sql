@@ -958,4 +958,59 @@ join parcours as p on c.id_parcours = p.id_parcours
 join niveau as n on c.id_niveau = n.id_niveau
 join au on c.id_au = au.id_au;
 
+
+
+
+
+
+-- comptage des etudiants ayant validé ou pas les ue
+select nom_unite_enseignement, count(valide) as nombre_elim from 
+    (select distinct on (id_au , id_parcours , id_niveau , id_ue, im)  id_au , id_parcours , id_niveau , im, id_ue, nom_unite_enseignement,valide 
+    from resultats_definitifs 
+    where id_au = 5
+    and id_parcours = 4
+    and id_niveau = 2
+    and id_ue = 14
+    and valide = 'V' 
+    order by id_au , id_parcours , id_niveau , id_ue, im, valide) as srq
+group by nom_unite_enseignement;
+
+-- comptage des etudiants ayant validé ou pas leur année
+
+
+     select id_au ,intitule ,nom_parcours, count(statut_au_suivante) as nombre_statut from 
+                                (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
+                                from resultats_definitifs 
+                                where id_parcours = 4
+                                and id_niveau = 2
+                                and statut_au_suivante = 'exclu'
+
+                                order by id_au , id_parcours , id_niveau , im 
+                                )as srq
+                        
+                                group by id_au,intitule,nom_parcours
+                                
+                                order by id_au desc 
+                                limit 6;
+-- ----------------*******************----------------------
+   select count(statut_au_suivante) as nombre_statut from 
+                                (select distinct on (id_au , id_parcours , id_niveau , im)id_au , id_parcours ,intitule, id_niveau , im,statut_au_suivante,nom_parcours
+                                from resultats_definitifs 
+                                where id_parcours = 4
+                                and id_niveau = 2
+                                and id_au = 5
+                                and statut_au_suivante = 'passant'
+
+                                order by id_au , id_parcours , id_niveau , im 
+                                )as srq
+                        
+                                group by id_au,intitule,nom_parcours;
+    
+
+
+
+
+
+
+
     

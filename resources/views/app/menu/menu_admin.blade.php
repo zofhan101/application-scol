@@ -1,13 +1,7 @@
 <aside id="sidebar" class="sidebar">
   <ul class="sidebar-nav" id="sidebar-nav">
 
-    <li class="nav-item">
-      <a class="nav-link" href="index.html">
-        <i class="bi bi-graph-up"></i>
-        <span>Tableau de bord</span>
-      </a>
-    </li><!-- End Dashboard Nav -->
-
+    
     <li class="nav-item">
       <a class="nav-link" id="refresh-views-link" href="javascript:void(0);">
         <i class="bi bi-arrow-clockwise" id="grid-icon"></i>
@@ -20,7 +14,7 @@
     <li class="nav-item">
       <a class="nav-link collapsed" data-bs-target="#component-users" data-bs-toggle="collapse" href="#">
         <i class="bi bi-person-fill"></i><span>Gestion des utilisateurs</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>      
+      </a>
       <ul id="component-users" class="nav-content collapse" data-bs-parent="#sidebar-nav">
         <li>
           <a href="{{ route('listeUsers') }}">
@@ -57,7 +51,7 @@
       <a class="nav-link collapsed" data-bs-target="#components-ue" data-bs-toggle="collapse" href="#">
         <i class="bi bi-journal-bookmark-fill"></i><span>Unités d'enseignement</span><i class="bi bi-chevron-down ms-auto"></i>
       </a>
-      
+
       <ul id="components-ue" class="nav-content collapse" data-bs-parent="#sidebar-nav">
         <li>
           <a href="{{ route('crud_ue') }}">
@@ -96,7 +90,7 @@
             }
             const data = await response.json();
 
-    
+
 
             // Hide the spinner and show the success icon
             spinner.classList.add('d-none');

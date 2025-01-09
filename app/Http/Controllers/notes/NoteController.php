@@ -158,8 +158,75 @@ class NoteController extends Controller
         return $subjects;
     }
 
+    // statistique pour alimenter le diagramme en baton (nombre des admis redoublant tripant et exclu)
+    public function getNombreAdmis(Request $request){
+        $request->validate([
 
+            "id_au"=> ['required', 'numeric' , 'exists:au,id_au'],
+            "id_parcours" =>['required','numeric','exists:parcours,id_parcours'],
+            "id_niveau"=> ['required' , 'numeric' , 'exists:niveau,id_niveau'],
 
+        ]);
+
+        $id_parcours = $request->input('id_parcours');
+        $id_niveau = $request->input('id_niveau');
+
+        $id_au = $request->input('id_au');
+        try{
+
+            $results = Operation_sur_au::getAdmis($id_parcours,$id_niveau,$id_au);
+            return response()->json($results , 200);
+        }
+        catch(\Throwable $th){
+            return response()->json(['errors' => ["message" => $th]], 500);
+        }
+
+    }
+    // statistique pour alimenter le donut(nombre de validé eliminatoire ou non validé dans une matiere)
+    public function getNombreValide(Request $request){
+        $request->validate([
+            "id_au"=> ['required', 'numeric' , 'exists:au,id_au'],
+            "id_parcours" =>['required','numeric','exists:parcours,id_parcours'],
+            "id_niveau"=> ['required' , 'numeric' , 'exists:niveau,id_niveau'],
+            "id_ue" => ['required' , 'numeric' , 'exists:unite_enseignement,id_unite_enseignement']
+        ]);
+
+        $id_parcours = $request->input('id_parcours');
+        $id_au = $request->input('id_au');
+        $id_niveau = $request->input('id_niveau');
+        $id_ue = $request->input('id_ue');
+
+        try{
+            $results = Operation_sur_au::getNombreValide($id_au,$id_parcours,$id_niveau,$id_ue);
+            return response()->json($results , 200);
+        }
+        catch(\Throwable $th){
+            return response()->json(['errors' => ["message" => $th]], 500);
+        }
+
+    }
+    // statistique de nombre d'inscrits
+    public function getNombreInscrits(Request $request){
+        $request->validate([
+            "id_au"=> ['required', 'numeric' , 'exists:au,id_au'],
+            "id_parcours" =>['required','numeric','exists:parcours,id_parcours'],
+            "id_niveau"=> ['required' , 'numeric' , 'exists:niveau,id_niveau']
+        ]);
+
+        $id_parcours = $request->input('id_parcours');
+        $id_au = $request->input('id_au');
+        $id_niveau = $request->input('id_niveau');
+
+        try{
+            $results = Operation_sur_au::getNombreInscrits($id_au,$id_parcours,$id_niveau);
+            return response()->json($results , 200);
+        }
+        catch(\Throwable $th){
+            return response()->json(['errors' => ["message" => $th]], 500);
+        }
+    }
+
+    // prendre la combinaison ue ec session pour un parcours et un niveau donné
     public function getUeEcSession(Request $request){
         $au = AU::get_au_en_cours();
         $id_au = $au->id_au;
@@ -179,7 +246,7 @@ class NoteController extends Controller
 
         }
         catch(\Throwable $th){
-            return response()->json(['errors' => ["message" => $th]], 500);
+            return response()->json(['errors' => ["message" => $th->getMessage()]], 500);
         }
 
 
