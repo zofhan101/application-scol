@@ -2,14 +2,14 @@
   <ul class="sidebar-nav" id="sidebar-nav">
 
     <li class="nav-item">
-      <a class="nav-link " href="index.html">
-        <i class="bi bi-grid"></i>
+      <a class="nav-link" href="index.html">
+        <i class="bi bi-bar-chart"></i>
         <span>Tableau de bord</span>
       </a>
     </li><!-- End Dashboard Nav -->
 
-    <li>
-      <a class="nav-link inactive" id="refresh-views-link" href="javascript:void(0);">
+    <li class="nav-item">
+      <a class="nav-link" id="refresh-views-link" href="javascript:void(0);">
         <i class="bi bi-arrow-clockwise" id="grid-icon"></i>
         <img src="{{ asset('assets/images/loading.gif') }}" alt="Loading..." class="d-none" id="loading-spinner" style="width: 20px; height: 20px; margin-right: 2vh;">
         <i class="bi bi-check-circle text-success d-none" id="success-icon"></i>
@@ -19,8 +19,8 @@
 
     <li class="nav-item">
       <a class="nav-link collapsed" data-bs-target="#component-users" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-menu-button-wide"></i><span>Gestion des utilisateurs</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
+        <i class="bi bi-person-fill"></i><span>Gestion des utilisateurs</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>      
       <ul id="component-users" class="nav-content collapse" data-bs-parent="#sidebar-nav">
         <li>
           <a href="{{ route('listeUsers') }}">
@@ -55,8 +55,9 @@
 
     <li class="nav-item">
       <a class="nav-link collapsed" data-bs-target="#components-ue" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-menu-button-wide"></i><span>Unités d'enseignement</span><i class="bi bi-chevron-down ms-auto"></i>
+        <i class="bi bi-journal-bookmark-fill"></i><span>Unités d'enseignement</span><i class="bi bi-chevron-down ms-auto"></i>
       </a>
+      
       <ul id="components-ue" class="nav-content collapse" data-bs-parent="#sidebar-nav">
         <li>
           <a href="{{ route('crud_ue') }}">
