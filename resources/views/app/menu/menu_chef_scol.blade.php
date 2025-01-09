@@ -236,6 +236,13 @@
             </a>
           </li>
 
+          <li>
+            <a href="{{ route('notes.import_resultats_paces.form') }}">
+              <i class="bi bi-circle"></i><span>Importer les résultats du concours PACES</span>
+            </a>
+          </li>
+
+
 
 
 

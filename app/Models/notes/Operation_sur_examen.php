@@ -5,9 +5,94 @@ namespace App\Models\notes;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use stdClass;
+use App\Models\inscription\Inscription;
+use App\Models\AU\AU;
 
 class Operation_sur_examen
 {
+
+    // CONTROLE DE L'IMPORT DES RESULTATS DU CONCOURS PACES
+    public static function controler_fichier($fileContent, $subjects, $id_parcours){
+        $errors = DB::transaction(function () use($fileContent, $subjects, $id_parcours){
+            $num_ligne;
+            $au_en_cours = AU::get_au_en_cours();
+            $id_au = $au_en_cours->id_au;
+            $errors = [];
+            $note;
+
+            $note_max = DB::scalar('select note_max from note_max order by id_note_max desc limit 1');
+
+            foreach($fileContent as $index => $content){
+                $num_ligne = $index + 2;
+
+                //valider l'inscription à l'AU en cours
+                $im = $content[1];
+
+                $inscription = Inscription::est_inscrit($im, $id_au, $id_parcours);
+                if(empty($inscription))
+                    $errors[] = "LIGNE ".$num_ligne.": "."Etudiant non inscrit à l'A.U. en cours pour le parcours selectionné";
+
+
+
+                // valider les valeurs des décisions
+                $decision = strtolower($content[49]);
+                if($decision != 'admis' && $decision != 'ajourné' && $decision != 'exclu'){
+                    $errors[] = "LIGNE ".$num_ligne.": "."Valeur de la décision non prise en charge";
+                }
+
+                // valider les autres champs
+
+                // Valider les valeurs des colonnes
+                $nom = trim($content[2]); // Nom (indice 2)
+                $prenoms = trim($content[3]); // Prénoms (indice 3)
+                $date_naissance = trim($content[5]); // Date de naissance (indice 5)
+                $lieu_naissance = trim($content[6]); // Lieu de naissance (indice 6)
+
+                // Contrôle du nom
+                if (empty($nom)) {
+                    $errors[] = "LIGNE " . $num_ligne . ": Le champ 'Nom' est obligatoire.";
+                }
+
+                // Contrôle des prénoms
+                if (empty($prenoms)) {
+                    $errors[] = "LIGNE " . $num_ligne . ": Le champ 'Prénoms' est obligatoire.";
+                }
+
+                // Contrôle de la date de naissance
+                if (empty($date_naissance)) {
+                    $errors[] = "LIGNE " . $num_ligne . ": Le champ 'Date de naissance' est obligatoire.";
+                }
+
+                // Contrôle du lieu de naissance
+                if (empty($lieu_naissance)) {
+                    $errors[] = "LIGNE " . $num_ligne . ": Le champ 'Lieu de naissance' est obligatoire.";
+                }
+
+
+                //valider les note fournies
+
+                foreach($subjects as $subject){
+                    $note = $content[$subject[1]];
+
+                    if(!is_numeric($note)){
+                        $errors[] = "LIGNE ".$num_ligne.": "."NOTE ".$subject[0]->nom_unite_enseignement." VALEUR NON NUMERIQUE";
+                    }
+                    else if($note < 0){
+                        $errors[] = "LIGNE ".$num_ligne.": "."NOTE ".$subject[0]->nom_unite_enseignement." VALEUR NEGATIVE";
+
+                    }
+                    else if($note > $note_max){
+                        $errors[] = "LIGNE ".$num_ligne.": "."NOTE ".$subject[0]->nom_unite_enseignement." VALEUR SUPERIEURE A ".$note_max;
+
+                    }
+                }
+            }
+
+            return $errors;
+        });
+
+        return $errors;
+    }
 
 
     // fonction de recuperation de ue_ec_session
@@ -17,7 +102,7 @@ class Operation_sur_examen
     // fonction pour enregistrement note stage
     public static function enregistrer_note_stage($id_ue_ec , $im ,$note){
         $nextval = DB::scalar("SELECT nextval('numero_note_stage')");
-        
+
         DB::transaction(function () use($nextval,$id_ue_ec,$im,$note){
             DB::insert("insert into barcode_note(numero,note,id_ue_ec) values(?,?,?)",[
                 $nextval ,
@@ -31,7 +116,7 @@ class Operation_sur_examen
                 $id_ue_ec
             ]);
         });
-        
+
     }
 
     public static function get_operations_sur_eval($id_au){
